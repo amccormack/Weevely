@@ -85,7 +85,7 @@ class Php(Module):
     def set_post_data(self, post_data = {}):
         """Post data is cleaned after every use """
         
-        self.post_data = post_data
+        self.post_data.update(post_data)
        
        
     def run_module(self, cmd, mode = None, proxy = None, debug = None):
@@ -111,7 +111,6 @@ class Php(Module):
         request = CmdRequest( self.url, self.password, self.proxy)
         request.setPayload(cmd, self.current_mode)
 
-            
     
         debug_level = 1
         if debug:

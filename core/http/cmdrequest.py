@@ -88,7 +88,7 @@ class CmdRequest(Request):
 	def setPostData(self, data_dict):
 		self.data = data_dict.copy()
 
-	def execute( self ):
+	def execute( self , bytes = -1):
 		response = self.read()
 #		print self.extractor_debug.findall(response)
 		data	 = self.extractor.findall(response)

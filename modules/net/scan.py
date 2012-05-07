@@ -12,6 +12,7 @@ from core.parameters import ParametersList, Parameter as P
 from external.ipaddr import IPNetwork, IPAddress, summarize_address_range
 from random import choice
 from base64 import b64encode
+from socket import gethostbyname
 
 classname = 'Scan'
     
@@ -19,12 +20,26 @@ classname = 'Scan'
 class RequestList(dict):
     
     
-    def __init__(self, modhandler):
+    def __init__(self, modhandler, port_list_path):
         
         self.modhandler = modhandler
         
         self.port_list = []
         self.ifaces = {}
+        
+        self.nmap_ports = []
+        self.nmap_services = {}
+        
+        if port_list_path:
+            try:
+                nmap_file = open(port_list_path, 'r')
+            except:
+                raise ModuleException(self.name, 'Error opening \'%s\' port file' % port_list_path)
+            
+            for line in nmap_file.readlines():
+                name, port = line[:-1].split()
+                self.nmap_services[int(port)] = name
+                self.nmap_ports.append(int(port))
         
         dict.__init__(self)
         
@@ -73,13 +88,16 @@ class RequestList(dict):
             self.__set_port_ranges(ports)
         
         
-        if ',' in net:
-            addresses = net.split(',')
-        else:
-            addresses = [ net ]    
-        
-        for addr in addresses:
-            self.__set_networks(addr)
+        # If there are available ports
+        if self.port_list:
+            
+            if ',' in net:
+                addresses = net.split(',')
+            else:
+                addresses = [ net ]    
+            
+            for addr in addresses:
+                self.__set_networks(addr)
         
     def __set_port_ranges(self, given_range):
 
@@ -106,7 +124,11 @@ class RequestList(dict):
                     start_port = int_port
                     end_port = int_port
                     
-            self.port_list += [ p for p in range(start_port, end_port+1)]
+            if start_port and end_port:
+                self.port_list += [ p for p in range(start_port, end_port+1) if p in self.nmap_ports]
+            else:
+                raise ModuleException('net.scan', 'Error parsing port numbers \'%s\'' % given_range)
+                    
                     
 
     def __get_network_from_ifaces(self, iface):
@@ -139,7 +161,7 @@ class RequestList(dict):
             #Parse IP-IP
             if addr.count('-') == 1:
                 splitted_addr = addr.split('-')
-                # Only adress supported
+                # Only address supported
                 
                 try:
                     start_address = IPAddress(splitted_addr[0])
@@ -154,6 +176,12 @@ class RequestList(dict):
                 remote_iface = self.__get_network_from_ifaces(addr)
                 if remote_iface:
                     networks.append(remote_iface)  
+                else:
+                    # Try to resolve host
+                    try:
+                        networks.append(IPNetwork(gethostbyname(addr)))
+                    except:
+                        pass
 
         if not networks:       
             print '[net.scan] Warning: \'%s\' is not an IP address, network or detected interaface' % ( addr)
@@ -168,8 +196,10 @@ class RequestList(dict):
 class Scan(Module):
 
     params = ParametersList('Scan network for open ports', [],
-                    P(arg='addr', help='IP address, multiple addresses (IP1,IP2,..), networks (IP/MASK or IPstart-IPend) or interfaces (eth0)', required=True, pos=0),
-                    P(arg='port', help='Port or multiple ports (PORT1, PORT2,.. or startPORT-endPORT)', required=True, pos=1))
+                    P(arg='addr', help='IP address, multiple IPs (IP1,IP2,..), networks (IP/MASK or firstIP-lastIP) or interfaces (ethN)', required=True, pos=0),
+                    P(arg='port', help='Port or multiple ports (PORT1,PORT2,.. or firstPORT-lastPORT)', required=True, pos=1),
+                    P(arg='onlyknownports', help='Scan only known ports', default=True, type=bool)
+                    )
 
     
     vector_scan = """
@@ -183,7 +213,6 @@ else { print("."); }
 """
 
     def __init__(self, modhandler, url, password):
-        self.reqlist = RequestList(modhandler)
 
         self.rand_post_addr = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
         self.rand_post_port = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
@@ -192,15 +221,33 @@ else { print("."); }
         Module.__init__(self, modhandler, url, password)    
 
     
-    def run_module(self, addr, port):
+    def run_module(self, addr, port, onlyknownports):
         
+
+        reqnum = 10
+        
+        port_list_path = None
+        if onlyknownports:
+            port_list_path = 'modules/net/external/nmap-services-tcp'
+        
+        self.reqlist = RequestList(self.modhandler, port_list_path)
         self.reqlist.add(addr, port)
+        
+        if not self.reqlist:
+            raise ModuleException(self.name, 'Invalid scan range, check hosts and ports')
+        
+        known_ports_string = ''
+        if onlyknownports:
+            known_ports_string = '. Only known ports scanned.'
+        
+        self.mprint('[%s] Scanning %i hosts in %i requests (%i per request)%s' % (self.name, len(self.reqlist), len(self.reqlist)*len(self.reqlist[self.reqlist.keys()[0]]), reqnum, known_ports_string))
+        
         
         while self.reqlist:
             
             reqstringarray = ''
             
-            requests = self.reqlist.get_requests(10)
+            requests = self.reqlist.get_requests(reqnum)
 
             for host, ports in requests.items():
                 
@@ -211,5 +258,7 @@ else { print("."); }
             payload = self.vector_scan % (self.rand_post_addr)
             self.modhandler.load('shell.php').set_post_data({self.rand_post_addr : b64encode(reqstringarray)})
         
-            print self.modhandler.load('shell.php').run({0 : payload})
+            response = self.modhandler.load('shell.php').run({0 : payload})
+            print response
+
 

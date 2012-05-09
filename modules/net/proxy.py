@@ -136,7 +136,7 @@ class Proxy(Module):
         
         server = SocketServer.ThreadingTCPServer((lhost, lport), ProxyHandler)
         server.rurl = rurl
-        print '[%s] Running, use \'http://%s:%i\' as HTTP proxy' % (self.name, lhost, lport)
+        print '[%s] Proxy running. Set \'http://%s:%i\' as HTTP proxy' % (self.name, lhost, lport)
         server.serve_forever()
         
         

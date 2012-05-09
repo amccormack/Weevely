@@ -244,7 +244,10 @@ else { print("."); }
         
         hostnum = len(self.reqlist)
         portnum = len(self.reqlist.port_list)
-        self.mprint('[%s] Scanning %i ports of %i hosts using %i requests (%i connections per request)' % (self.name, portnum, hostnum, portnum*hostnum/portsperreq, portsperreq))
+        reqnum = (portnum*hostnum/portsperreq)+1
+
+            
+        self.mprint('[%s] Scanning %i ports of %i hosts using %i requests (%i connections per request)' % (self.name, portnum, hostnum, reqnum, portsperreq))
         if onlyknownports:
             known_ports_string = '[%s] Only known ports scanned.' % self.name
         

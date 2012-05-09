@@ -5,7 +5,7 @@ Created on 03/ott/2011
 '''
 
 import urllib
-from random import randint
+from random import choice
 
 agents = ( 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6', \
            'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.14) Gecko/2009090216 Ubuntu/9.04 (jaunty) Firefox/3.0.14', \
@@ -13,7 +13,7 @@ agents = ( 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.6) Gecko/20
 
 class URLOpener(urllib.FancyURLopener):
     
-    version = agents[ randint( 0, len(agents) - 1 ) ]
+    version = choice(agents)
     
     def http_error_206(self, url, fp, errcode, errmsg, headers, data=None):
         pass

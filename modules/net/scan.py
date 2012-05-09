@@ -184,7 +184,7 @@ class RequestList(dict):
                         pass
 
         if not networks:       
-            print '[net.scan] Warning: \'%s\' is not an IP address, network or detected interaface' % ( addr)
+            print '[net.scan] Warning: \'%s\' is not an IP address, network or detected interface' % ( addr)
             
         else:
             for net in networks:
@@ -198,7 +198,8 @@ class Scan(Module):
     params = ParametersList('Scan network for open ports', [],
                     P(arg='addr', help='IP address, multiple IPs (IP1,IP2,..), networks (IP/MASK or firstIP-lastIP) or interfaces (ethN)', required=True, pos=0),
                     P(arg='port', help='Port or multiple ports (PORT1,PORT2,.. or firstPORT-lastPORT)', required=True, pos=1),
-                    P(arg='onlyknownports', help='Scan only known ports', default=True, type=bool)
+                    P(arg='onlyknownports', help='Scan only known ports', default=True, type=bool),
+                    P(arg='portsperreq', help='Number of scanned ports per request.', default='auto')
                     )
 
     
@@ -221,11 +222,16 @@ else { print("."); }
         Module.__init__(self, modhandler, url, password)    
 
     
-    def run_module(self, addr, port, onlyknownports):
+    def run_module(self, addr, port, onlyknownports, portsperreq):
         
-
-        reqnum = 10
-        
+        try:
+            if portsperreq == 'auto':
+                portsperreq = int(self.modhandler.load('system.info').run({ 0: 'max_execution_time' }))-2
+            else:
+                portsperreq = int(portsperreq)
+        except ValueError:
+            portsperreq = 10
+            
         port_list_path = None
         if onlyknownports:
             port_list_path = 'modules/net/external/nmap-services-tcp'
@@ -236,18 +242,18 @@ else { print("."); }
         if not self.reqlist:
             raise ModuleException(self.name, 'Invalid scan range, check hosts and ports')
         
-        known_ports_string = ''
+        hostnum = len(self.reqlist)
+        portnum = len(self.reqlist.port_list)
+        self.mprint('[%s] Scanning %i ports of %i hosts using %i requests (%i connections per request)' % (self.name, portnum, hostnum, portnum*hostnum/portsperreq, portsperreq))
         if onlyknownports:
-            known_ports_string = '. Only known ports scanned.'
-        
-        self.mprint('[%s] Scanning %i hosts in %i requests (%i per request)%s' % (self.name, len(self.reqlist), len(self.reqlist)*len(self.reqlist[self.reqlist.keys()[0]]), reqnum, known_ports_string))
+            known_ports_string = '[%s] Only known ports scanned.' % self.name
         
         
         while self.reqlist:
             
             reqstringarray = ''
             
-            requests = self.reqlist.get_requests(reqnum)
+            requests = self.reqlist.get_requests(portsperreq)
 
             for host, ports in requests.items():
                 

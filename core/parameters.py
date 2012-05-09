@@ -31,7 +31,7 @@ class Parameter:
         type = ''
         if self.type != None:
             type = 'Type: %s' % repr(self.type.__name__)                    
-            if isinstance(True, self.type):
+            if 'bool' in str(self.type):
                 type += ' (True, False)'
             
             

@@ -92,9 +92,9 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 class Proxy(Module):
 
     params = ParametersList('Run proxy through server', [],
+                    P(arg='rurl', help='Skip install and run directly server through remote url', pos=0),
                     P(arg='lport', help='Local proxy port', default=8080, type=int),
-                    P(arg='background', help='Go to background', default=True, type=bool),
-                    P(arg='rurl', help='Skip install and run directly server through remote url'),
+                    P(arg='background', help='Go to background', default=False, type=bool),
                     P(arg='rdir', help='Install in remote directory, or \'find\' it automatically', default='find'),
                     P(arg='rname', help='Install with remote file name', default='weepro.php')
                     )
@@ -136,11 +136,11 @@ class Proxy(Module):
         
         server = SocketServer.ThreadingTCPServer((lhost, lport), ProxyHandler)
         server.rurl = rurl
-        print '[%s] Proxy server running on %s:%i via \'%s\'' % (self.name, lhost, lport, rurl)
+        print '[%s] Running, use \'http://%s:%i\' as HTTP proxy' % (self.name, lhost, lport)
         server.serve_forever()
         
         
-    def run_module(self, lport, background, rurl, rdir, rname):
+    def run_module(self, rurl, lport, background, rdir, rname):
 
         if not rurl:
         
@@ -161,16 +161,16 @@ class Proxy(Module):
                 if response:
                     rurl = url
                     self.mprint('[%s] PHP proxy uploaded as \'%s\'' % (self.name, rurl))
-        
+                    self.mprint('[%s] Next time to skip install run \':net.proxy rurl=%s\'' % (self.name, rurl))
+                    
             if not rurl:
                 raise ModuleException(self.name,  "Error installing remote PHP proxy, check remote dir and file name")
           
-        try:
+#        try:
         
-           Thread(target=self.__run_proxy_server, args=(rurl, lport)).start()
+           #Thread(target=self.__run_proxy_server, args=(rurl, lport)).start()
         
-        except Exception, errtxt:
-           print errtxt
-          
-        from time import sleep
-        sleep(100) 
+#        except Exception, errtxt:
+#           print errtxt
+
+        self.__run_proxy_server(rurl, lport)

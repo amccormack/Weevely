@@ -161,7 +161,7 @@ class Proxy(Module):
                 if response:
                     rurl = url
                     self.mprint('[%s] PHP proxy uploaded as \'%s\'' % (self.name, rurl))
-                    self.mprint('[%s] Next time to skip install run \':net.proxy rurl=%s\'' % (self.name, rurl))
+                    self.mprint('[%s] Next times skip install running \':net.proxy rurl=%s\'' % (self.name, rurl))
                     
             if not rurl:
                 raise ModuleException(self.name,  "Error installing remote PHP proxy, check remote dir and file name")

@@ -18,7 +18,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 import base64, codecs
-from random import random, randrange, choice, shuffle
+from random import random, randrange, choice, shuffle, randint
+from collections import Counter
 
 
 def random_string(charset = 'abcdefghijklmnopqrstuvwxyz', len=4, fixed=False):
@@ -38,23 +39,48 @@ def pollute_with_random_str(str, charset = '!"#$%&()*-,./:<>?@[\]^_`{|}~', frequ
 	return str_encoded
 	
 	
+def pollute_replacing(str, charset = 'abcdefghijklmnopqrstuvwxyz'):
+	
+	# Choose common substring in str
+	count = {}
+	for r in range(1,len(str)):
+		count.update( Counter(str[i:i+r] for i in range(len(str)-r-1)) )
+	
+	substr = choice(sorted(count, key=count.get, reverse=True)[:5])
+
+	# Choose str to replace with
+	pollution = find_randstr_not_in_str(str.replace(substr,''), charset)
+			
+	replacedstr = str.replace(substr,pollution)
+	return substr, pollution, replacedstr
 
 	
-def pollute_with_static_str(str, charset = 'abcdefghijklmnopqrstuvwxyz', frequency=0.1):
+def find_randstr_not_in_str(str, charset):
 
 	while True:
-		pollution_chars = random_string(charset, 16, True)
 
+		pollution_chars = random_string(charset, 16, True)
+			
 		pollution = ''
+		found = False
 		for i in range(0, len(pollution_chars)):
 			pollution = pollution_chars[:i]
 			if (not pollution in str) :
+				found=True
 				break
 			
-		if not pollution:
+		if not found:
 			print '[!] Bad randomization, retrying.'
 		else:
-			break
+			return pollution
+
+	
+		
+	
+	
+def pollute_with_static_str(str, charset = 'abcdefghijklmnopqrstuvwxyz', frequency=0.1):
+
+	pollution = find_randstr_not_in_str(str, charset)
 		
 	str_encoded = ''
 	for char in str:

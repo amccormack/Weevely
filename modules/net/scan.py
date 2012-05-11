@@ -44,7 +44,7 @@ class RequestList(dict):
         dict.__init__(self)
         
         
-    def get_requests(self, howmany = 30):
+    def get_requests(self, howmany):
         
         to_return = {}
         requests = 0
@@ -199,7 +199,7 @@ class Scan(Module):
                     P(arg='addr', help='IP address, multiple IPs (IP1,IP2,..), networks (IP/MASK or firstIP-lastIP) or interfaces (ethN)', required=True, pos=0),
                     P(arg='port', help='Port or multiple ports (PORT1,PORT2,.. or firstPORT-lastPORT)', required=True, pos=1),
                     P(arg='onlyknownports', help='Scan only known ports', default=True, type=bool),
-                    P(arg='portsperreq', help='Number of scanned ports per request.', default='auto')
+                    P(arg='portsperreq', help='Number of scanned ports per request.', default=10, type=int)
                     )
 
     
@@ -223,15 +223,7 @@ else { print("."); }
 
     
     def run_module(self, addr, port, onlyknownports, portsperreq):
-        
-        try:
-            if portsperreq == 'auto':
-                portsperreq = int(self.modhandler.load('system.info').run({ 0: 'max_execution_time' }))-2
-            else:
-                portsperreq = int(portsperreq)
-        except ValueError:
-            portsperreq = 10
-            
+                    
         port_list_path = None
         if onlyknownports:
             port_list_path = 'modules/net/external/nmap-services-tcp'

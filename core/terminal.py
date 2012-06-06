@@ -13,6 +13,24 @@ module_trigger = ':'
 help_string = ':show'
 set_string = ':set'
 load_string = ':load'
+gen_string = ':generator'
+    
+
+def format_arglist(module_arglist):
+    
+    arguments = {}
+    pos = 0
+    for arg in module_arglist:
+        if '=' in arg:
+            name, value = arg.split('=')
+        else:
+            name = pos
+            value = arg
+            
+        arguments[name] = value
+        pos+=1
+    
+    return arguments
 
             
 class Terminal(Enviroinment):
@@ -71,7 +89,7 @@ class Terminal(Enviroinment):
         elif cmd_splitted[0] == load_string:   
             if len(cmd_splitted)>=2:
                 self.__load_rcfile(cmd_splitted[1])
-                           
+       
         ## Command call    
         else:
 
@@ -79,8 +97,7 @@ class Terminal(Enviroinment):
             if cmd_splitted[0][0] == module_trigger:
                 interpreter = cmd_splitted[0][1:]
                 cmd_splitted = cmd_splitted[1:]
-                
-                
+            
             output =  self.run(interpreter, cmd_splitted)
    
         if output != None:
@@ -107,32 +124,15 @@ class Terminal(Enviroinment):
             
         if output != None:
             print output
-    
-
-    def __format_arglist(self, module_arglist):
-        
-        arguments = {}
-        pos = 0
-        for arg in module_arglist:
-            if '=' in arg:
-                name, value = arg.split('=')
-            else:
-                name = pos
-                value = arg
-                
-            arguments[name] = value
-            pos+=1
-        
-        return arguments
 
 
     def set(self, module_name, module_arglist):
         
-        if module_name not in self.modhandler.module_info.keys():
+        if module_name not in self.modhandler.modules_classes.keys():
             print '[!] Error module with name \'%s\' not found' % (module_name)
         else:
-           arguments = self.__format_arglist(module_arglist)
-           module_class = self.modhandler.load(module_name, init_module=False)
+           arguments = format_arglist(module_arglist)
+           module_class = self.modhandler.modules_classes[module_name]
            
            check, params = module_class.params.set_and_check_parameters(arguments, oneshot=False)
            
@@ -146,25 +146,13 @@ class Terminal(Enviroinment):
  
     def run(self, module_name, module_arglist):        
         
-        # TODO: use directly load_interpreters or get_best_interpreter
-        # The double choose of best inetrpreter and load_inerpreter call seems
-        # Redundant
-        
-        if module_name == None:
+        if not module_name:
+            module_name = 'shell.sh'
             
-            if not self.modhandler.interpreter:
-                self.modhandler.load_interpreters()
-            
-            if 'shell.sh' in self.modhandler.loaded_shells:
-                module_name = 'shell.sh'
-            else:
-                module_name = 'shell.php'
-            
-            
-        if module_name not in self.modhandler.module_info.keys():
+        if module_name not in self.modhandler.modules_classes.keys():
             print '[!] Error module with name \'%s\' not found' % (module_name)
         else:
-            arguments = self.__format_arglist(module_arglist)
+            arguments = format_arglist(module_arglist)
         
             try:
                 response = self.modhandler.load(module_name).run(arguments)

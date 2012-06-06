@@ -18,8 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
-from core.terminal import Terminal, module_trigger, help_string
-from core.backdoor import Backdoor
+from core.terminal import Terminal, module_trigger, format_arglist
 from core.modules_handler import ModHandler
 from core.module import ModuleException
 from core.helper import Helper
@@ -31,18 +30,24 @@ Weevely 0.6 - Generate and manage stealth PHP backdoors
               Emilio Pinna 2011-2012            
 '''
    
-general_usage = '''Start telnet-like session
-  weevely <url> <password> 
+general_usage = '''[+] Start telnet-like session
+    weevely <url> <password> 
   
-Run single command or module
-  weevely <url> <password> <command> [argument1] [argument2] ..
+[+] Run shell command o module
+    weevely <url> <password> [ <command> | :<module name> ]  ..
 
-Generate PHP backdoor script
-  weevely generate <password> <output path> 
+[+] Generate PHP backdoor. 
+    weevely generate <password>  ..  
+
+[+] Show modules help
+    weevely show [module name]
   
-Show modules help
-  weevely <url> <password> %s [module name]
-'''  % help_string
+Available generators
+
+%s
+Available modules:
+
+%s'''  
     
 if __name__ == "__main__":
 
@@ -61,20 +66,33 @@ if __name__ == "__main__":
         except KeyboardInterrupt:
             print '\n[!] Exiting. Bye ^^'
         
-    elif len(sys.argv) == 4 and sys.argv[1] == 'generate':
-        try:
-         Backdoor( sys.argv[2] ).save( sys.argv[3] )
-        except Exception, e:
-            print '\n[!] Creation error: %s ' % str(e)
-            raise
+    elif len(sys.argv) >= 3 and sys.argv[1].startswith('generate'):
         
+        genname = sys.argv[1] 
+        password = sys.argv[2]
+        
+        if genname == 'generate':
+            genname = 'generate.php'
+        
+        args_list = [':%s' % genname ] + sys.argv[3:]
+        
+        try:
+            Terminal (ModHandler(genname, password), True).run_module_cmd(args_list)
+        except ModuleException, e:
+            print '[!] [%s] %s ' % (e.module, e.error)
+            
+    elif len(sys.argv) == 3 and sys.argv[1] == 'show':
+        print ModHandler('', '').helps(sys.argv[2])
+        
+                        
+
     elif len(sys.argv) > 3 and sys.argv[1].startswith('http'):
 
         url = sys.argv[1]
         password = sys.argv[2]        
         
         
-        if sys.argv[3] == help_string:
+        if sys.argv[3] == ':show':
             modname = ''
             if len(sys.argv)>4:
                 modname = sys.argv[4]
@@ -96,6 +114,6 @@ if __name__ == "__main__":
                 print '\n[!] Exiting. Bye ^^'
     else:
         
-        print '%s\nAvailable modules\n\n%s\n' % (general_usage, Helper().summaries())
+        print general_usage % ( ModHandler().summary(only_group='generate'), ModHandler().summary(exclude_group='generate'))
         
     

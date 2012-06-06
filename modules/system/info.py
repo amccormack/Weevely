@@ -53,6 +53,7 @@ class Info(Module):
         
         vectors = self._get_default_vector2()
         
+
         if not vectors:
             vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
                   

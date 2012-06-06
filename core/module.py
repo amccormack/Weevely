@@ -16,6 +16,7 @@ class Module:
     
     
     def __init__(self, modhandler, url, password):
+        
         self.modhandler = modhandler
         self.url = url
         self.password = password

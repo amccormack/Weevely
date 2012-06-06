@@ -182,7 +182,7 @@ class ParametersList:
                 
                 
         if not check:
-            print '[!] Usage: %s' % self.summary()
+            print '[!] Usage: %s' % self
         
         return check, oneshot_parameters
                 
@@ -239,7 +239,7 @@ class ParametersList:
                 args_list.append(best_value)
             
         if error_required:
-            print '[!] Error, required parameters: \'%s\'\n[!] Usage: %s' % ('\', \''.join(error_required), self.summary())
+            print '[!] Error, required parameters: \'%s\'\n[!] Usage: %s' % ('\', \''.join(error_required), self)
             return False, args_list
         
         return True, args_list

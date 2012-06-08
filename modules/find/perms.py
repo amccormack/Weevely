@@ -38,10 +38,10 @@ if(@cktp($df,$f,'d')){
     
 
     params = ParametersList('Find files by permissions', vectors,
-                    P(arg='qty', help='How many files display', choices=['first', 'any'], default='any'), 
-                    P(arg='type', help='Type', choices=['f','d', 'any'], default='any'), 
-                    P(arg='perm', help='Permission', choices=['w','r','x','any'], default='r'),
-                    P(arg='rpath', help='Remote starting path', default='.')
+                    P(arg='qty', help='How many files display', choices=['first', 'any'], default='any', pos=0), 
+                    P(arg='type', help='Type', choices=['f','d', 'any'], default='any', pos=1), 
+                    P(arg='perm', help='Permission', choices=['w','r','x','any'], default='r', pos=2),
+                    P(arg='rpath', help='Remote starting path', default='.', pos=3)
                     )
     
     

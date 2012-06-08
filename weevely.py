@@ -36,8 +36,8 @@ general_usage = '''[+] Start telnet-like session
 [+] Run shell command o module
     weevely <url> <password> [ <command> | :<module name> ]  ..
 
-[+] Generate PHP backdoor. 
-    weevely generate <password>  ..  
+[+] Generate PHP backdoor
+    weevely generate <password> [ <path> ] ..  
 
 [+] Show modules help
     weevely show [module name]
@@ -45,7 +45,7 @@ general_usage = '''[+] Start telnet-like session
 Available generators
 
 %s
-Available modules:
+Available modules
 
 %s'''  
     
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         
                         
 
-    elif len(sys.argv) > 3 and sys.argv[1].startswith('http'):
+    elif len(sys.argv) > 3:
 
         url = sys.argv[1]
         password = sys.argv[2]        
@@ -98,7 +98,7 @@ if __name__ == "__main__":
                 modname = sys.argv[4]
             print ModHandler(url, password).helps(modname)
             
-        else:
+        elif sys.argv[1].startswith('http') or sys.argv[3] == ':set':
         
             try:
                 terminal = Terminal (ModHandler(url, password), True)
@@ -112,6 +112,8 @@ if __name__ == "__main__":
                 print e
             except KeyboardInterrupt:
                 print '\n[!] Exiting. Bye ^^'
+                
+        
     else:
         
         print general_usage % ( ModHandler().summary(only_group='generate'), ModHandler().summary(exclude_group='generate'))

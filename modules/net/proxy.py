@@ -173,4 +173,10 @@ class Proxy(Module):
 #        except Exception, errtxt:
 #           print errtxt
 
-        self.__run_proxy_server(rurl, lport)
+        try:
+            self.__run_proxy_server(rurl, lport)
+        except Exception, e:
+            raise ModuleException(self.name,'Proxy start on port %i failed with error %s' % (lport, str(e)) )
+        
+        
+        

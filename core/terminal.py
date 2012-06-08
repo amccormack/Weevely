@@ -46,7 +46,7 @@ class Terminal(Enviroinment):
         self.one_shot = one_shot
 
         self.configs = Configs()
-        self.__load_rcfile(dirpath + rcfilepath)
+        self.__load_rcfile(dirpath + rcfilepath, default_rcfile=True)
     
         if not one_shot:
             Enviroinment.__init__(self)
@@ -164,20 +164,31 @@ class Terminal(Enviroinment):
                 print '[!] [%s] Error: %s' % (e.module, e.error) 
            
 
-    def __load_rcfile(self, path = None):
-        
-        if path:
-            for cmd in self.configs.read_rc(os.path.expanduser(path)):
+    def __load_rcfile(self, path, default_rcfile=False):
+            
+        path = os.path.expanduser(path)
+            
+        if default_rcfile:
+            if not os.path.exists(path):
                 
-                cmd       = cmd.strip()
+                try:
+                    rcfile = open(path, 'w').close()
+                except Exception, e:
+                    print "[!] Error creating '%s' rc file." % path
+                else:
+                    return []
+            
+        for cmd in self.configs.read_rc(path):
+            
+            cmd       = cmd.strip()
+            
+            if cmd:
+                print '[rc] %s' % (cmd)
                 
-                if cmd:
-                    print '[rc] %s' % (cmd)
-                    
-                    if cmd[0] == module_trigger:
-                        self.run_module_cmd(shlex.split(cmd))
-                    else:
-                        self.run_line_cmd(cmd)    
-    
+                if cmd[0] == module_trigger:
+                    self.run_module_cmd(shlex.split(cmd))
+                else:
+                    self.run_line_cmd(cmd)    
+
         
         

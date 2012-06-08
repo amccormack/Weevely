@@ -15,25 +15,12 @@ class Configs:
             
         self.historyfile = self.__historyfile()
             
-    def read_rc(self, rcpath = None):
-        
-        if not rcpath:
-            rcpath = self.dirpath + rcfilepath
-        
-        
-        if not os.path.exists(rcpath):
+    def read_rc(self, rcpath):
             
-            try:
-                rcfile = open(rcpath, 'w').close()
-            except Exception, e:
-                print "[!] Error creating rc file."
-            else:
-                return []
-        
         try:
             rcfile = open(rcpath, 'r')
         except Exception, e:
-            print "[!] Error opening rc file."
+            print "[!] Error opening '%s' file." % rcpath
         else:
             return [c for c in rcfile.read().split('\n') if c and c[0] != '#']
         

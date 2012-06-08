@@ -56,7 +56,7 @@ class Tcp(Module):
             
         if not self.done:
             self.last_vector = None
-            self.mprint("[%s] No backdoor method worked. Assure port is not busy." % (self.name))
+            self.mprint("[%s] No vector works. Check port '%i' availability and privileges" % (self.name, port))
 
                 
     def __execute_payload(self, vector, parameters):
@@ -76,7 +76,7 @@ class Tcp(Module):
     def __check_module_state(self):
         if self.last_vector and not self.done:
             self.params.set_and_check_parameters({'vector' : self.last_vector})
-            self.mprint('[%s] Port \'%s\' seems open. Use telnet to connect end commands with semicolon' % (self.name, self.last_vector))
+            self.mprint('[%s] Port open. Run telnet to connect and terminate commands using semicolon' % (self.name))
             self.done = True
            
     

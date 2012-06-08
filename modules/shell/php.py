@@ -21,7 +21,7 @@ class Php(Module):
     '''
     
     params = ParametersList('PHP command shell', [],
-                             P(arg='cmd', help='PHP commands. Terminate with semi-comma', required=True, pos=0),
+                             P(arg='cmd', help='PHP command enclosed with brackets and terminated by semi-comma', required=True, pos=0),
                              P(arg='mode', help='Obfuscation mode', choices = ['Cookie', 'Referer' ]),
                              P(arg='proxy', help='HTTP proxy'),
                              P(arg='debug', help='Enable requests and response debug', type=bool, default=False, hidden=True)
@@ -132,8 +132,10 @@ class Php(Module):
         except NoDataException, e:
             self.mprint( "Response: NoData", debug_level)
             pass
+        except IOError, e:
+            self.mprint('[!] %s. Are backdoor URL or proxy reachable?' % e.strerror)
         except Exception, e:
-            self.mprint('[!] Error requesting data: check URL or your internet connection.')
+            self.mprint('[!] Error connecting to backdoor URL or proxy')
         else:
                     
             if  'error' in resp and 'eval()\'d code' in resp:

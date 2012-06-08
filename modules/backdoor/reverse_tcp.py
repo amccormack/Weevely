@@ -60,8 +60,8 @@ class Reversetcp(Module):
             
         if not self.done:
             self.last_vector = None
-            self.mprint("[%s] No reverse backdoor method worked. Assure remote port is" % (self.name))
-            self.mprint("[%s] listening using commands like \'nc -v -l -p <port>\'" % (self.name))
+            self.mprint("[%s] No reverse backdoor vector worked. Check if port is listening or" % (self.name))
+            self.mprint("[%s] spawn it using \'nc -v -l -p <port>\'" % (self.name))
 
                 
 
@@ -82,7 +82,7 @@ class Reversetcp(Module):
     def __check_module_state(self):
         if self.last_vector and not self.done:
             self.params.set_and_check_parameters({'vector' : self.last_vector})
-            self.mprint('[%s] Reverse backdoor seems connected. If needed end commands with semicolon' % (self.name, self.last_vector))
+            self.mprint('[%s] Reverse backdoor connected. End commands with semicolon' % (self.name))
             self.done = True
            
         

@@ -80,7 +80,7 @@ class Download(Module):
             if not (self.transfer_dir and self.transfer_url_dir and self.file_path):
                 
                 self.modhandler.set_verbosity(2)
-                if not self.modhandler.load('find.webdir').run({'rpath': 'auto'}):
+                if not self.modhandler.load('find.webdir').run({'rpath': 'find'}):
                     self.modhandler.set_verbosity()
                     return
                 self.modhandler.set_verbosity()

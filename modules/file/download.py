@@ -101,7 +101,6 @@ class Download(Module):
             
             payload = self.__prepare_payload(vector, [remote_path])
             
-            
         response = self.modhandler.load(vector.interpreter).run({0 : payload})
         
         if response:
@@ -114,26 +113,24 @@ class Download(Module):
    
      
      
-    def __process_response(self,response, remote_path, local_path):
+    def __process_response(self, response, remote_path, local_path):
         
         if self.vector.name == 'copy' or self.vector.name == 'symlink':
-            
             
             if not self.file_path.endswith('.html') and not self.file_path.endswith('.htm'):
                 self.mprint("[%s] Warning, method '%s' use HTTP file download. Assure that remote file\n[%s] has a downloadable extension like 'html', or use another vector" % (self.name, self.vector.name, self.name))
                     
             if self.modhandler.load('file.check').run({'rpath' : self.file_path, 'mode': 'exists'}):
                 
-                
                 response = Request(self.url).read()
-                
+
                 if self.modhandler.load('shell.php').run({0: "unlink('%s') && print('1');" % self.file_path}) != '1':
                     self.mprint("[!] [%s] Error cleaning support file %s" % (self.name, self.file_path))
                     
                     
             else:
                     self.mprint("[!] [%s] Error checking existance of %s" % (self.name, self.file_path))
-                
+                    response = None
             
         else:
             if self.encoder_callable:
@@ -142,7 +139,7 @@ class Download(Module):
                 except TypeError:
                     self.mprint("[!] [%s] Error, unexpected file content" % (self.name))
                     
-                    
+              
         if response:
 
             try:
@@ -168,9 +165,10 @@ class Download(Module):
 
     def get_last_read_file(self):
         """Get last read file and delete it"""
-        lastreadfile = self.lastreadfile[:]
-        self.lastreadfile=''
-        return lastreadfile
+        if self.lastreadfile:
+            lastreadfile = self.lastreadfile[:]
+            self.lastreadfile=''
+            return lastreadfile
      
     def run_module(self, remote_path, local_path):
     
@@ -182,6 +180,7 @@ class Download(Module):
         for vector in vectors:
             
             response = self.__execute_payload(vector, [remote_path, local_path])
+            
             if response != None:
                     
                 file_response = self.__process_response(response, remote_path, local_path)

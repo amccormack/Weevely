@@ -35,17 +35,18 @@ class Enum(Module):
             
             try:
                 list=open(os.path.expanduser(list_path),'r').read().splitlines()
+                self.set_list(list)
             except:
                 raise ModuleException(self.name,  "Error opening path list \'%s\'" % list_path)
         else:
             list = self.pathdict.keys()
-
+            
 
         self.mprint('[%s] Enumerating %i paths' % (self.name, len(list)))
         
         
         for path in list:
-            
+
             output = path + '' + '\t'*(3-((len(path)+1)/8))
             
             if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'exists'}):

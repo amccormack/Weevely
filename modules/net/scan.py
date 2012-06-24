@@ -208,7 +208,7 @@ $str = base64_decode($_POST["%s"]);
 foreach (explode(',', $str) as $s) {
 $s2 = explode(' ', $s);
 foreach( explode('|', $s2[1]) as $p) {
-if($fp = fsockopen("$s2[0]", $p, $timeout=1)) {print("\nOPEN: $s2[0]:$p\n"); fclose($fp);}
+if($fp = fsockopen("$s2[0]", $p, $n, $e, $timeout=1)) {print("\nOPEN: $s2[0]:$p\n"); fclose($fp);}
 else { print("."); }    
 }}
 """

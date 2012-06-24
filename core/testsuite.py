@@ -197,6 +197,7 @@ TS = [
       TG('scan', 'Network scanning',
         [
         TC([ urlpwd, ':net.scan localhost 12,30,40,70-90,2555' ], 'OPEN: 127.0.0.1:80'),
+        TC([ urlpwd, ':net.scan www.google.it 12,30,40,70-90,2555' ], 'OPEN: www.google.it:80'),
         TC([ urlpwd, ':net.scan localhost 12,30' ], 'OPEN', negate=True)
         ])
       

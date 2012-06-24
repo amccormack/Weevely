@@ -22,7 +22,7 @@ def format_arglist(module_arglist):
     pos = 0
     for arg in module_arglist:
         if '=' in arg:
-            name, value = arg.split('=')
+            name, value = arg.split('=',1)
         else:
             name = pos
             value = arg

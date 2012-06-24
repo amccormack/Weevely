@@ -58,8 +58,6 @@ class Sql_users(Module):
                                                                              
                 if response:
                     self.mprint(response)
-                else:
-                    self.mprint('[%s] Password of \'%s\' not found' % (self.name, user))
                 
                
                 

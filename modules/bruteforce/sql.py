@@ -126,9 +126,9 @@ break;
                 if response.startswith('+'):
                     return "[%s] FOUND! (%s)" % (self.name,response[1:])
             else:
-                self.mprint("Try #%i: (%s:%s) ..." % (endword+start_line, parameters[2], wl[endword-1]))
+                self.mprint("Tried password #%i: (%s:%s) ..." % (endword+start_line, parameters[2], wl[endword-1]))
 
-        self.mprint('[%s] Password not found. Check mysql connection, username or get a bigger wordlist.' % self.name);
+        self.mprint('[%s] Password of \'%s\' not found. Check dbms connection or try with another username and wordlist' % (self.name, parameters[2]));
 
     def __prepare_payload( self, vector, parameters ):
 

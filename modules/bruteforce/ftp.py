@@ -67,7 +67,7 @@ break;
             try:
                 wordlist = open(filename, 'r')
             except Exception, e:
-                raise ModuleException(self.name, "Error opening %s: %s" % (filename, str(e)))
+                raise ModuleException(self.name, "%s" % (str(e)))
     
             wl_splitted = [ w.strip() for w in wordlist.read().split() ]
 
@@ -130,7 +130,9 @@ break;
                     if response.startswith('+'):
                         return "[%s] FOUND! (%s)" % (self.name,response[1:])
                 else:
-                    self.mprint("Try #%i: (%s:%s) ..." % (endword+start_line, parameters[2], wl[endword]))
+                    self.mprint("Tried password #%i: (%s:%s) ..." % (endword+start_line, parameters[2], wl[endword-1]))
+    
+            self.mprint('[%s] Password of \'%s\' not found. Check ftp connection or try with another username and wordlist' % (self.name, parameters[2]));
 
 
     def __prepare_payload( self, vector, parameters, payloadnum = 0 ):

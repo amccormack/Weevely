@@ -10,7 +10,6 @@ import random
 from core.parameters import ParametersList, Parameter as P
 
 classname = 'Console'
- 
 
     
 class Console(Module):

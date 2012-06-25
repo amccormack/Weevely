@@ -19,7 +19,8 @@ class Dump(Module):
 
     
     vectors = VectorList( [
-            Vector('shell.sh', 'mysqldump', "mysqldump -h %s -u %s --password=%s %s %s") ,
+            Vector('shell.sh', 'mysqldump', "mysqldump -h %s -u %s --password=%s %s %s --single-transaction") ,
+            # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527
             Vector('shell.php', 'mysqlphpdump', """
 function dmp ($table)
 {

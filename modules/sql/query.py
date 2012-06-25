@@ -57,6 +57,9 @@ echo $table."\n";
             if response != None:
                 self.params.set_and_check_parameters({'vector' : vector.name})
                 return response
+            
+        
+        self.mprint('[%s] No query response. Check query, credentials and dbms availability.' % (self.name))
                 
         
     def __execute_payload(self, vector, parameters):

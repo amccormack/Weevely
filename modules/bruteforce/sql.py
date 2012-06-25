@@ -66,7 +66,7 @@ break;
             try:
                 wordlist = open(filename, 'r')
             except Exception, e:
-                raise ModuleException(self.name, "Error opening %s: %s" % (filename, str(e)))
+                raise ModuleException(self.name, "%s" % (str(e)))
     
             wl_splitted = [ w.strip() for w in wordlist.read().split() ]
             

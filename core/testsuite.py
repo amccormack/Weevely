@@ -15,6 +15,8 @@ http_proxy = "http://localhost:8080"
 bd_tcp_port = 9090
 mysql_user = 'root'
 mysql_pwd = 'root'
+ftp_user = 'weev-test'
+ftp_pwd = 'weev-test'
 
 
 
@@ -56,10 +58,10 @@ asdasd
 thisiswrongpassword
 kjdsa
 #comment?
+%s
 asd
 %s
-anotherwrongpassword
-""" % (mysql_pwd)
+""" % (ftp_pwd, mysql_pwd)
            
            }
 
@@ -220,15 +222,26 @@ TS = [
         TC([ urlpwd, ':net.scan localhost 12,30' ], 'OPEN', negate=True)
         ]),
       
-      TG('brutesql', 'SQL browsing and forcing',
+      TG('brutesql', 'SQL forcing',
         [
         TC([ urlpwd, ':bruteforce.sql mysql %s /tmp/wordlist' % (mysql_user) ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
+        TC([ urlpwd, ':bruteforce.sql_users mysql /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
         TC([ urlpwd, ':bruteforce.sql postgres %s /tmp/wordlist' % (mysql_user) ], 'pg_connect not available'),
-        TC([ urlpwd, ':bruteforce.sql mysql blabla /tmp/wordlist' ], 'Password not found'),
+        TC([ urlpwd, ':bruteforce.sql mysql blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
         
         ]),
       
+      # TODO: Entrambi i force non testano l'ultima pwd
       
+      
+      TG('bruteftp', 'FTP forcing',
+        [
+        #TC([ urlpwd, ':bruteforce.ftp_users /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
+        TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlist' % (ftp_user) ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
+        TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlista' % (mysql_user) ], 'No such file or directory'),
+        TC([ urlpwd, ':bruteforce.ftp blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
+
+        ]),
       
       ]       
     
@@ -254,12 +267,13 @@ def parse_testlist_parameters():
     
     tslist = []
     if len(argv) >= 2:
-        splittedlist = argv[1].split(',')
-        for par in splittedlist:
+        for par in argv[1:]:
             if par.isdigit():
                 tslist.append(int(par))
             else:
                 tslist.append(par)
+    else:
+        print '[TESTSUITE] Specify tests or \'all\'. Available tests:\n[TESTSUITE] "%s"' % ('", "'.join([tg.name for tg in TS]))
     
     return tslist
        
@@ -268,7 +282,7 @@ def run_tests(tslist):
     try:
         i = 0
         for ts in TS:       
-            if not tslist or ts.name in tslist or i in tslist:
+            if 'all' in tslist or ts.name in tslist or i in tslist:
                 ts.test()
                 
             i+=1
@@ -278,7 +292,8 @@ def run_tests(tslist):
     
 if __name__ == "__main__":
     
-    initialize_enviroinment()
     tslist = parse_testlist_parameters()
-    run_tests(tslist)
-    restore_enviroinment()
+    if tslist:
+        initialize_enviroinment()
+        run_tests(tslist)
+        #restore_enviroinment()

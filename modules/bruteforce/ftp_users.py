@@ -39,7 +39,11 @@ class Ftp_users(Module):
         usersresponse = self.modhandler.load('audit.etc_passwd').run({ 'filter' : 'True'})
         
         if usersresponse:
-            users = [ u.name for u in self.modhandler.load('audit.etc_passwd').usersinfo ]
+
+            usersdict = self.modhandler.load('audit.etc_passwd').usersinfo
+            
+            users = [ usersdict[u].name for u in usersdict ]
+
             
             for user in users:
                 
@@ -47,16 +51,13 @@ class Ftp_users(Module):
                     wl_splitted = self.__generate_wl_from_user(user)
                 else:
                     wl_splitted = self.__generate_wl_from_user(user) + wl_splitted
-            
                 
                 self.modhandler.load('bruteforce.ftp').set_substitutive_wl(wl_splitted)
-                response = self.modhandler.load('bruteforce.ftp').run({'user' : user, 'lpath' : '', 'sline' : 0, 'host' : host, 'port' : port})
+                response = self.modhandler.load('bruteforce.ftp').run({'user' : user, 'lpath' : '/tmp/wordlist', 'sline' : 'all', 'host' : host, 'port' : port})
                 
                 
                 if response:
                     self.mprint(response)
-                else:
-                    self.mprint('[%s] Password of \'%s\' not found' % (self.name, user))
                 
                
                 

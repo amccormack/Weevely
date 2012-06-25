@@ -147,12 +147,16 @@ class ParametersList:
                         check=False
                     
                     if param.type:
-                        try:
-                            value = ast.literal_eval(value)
-                        except ValueError:
-                            print '[!] Error, allowed type %s: %s' % (self.__print_namepos(namepos), repr(param.type))             
-                            check=False
-    
+                        
+                        # Check if passed parameter is a string, in case conver
+                        if isinstance(value,str):
+                            try:
+                                value = ast.literal_eval(value)
+                            except ValueError:
+                                print '[!] Error, allowed type %s: %s' % (self.__print_namepos(namepos), repr(param.type))             
+                                check=False
+                                
+                        # Check instance
                         if not isinstance(value, param.type):
                             print '[!] Error, allowed type %s: %s' % (self.__print_namepos(namepos), repr(param.type)) 
                             check=False

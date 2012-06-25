@@ -15,7 +15,6 @@ classname = 'Summary'
     
 class Summary(Module):
     '''Get SQL database summary
-    :sql.summary mysql|postgres <host> <user> <pass> <db name>  
     '''
     
     vectors = VectorList( [
@@ -87,7 +86,7 @@ class Summary(Module):
         if self.structure[db]:
             self.__print_db()
         else:
-            self.mprint('[%s] Error getting database structure, no response' % (self.name))
+            self.mprint('[%s] Error getting database structure. Check dbms availability and credentials.' % (self.name))
 
     def __prepare_payload( self, vector, parameters , parameter_num):
 

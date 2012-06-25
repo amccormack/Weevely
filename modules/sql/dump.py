@@ -75,6 +75,7 @@ function dmp ($table)
         $result .= "-- table is empty";
     return $result . "\n\n";
 }
+ini_set('mysql.connect_timeout',1);
 mysql_connect("%s","%s","%s");
 $db_name = "%s";
 $db_table_name = "%s";

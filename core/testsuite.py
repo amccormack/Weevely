@@ -225,6 +225,8 @@ TS = [
       TG('brutesql', 'SQL forcing',
         [
         TC([ urlpwd, ':bruteforce.sql mysql %s /tmp/wordlist' % (mysql_user) ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
+        TC([ urlpwd, ':bruteforce.sql_users mysql /tmp/wordlist filtered.com' ], 'Check dbms availability'),
+        TC([ urlpwd, ':bruteforce.sql mysql user /tmp/wordlist all nonexistant.host' ], 'Check dbms availability'),
         TC([ urlpwd, ':bruteforce.sql_users mysql /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
         TC([ urlpwd, ':bruteforce.sql postgres %s /tmp/wordlist' % (mysql_user) ], 'pg_connect not available'),
         TC([ urlpwd, ':bruteforce.sql mysql blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
@@ -236,11 +238,19 @@ TS = [
       
       TG('bruteftp', 'FTP forcing',
         [
-        TC([ urlpwd, ':bruteforce.ftp_users /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
         TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlist' % (ftp_user) ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
+        TC([ urlpwd, ':bruteforce.ftp_users /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
+        TC([ urlpwd, ':bruteforce.ftp user /tmp/wordlist all filtered.com 22' ], 'service not available'),
+        TC([ urlpwd, ':bruteforce.ftp user /tmp/wordlist all notexistant.host' ], 'service not available'),
         TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlista' % (mysql_user) ], 'No such file or directory'),
         TC([ urlpwd, ':bruteforce.ftp blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
-
+        ]),
+      
+      
+      TG('sql', 'SQL',
+        [
+        TC([ urlpwd, ':sql.summary mysql %s %s information_schema' % (mysql_user, mysql_pwd) ], 'TABLE: USER_PRIVILEGES' ),
+        TC([ urlpwd, ':sql.summary mysql %s %s information_schema badhost.com' % (mysql_user, mysql_pwd) ], 'Check dbms availability' ),
         ]),
       
       ]       

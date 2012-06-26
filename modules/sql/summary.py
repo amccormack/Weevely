@@ -10,7 +10,6 @@ import random
 from core.parameters import ParametersList, Parameter as P
 
 classname = 'Summary'
- 
 
     
 class Summary(Module):
@@ -56,13 +55,19 @@ class Summary(Module):
         pwd = parameters[3]
         db = parameters[4]
         
-        self.modhandler.set_verbosity(2)
         
         self.structure[db] = {}
-          
+        
+        # databases
+        payload = self.__prepare_payload(vector, [], 0) 
+        response = self.modhandler.load(vector.interpreter).run({'dbms' : mode, 'user' : user, 'pwd': pwd, 'query' : payload, 'host' : host})
+        print 'DATABASE LIST: \n\'%s\'' % response
+        
+        
+        self.modhandler.set_verbosity(4)
+        
         # tables
         payload = self.__prepare_payload(vector, [db], 1) 
- 
         response = self.modhandler.load(vector.interpreter).run({'dbms' : mode, 'user' : user, 'pwd': pwd, 'query' : payload, 'host' : host})
         
         if response:
@@ -86,7 +91,7 @@ class Summary(Module):
         if self.structure[db]:
             self.__print_db()
         else:
-            self.mprint('[%s] Error getting database structure. Check dbms availability and credentials.' % (self.name))
+            self.mprint('[%s] Error getting database structure, check credentials, query and dbms availability.' % (self.name))
 
     def __prepare_payload( self, vector, parameters , parameter_num):
 

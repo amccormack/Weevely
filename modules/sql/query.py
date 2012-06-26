@@ -25,15 +25,16 @@ $result = $q("%s");
 while (list($table) = $f($result)) {
 echo $table."\n";
 }
+mysql_close();
 }""", """
 $c="%s"; $q="%s"; $f="%s"; $h="%s"; $u="%s"; $p="%s";
 $result = $q("%s");
 if($result) {
-print("[!] Error connecting to '$u:$p@$h', trying with default user@localhost:\n");
 while (list($table) = $f($result)) {
 echo $table."\n";
 }
 }
+mysql_close();
 """])
             ])
 
@@ -61,13 +62,14 @@ echo $table."\n";
         if not vectors:
             vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
         for vector in vectors:
+
             response = self.__execute_payload(vector, [sql_connect, sql_query, sql_fetch, host, user, pwd, query])
             if response != None:
                 self.params.set_and_check_parameters({'vector' : vector.name})
                 return response
             
         
-        self.mprint('[%s] No query response. Check query, credentials and dbms availability.' % (self.name))
+        self.mprint('[%s] No response, check credentials and dbms availability.' % (self.name))
                 
         
     def __execute_payload(self, vector, parameters):
@@ -75,14 +77,15 @@ echo $table."\n";
         payload = self.__prepare_payload(vector, parameters) 
         response = self.modhandler.load(vector.interpreter).run({ 0: payload })
         
-        
         if not response:
             
             payload = self.__prepare_payload(vector, parameters, 1) 
             response = self.modhandler.load(vector.interpreter).run({ 0: payload })
             
-            
             if response:
+                
+                self.mprint("[%s] Error connecting to '%s:%s@%s', using default (query 'SELECT USER();' to print out)" % (self.name, parameters[3], parameters[4], parameters[5]),  3);
+                
                 return response
         else:
             return response

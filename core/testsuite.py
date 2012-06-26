@@ -2,6 +2,7 @@ from commands import getstatusoutput as run
 from os import system as run_bg, getenv, remove
 from re import search, DOTALL
 from sys import argv
+import types
 
 class TestException(Exception):
     pass
@@ -87,8 +88,16 @@ class TG(list):
 
 class TC:
     def __init__(self, params, expected_output, expected_status = None, negate=False, printout=False, background=False):
+        
+        if isinstance(expected_output, types.ListType):
+            self.expected_output = expected_output
+        elif isinstance (expected_output, types.StringTypes):
+            self.expected_output = [ expected_output ]
+        else:
+            print "[!] Error declaring TC expected output"
+
         self.params = params
-        self.output = '.*%s.*' % expected_output
+        
         self.status = expected_status
         self.negate = negate
         self.printout = printout
@@ -97,6 +106,9 @@ class TC:
     def outp_format(self, out):
         
         return ' \n===============================\n%s\n===============================\n' % out
+
+
+
 
     def test(self):
             
@@ -111,13 +123,21 @@ class TC:
         else:
             cmd_string = './weevely.py %s' % (' '.join(self.params))
             status, output = run(cmd_string)
-            if self.negate != bool(search(self.output, output, flags=DOTALL)):
-                result = 'OK'
+            for expected in self.expected_output:
+                if self.negate != bool(search('.*%s.*' % expected, output, flags=DOTALL)):
+                    # Only one test passed in enough
+                    
+                    if self.negate:
+                        result = "OK NOT [ '%s' ]" % "', '".join(self.expected_output)
+                    else:
+                        result = "OK [ '%s' ]" % (expected)
+                    
+                    break
 
-        print '[%s] %s' % (result, cmd_string) 
+        print '[+] %s .. %s' % (cmd_string, result) 
 
         if result == 'KO':
-            raise TestException('Test failed. Expected output: "%s"\n %s' % (self.output, self.outp_format(output)))
+            raise TestException('Test failed. Expected output: \'%s\'\n %s' % ("', '".join(self.expected_output), self.outp_format(output)))
         
         if self.printout:
             print self.outp_format(output)
@@ -232,10 +252,7 @@ TS = [
         TC([ urlpwd, ':bruteforce.sql mysql blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
         
         ]),
-      
-      # TODO: Entrambi i force non testano l'ultima pwd
-      
-      
+
       TG('bruteftp', 'FTP forcing',
         [
         TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlist' % (ftp_user) ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
@@ -249,8 +266,32 @@ TS = [
       
       TG('sql', 'SQL',
         [
-        TC([ urlpwd, ':sql.summary mysql %s %s information_schema' % (mysql_user, mysql_pwd) ], 'TABLE: USER_PRIVILEGES' ),
-        TC([ urlpwd, ':sql.summary mysql %s %s information_schema badhost.com' % (mysql_user, mysql_pwd) ], 'Check dbms availability' ),
+
+        TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;" filtered.com' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),
+        TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;" nonexistant.host' % (mysql_user, mysql_pwd) ], ['using default', 'check credential'] ),
+        TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;"' % (mysql_user, mysql_pwd) ], 'information_schema' ),
+        TC([ urlpwd, ':sql.query mysql %s %s "WRONG_CMD"' % (mysql_user, mysql_pwd) ], 'check credential' ),        
+        
+        # Good with mysqldump and mysqlphpdump
+        TC([ urlpwd, ':sql.dump mysql %s %s information_schema vector=mysqlphpdump' % (mysql_user, mysql_pwd) ], 'Saving \'.*\' dump' ),        
+        TC([ urlpwd, ':sql.dump mysql %s %s information_schema vector=mysqldump' % (mysql_user, mysql_pwd) ], 'Saving \'.*\' dump' ),        
+        
+        # Bad with mysqlphpdump
+        TC([ urlpwd, ':sql.dump mysql Asd asd information_schema vector=mysqlphpdump' ], ['using default', 'check credential' ] ), 
+        TC([ urlpwd, ':sql.dump mysql %s %s baddb vector=mysqlphpdump' % (mysql_user, mysql_pwd) ], 'check credential' ),        
+        
+        #Bad with mysqldump
+        TC([ urlpwd, ':sql.dump mysql %s %swrong information_schema vector=mysqldump' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),        
+        TC([ urlpwd, ':sql.dump mysql %s %s baddb vector=mysqldump' % (mysql_user, mysql_pwd) ], 'check credential'  ),        
+
+        #Summary good
+        TC([ urlpwd, ':sql.summary mysql %s %s information_schema' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ], negate=True ),
+        TC([ urlpwd, ':sql.summary mysql %s %swrong information_schema filtered.com' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),
+        TC([ urlpwd, ':sql.summary mysql %swrong %s information_schema nonexistant.host' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ]  ),
+        TC([ urlpwd, ':sql.summary mysql %s %s baddb' % (mysql_user, mysql_pwd) ], [ 'check credential' ]  ),
+
+             
+
         ]),
       
       ]       

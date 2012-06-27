@@ -55,7 +55,7 @@ class Upload(Module):
         else:
             file_exists = self.modhandler.load('file.check').run({'rpath' : remote_path, 'mode' :'exists'})
             if file_exists:
-                self.mprint('[!] [%s] MD5 hash of \'%s\' file mismatch, file corrupted.' % (self.name, remote_path))
+                self.mprint('[!] [%s] MD5 hash of \'%s\' file mismatch, upload failed' % (self.name, remote_path))
             else:
                 self.mprint ('[!] [%s] File \'%s\' creation failed, check remote path and permissions.' % ( self.name, remote_path))
     

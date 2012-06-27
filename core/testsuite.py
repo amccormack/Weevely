@@ -3,12 +3,13 @@ from os import system as run_bg, getenv, remove
 from re import search, DOTALL
 from sys import argv
 import types
+from commands import getstatusoutput
 
 class TestException(Exception):
     pass
 
-
-url = 'http://localhost/we.php'
+host = 'http://localhost'
+url = '%s/we.php' % host
 pwd = 'asdasd'
 urlpwd = '%s %s' % (url, pwd)
 writable_dir = 'writable'
@@ -18,8 +19,6 @@ mysql_user = 'root'
 mysql_pwd = 'root'
 ftp_user = 'weev-test'
 ftp_pwd = 'weev-test'
-
-
 
 
 home = getenv("HOME")
@@ -62,7 +61,9 @@ kjdsa
 %s
 asd
 %s
-""" % (ftp_pwd, mysql_pwd)
+""" % (ftp_pwd, mysql_pwd),
+
+            '/tmp/image.gif' : 'http://upload.wikimedia.org/wikipedia/commons/4/4b/Empty.gif'
            
            }
 
@@ -290,9 +291,35 @@ TS = [
         TC([ urlpwd, ':sql.summary mysql %swrong %s information_schema nonexistant.host' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ]  ),
         TC([ urlpwd, ':sql.summary mysql %s %s baddb' % (mysql_user, mysql_pwd) ], [ 'check credential' ]  ),
 
-             
-
         ]),
+
+
+      TG('generatephp', 'Generate and upload PHP backdoor',
+        [
+        TC([ 'generate password /tmp/testbd.php' ], 'Backdoor file \'/tmp/testbd.php\' created with password \'password\''),
+        TC([ urlpwd, ':file.upload /tmp/testbd.php %s/testbd.php' % writable_dir ], 'File.*uploaded'),
+        TC([ '%s/%s/testbd.php password' % (host, writable_dir), ':system.info os' ], 'Linux'),
+        TC([ '%s/%s/testbd.php password' % (host, writable_dir), 'rm testbd.php' ], ''),
+        TC([ '%s/%s/testbd.php password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
+        ]),
+      
+        TG('generateimg', 'Generate and upload backdoor embedded in image',
+        [
+        TC([ 'generate.img password /tmp/image.gif /tmp/generated-image/' ], 'created with password \'password\''),
+        TC([ urlpwd, ':file.upload /tmp/generated-image/image.gif %s/image.gif' % (writable_dir) ], 'File.*uploaded'),
+        TC([ urlpwd, ':file.upload /tmp/generated-image/.htaccess %s/.htaccess' % (writable_dir) ], 'File.*uploaded'),
+        TC([ '%s/%s/image.gif password' % (host, writable_dir), ':system.info os' ], 'Linux'),
+        TC([ urlpwd, 'rm %s/.htaccess' % (writable_dir)], ''),
+        TC([ '%s/%s/image.gif password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
+        TC([ urlpwd, 'rm %s/image.gif' % (writable_dir)], ''),
+        
+        
+        ]),
+
+      
+      # TODO: fare l'rm e cancellare tutti i file temporanei
+      # Aggiungere il vettore sql da console (magari nn e installato il modulo per php)
+      # Nell'help di generate non si capisce dove si mette la pwd
       
       ]       
     
@@ -307,10 +334,15 @@ def restore_enviroinment():
 def initialize_enviroinment():
     
     for script_path in scripts:
-        fscript = file(script_path,'w')
-        fscript.write(scripts[script_path])
-        fscript.close()
-    
+        if scripts[script_path].startswith('http'):
+            
+            getstatusoutput('wget %s -O %s' % (scripts[script_path], script_path))
+            
+        else:
+            fscript = file(script_path,'w')
+            fscript.write(scripts[script_path])
+            fscript.close()
+        
     print '[+] Created script files: "%s"' % '", "'.join(scripts.keys())
 
        

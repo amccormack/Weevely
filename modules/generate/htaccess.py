@@ -17,7 +17,7 @@ AddType application/x-httpd-php .htaccess
 '''
 
 
-    params = ParametersList('PHP embedded in .htaccess file', [],
+    params = ParametersList('Create backdoor in .htaccess file (needs remote AllowOverride)', [],
                         P(arg='path', help='Path', default='.htaccess', pos=0))
 
 

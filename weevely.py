@@ -25,10 +25,22 @@ from core.helper import Helper
 
 import sys
     
-print '''
-Weevely 0.6 - Generate and manage stealth PHP backdoors
-              Emilio Pinna 2011-2012            
+#print '''
+#Weevely 0.6 - Generate and manage stealth PHP backdoors
+#              Emilio Pinna 2011-2012            
+#'''
+
+print '''      ________                      __
+     |  |  |  |-----.----.-.--.----'  |--.--.  
+     |  |  |  |  -__| -__| |  | -__|  |  |  |  
+     |________|_____|____|___/|____|__|___  | 
+                                      |_____| v0.7
+
+                          Stealth tiny web shell
 '''
+
+
+
    
 general_usage = '''[+] Start telnet-like session
     weevely <url> <password> 

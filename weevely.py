@@ -30,13 +30,12 @@ import sys
 #              Emilio Pinna 2011-2012            
 #'''
 
-print '''      ________                      __
-     |  |  |  |-----.----.-.--.----'  |--.--.  
-     |  |  |  |  -__| -__| |  | -__|  |  |  |  
-     |________|_____|____|___/|____|__|___  | 
-                                      |_____| v0.7
-
-                          Stealth tiny web shell
+print '''      ________                      __ 
+     |  |  |  |-----.----.-.--.----'  |--.--.
+     |  |  |  |  -__| -__| |  | -__|  |  |  | 
+     |________|_____|____|___/|____|__|___  | v0.7
+                                      |_____| 
+               Stealth tiny web shell 
 '''
 
 
@@ -66,7 +65,7 @@ if __name__ == "__main__":
     
     if  len(sys.argv) == 3 and sys.argv[1].startswith('http'):
         
-        print "[+] Starting terminal. Shell probe may take a while..."
+        print "[+] Starting terminal, shell probe may take a while"
         
         url = sys.argv[1]
         password = sys.argv[2]

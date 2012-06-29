@@ -18,7 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
-from core.terminal import Terminal, module_trigger, format_arglist
+from core.terminal import Terminal, module_trigger
 from core.modules_handler import ModHandler
 from core.module import ModuleException
 from core.helper import Helper

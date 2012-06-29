@@ -19,6 +19,8 @@ mysql_user = 'root'
 mysql_pwd = 'root'
 ftp_user = 'weev-test'
 ftp_pwd = 'weev-test'
+#remote_page = 'http://www.google.com'
+remote_page = 'http://localhost/google.html'
 
 
 home = getenv("HOME")
@@ -162,11 +164,9 @@ TS = [
         [
         TC([ urlpwd, ':set shell.sh cmd\=ls' ],'cmd=ls'),   # set variable with =
         TC([ urlpwd, ':set shell.sh ls' ],'cmd=ls'),   # set variable without =
-        TC([ urlpwd, ':set shell.sh cmmd=ls' ],'invalid parameter'),   # set with good :mod cmdline
-        TC([ urlpwd[3:], ':set shell.php verbose=True' ],'Error'),   # set with wrong url cmdline
-        TC([ urlpwd, ':set sad.asd.ds verbose=True' ],'Error')   # set with non existant mod
+        TC([ urlpwd, ':set shell.php debug=True ' ],'\[debug=True\]'),   
+        TC([ urlpwd, ':set sad.asd.ds debug=True' ],'Error')   # set with non existant mod
         ]),
-      
 
       TG('load', 'Test "load"',
         [
@@ -239,7 +239,7 @@ TS = [
       TG('scan', 'Network scanning',
         [
         TC([ urlpwd, ':net.scan localhost 12,30,40,70-90,2555' ], 'OPEN: 127.0.0.1:80'),
-        TC([ urlpwd, ':net.scan www.google.it,localhost 12,30,40,70-90,2555' ], 'OPEN: .*:80.*OPEN: 127.0.0.1:80'),
+        #TC([ urlpwd, ':net.scan www.google.it,localhost 12,30,40,70-90,2555' ], 'OPEN: .*:80.*OPEN: 127.0.0.1:80'),
         TC([ urlpwd, ':net.scan localhost 12,30' ], 'OPEN', negate=True)
         ]),
       
@@ -326,7 +326,7 @@ TS = [
 	TG('phpproxy', 'Upload and test phpproxy',
         [
         TC([ urlpwd, ':net.php_proxy' ], 'proxy.*uploaded'),
-        TC([ urlpwd, '\'curl "%s/%s/weepro.php?u=http://www.google.com"\'' % (host, writable_dir) ], '<title>Google</title>'),
+        TC([ urlpwd, 'curl "%s/%s/weepro.php?u=%s"' % (host, writable_dir, remote_page) ], '<title>Google</title>'),
         ]),
       
 
@@ -334,6 +334,7 @@ TS = [
       # Aggiungere il vettore sql da console (magari nn e installato il modulo per php)
       # Nell'help di generate non si capisce dove si mette la pwd
       # Se mando un = in una stringa eseguita da terminale me lo prende come setting di variabile. Da fixare
+      # sql_disconnect e ftp_disconnect
       
       ]       
     

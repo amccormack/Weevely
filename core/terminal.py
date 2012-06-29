@@ -14,23 +14,6 @@ help_string = ':show'
 set_string = ':set'
 load_string = ':load'
 gen_string = ':generator'
-    
-
-def format_arglist(module_arglist):
-    
-    arguments = {}
-    pos = 0
-    for arg in module_arglist:
-        if '=' in arg:
-            name, value = arg.split('=',1)
-        else:
-            name = pos
-            value = arg
-            
-        arguments[name] = value
-        pos+=1
-    
-    return arguments
 
             
 class Terminal(Enviroinment):
@@ -131,17 +114,15 @@ class Terminal(Enviroinment):
         if module_name not in self.modhandler.modules_classes.keys():
             print '[!] Error module with name \'%s\' not found' % (module_name)
         else:
-           arguments = format_arglist(module_arglist)
            module_class = self.modhandler.modules_classes[module_name]
            
-           check, params = module_class.params.set_and_check_parameters(arguments, oneshot=False)
+           check, params = module_class.params.set_and_check_parameters(module_arglist, oneshot=False)
            
-            
            erroutput = '[%s] ' % module_name
            if not check:
                erroutput += 'Error setting parameters. '
                
-           print '%sValues: %s' % (erroutput, module_class.params.param_summary()),
+           print '%sValues: %s' % (erroutput, module_class.params.summary(print_all_args=True, print_value=True)),
 
  
     def run(self, module_name, module_arglist):        
@@ -152,10 +133,8 @@ class Terminal(Enviroinment):
         if module_name not in self.modhandler.modules_classes.keys():
             print '[!] Error module with name \'%s\' not found' % (module_name)
         else:
-            arguments = format_arglist(module_arglist)
-        
             try:
-                response = self.modhandler.load(module_name).run(arguments)
+                response = self.modhandler.load(module_name).run(module_arglist)
                 if response != None:
                     return response
             except KeyboardInterrupt:

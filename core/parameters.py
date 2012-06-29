@@ -1,4 +1,5 @@
-import ast
+import ast, types
+
 
 class Parameter:
     
@@ -54,53 +55,35 @@ class ParametersList:
         
         self.module_description = module_description
         self.parameters = list(parameters)
+        self.parameters_names = [par.arg for par in self.parameters]
+        
         self.vectors = vectors
         if vectors:
             self.parameters.append(Parameter(arg='vector', help='Specify vector', choices = vectors.get_names_list(), passed = False))
-      
-      
-    def param_summary(self):
-    
-        output=''
-        
-        for parameter in self.parameters:
-                
-            if parameter.hidden:
-                continue
-                
-            if parameter.required:
-                formatarg = '<%s%s%s>' 
-            else:
-                formatarg = '[%s%s%s]' 
-                
-            output += '%s ' % (formatarg % ( parameter.arg, '=', parameter.value))                
-        
-        return output
-        
-        
-      
-    def summary(self):
+            self.parameters_names.append('vector')
+ 
+    def summary(self, print_value = False, print_all_args = False):
         
         output=''
         
+        
         for parameter in self.parameters:
+        
+            value=''
             
-            if parameter.hidden:
+            # Skip vectors and hidden
+            if not print_all_args and (parameter.arg == 'vector' or parameter.hidden):
                 continue
             
-            # Skip printing vectors from summaries
-            if parameter.arg == 'vector':
-                continue
+            if print_value and parameter.value:
+                value='=%s' % parameter.value
             
             if parameter.required:
                 formatarg = '<%s%s>' 
             else:
                 formatarg = '[%s%s]' 
                 
-            if parameter.pos != -1:
-                output += '%s ' % (formatarg % ( parameter.arg, ''))
-            else:
-                output += '%s ' % (formatarg % ( parameter.arg, '='))                
+            output += '%s ' % (formatarg % ( parameter.arg, value))                
         
         return output
     
@@ -127,15 +110,20 @@ class ParametersList:
         return self.summary() + self.help()
         
         
-    def set_and_check_parameters(self, args, oneshot = False):
+    def set_and_check_parameters(self, arglist_argdict, oneshot = False):
         
         check=True
         
         oneshot_parameters = {}
+
+        if isinstance(arglist_argdict, types.DictionaryType):
+            args = arglist_argdict
+        elif isinstance(arglist_argdict, types.ListType):
+            args = self.format_arglist(arglist_argdict)
+        
         
         for namepos in args:
             param = self.__get_parameter(namepos)
-            
         
             if param:
                 value = args[namepos]
@@ -181,7 +169,6 @@ class ParametersList:
                 if not oneshot or not param.passed:
                     param.value = value    
         
-                
                 oneshot_parameters[param.arg] = value
                 
                 
@@ -212,7 +199,6 @@ class ParametersList:
         if par and par.choices:
             return par.choices
         return None
-
 
                 
     def get_parameters_list(self, argdict):
@@ -248,4 +234,20 @@ class ParametersList:
         
         return True, args_list
             
+    
+    def format_arglist(self, module_arglist):
         
+        arguments = {}
+        pos = 0
+        for arg in module_arglist:
+            
+            if '=' in arg and arg.split('=',1)[0] in self.parameters_names:
+                name, value = arg.split('=',1)
+            else:
+                name = pos
+                value = arg
+                
+            arguments[name] = value
+            pos+=1
+        
+        return arguments

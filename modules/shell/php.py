@@ -69,7 +69,7 @@ class Php(Module):
             
             if self.run_module('echo %s;' % (rand)) == rand:
                 self.current_mode = currentmode
-                #self.params.set_and_check_parameters({'mode' : currentmode}, False)
+                self.params.set_and_check_parameters({'mode' : currentmode}, False)
                 break
         
         if not self.current_mode:

@@ -34,13 +34,13 @@ class Module:
     def _probe(self):
         pass
     
-    def run(self, args = {}):
+    def run(self, module_arglist = []):
         
         if not self.modhandler.interpreter:
             self.modhandler.load_interpreters()
             
         output = None
-        check1, argdict = self.params.set_and_check_parameters(args, oneshot=True)
+        check1, argdict = self.params.set_and_check_parameters(module_arglist, oneshot=True)
         
         if check1:
             check2, arglist = self.params.get_parameters_list(argdict)

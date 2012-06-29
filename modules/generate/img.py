@@ -10,7 +10,7 @@ classname = 'Img'
 
 class Img(Module):
 
-    htaccess_template = '''AddType application/x-httpd-php .gif
+    htaccess_template = '''AddType application/x-httpd-php .%s
 '''
 
 
@@ -32,6 +32,14 @@ class Img(Module):
 
     def run_module( self, input_img, output_dir ):
 
+        if not path.exists(input_img):
+            raise ModuleException(self.name, "Image '%s' not found" % input_img)
+        
+        if not '.' in input_img:
+            raise ModuleException(self.name, "Can't find '%s' extension" % input_img)
+        
+        input_img_ext = input_img.split('.').pop()
+        
         if not path.exists(input_img):
             raise ModuleException(self.name, "Image '%s' not found" % input_img)
         
@@ -73,7 +81,7 @@ class Img(Module):
             
         try:
             hout = file( output_htaccess, 'wt' )
-            hout.write( self.htaccess_template )
+            hout.write( self.htaccess_template % input_img_ext )
             hout.close()
         except Exception, e:
             raise ModuleException(self.name, str(e))

@@ -323,10 +323,17 @@ TS = [
         TC([ '%s/%s/.htaccess password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
         ]),
       
+	TG('phpproxy', 'Upload and test phpproxy',
+        [
+        TC([ urlpwd, ':net.php_proxy' ], 'proxy.*uploaded'),
+        TC([ urlpwd, '\'curl "%s/%s/weepro.php?u=http://www.google.com"\'' % (host, writable_dir) ], '<title>Google</title>'),
+        ]),
+      
 
       # TODO: fare l'rm e cancellare tutti i file temporanei
       # Aggiungere il vettore sql da console (magari nn e installato il modulo per php)
       # Nell'help di generate non si capisce dove si mette la pwd
+      # Se mando un = in una stringa eseguita da terminale me lo prende come setting di variabile. Da fixare
       
       ]       
     

@@ -15,14 +15,14 @@ classname = 'PhpProxy'
     
 class PhpProxy(Module):
 
-    params = ParametersList('Install PHP proxy', [],
+    params = ParametersList('Install PHP proxy (needs remote php-curl)', [],
                     P(arg='rdir', help='Remote directory or \'find\' automatically', default='find', pos=0),
                     P(arg='rname', help='Remote file name', default='weepro.php', pos=1))
     
 
     def __get_backdoor(self):
         
-        backdoor_path = 'modules/net/external/php_proxy.php'
+        backdoor_path = 'modules/net/external/phpproxy.php'
 
         try:
             f = open(backdoor_path)
@@ -70,7 +70,7 @@ class PhpProxy(Module):
             response = self.__upload_file_content(phpfile, path)
         
             if response:
-                self.mprint('[%s] Simple PHP proxy uploaded as \'%s\'\n[%s] Use proxy with URL %s?u=http://site.com\n[%s] also to pivoting to internal webservers' % (self.name, path, self.name, url, self.name))
+                self.mprint('[%s] PHP proxy uploaded as \'%s\'\n[%s] Calling %s?u=http://site.com\n[%s] can also pivot to internal webservers' % (self.name, path, self.name, url, self.name))
         
             return
     

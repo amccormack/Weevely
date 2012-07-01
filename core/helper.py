@@ -57,7 +57,7 @@ class Helper:
             for modname in self.modules_names_by_group[group]:
                     
                 # Considering module name with or without :
-                if (modname.startswith(module)) or (modname.startswith(module[1:])) or not module:
+                if not module or (modname.startswith(module)) or (modname.startswith(module[1:])):
                     
                     descr = self.modules_classes[modname].params.module_description
                     usage = self.modules_classes[modname].params.summary()
@@ -65,7 +65,11 @@ class Helper:
                     if module:
                        help = self.modules_classes[modname].params.help()
                     
-                    output += '\n    [%s] %s\n    Usage :%s %s\n    %s\n' % (modname, descr, modname, usage, help)
+                    passwd = ''
+                    if 'generate' in modname:
+                        passwd = '<password> '
+                    
+                    output += '\n    [%s] %s\n    Usage :%s %s%s\n    %s\n' % (modname, descr, modname, passwd, usage, help)
              
         if module and not output:
             output += '[!] Error, module \'%s\' not found' % (module) 

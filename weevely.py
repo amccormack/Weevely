@@ -35,7 +35,7 @@ print '''      ________                      __
      |  |  |  |  -__| -__| |  | -__|  |  |  | 
      |________|_____|____|___/|____|__|___  | v0.7
                                       |_____| 
-               Stealth tiny web shell 
+              Stealth tiny web shell 
 '''
 
 
@@ -92,11 +92,12 @@ if __name__ == "__main__":
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
             
-    elif len(sys.argv) == 3 and sys.argv[1] == 'show':
-        print ModHandler('', '').helps(sys.argv[2])
+    elif len(sys.argv)>=2 and sys.argv[1] == 'show':
+        modname = None
+        if len(sys.argv) == 3:
+            modname = sys.argv[2]
+        print ModHandler('', '').helps(modname)
         
-                        
-
     elif len(sys.argv) > 3:
 
         url = sys.argv[1]

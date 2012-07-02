@@ -128,6 +128,8 @@ class ParametersList:
             if param:
                 value = args[namepos]
                 
+                #print value, namepos, len(value), bool(value)
+                
                 if value:
 
                     if param.choices and (value not in param.choices):
@@ -155,6 +157,13 @@ class ParametersList:
                             if self.get_parameter_value(excluded):
                                 print '[!] Error, parameters \'%s\' and \'%s\' are mutually exclusive' % (param.arg, excluded) 
                                 check=False
+                
+                else:
+                    # Not value, set value to null or default
+                    if param.default:
+                        value = param.default
+                    else:
+                        value = ''
                 
             else:
                 print '[!] Error, invalid parameter %s' % (self.__print_namepos(namepos))  

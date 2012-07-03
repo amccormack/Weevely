@@ -22,7 +22,6 @@ class Terminal(Enviroinment):
 
         self.modhandler = modhandler
         
-        
         self.url = modhandler.url
         self.password = modhandler.password
 
@@ -96,14 +95,11 @@ class Terminal(Enviroinment):
                 if 'shell.sh' not in self.modhandler.loaded_shells and cmd_line.startswith('ls'):
                     print self.modhandler.load('shell.php').ls_handler(cmd_line)
                     return
+
+        if not self.modhandler.interpreter:
+            self.modhandler.load_interpreters()
                 
-                output = self.run(None, [ cmd_line ])  
-                
-            else:
-                pass
-            
-        else:
-            output = self.run(None, [ cmd_line ])  
+        output = self.run(self.modhandler.interpreter, [ cmd_line ])  
             
         if output != None:
             print output
@@ -127,9 +123,6 @@ class Terminal(Enviroinment):
  
     def run(self, module_name, module_arglist):        
         
-        if not module_name:
-            module_name = 'shell.sh'
-            
         if module_name not in self.modhandler.modules_classes.keys():
             print '[!] Error module with name \'%s\' not found' % (module_name)
         else:

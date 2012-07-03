@@ -38,7 +38,7 @@ class Module:
         
         if not self.modhandler.interpreter:
             self.modhandler.load_interpreters()
-            
+                
         output = None
         check1, argdict = self.params.set_and_check_parameters(module_arglist, oneshot=True)
         

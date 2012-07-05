@@ -10,7 +10,8 @@ class Enum(Module):
     """Enumerate paths on remote filesystem"""
      
     params = ParametersList('Enumerate remote paths specified by wordlist', None,
-                P(arg='lpath', help='Path of local wordlist', required=True, pos=0))
+                P(arg='lpath', help='Path of local wordlist', required=True, pos=0),
+                P(arg='printall', help='Print paths not found too', default=False, type=bool, pos=1))
 
 
     def __init__(self, modhandler, url, password):
@@ -29,7 +30,7 @@ class Enum(Module):
         self.pathdict = {}
         return pathdict
      
-    def run_module(self, list_path):
+    def run_module(self, list_path, printall):
         
         if not self.pathdict and list_path:
             
@@ -62,10 +63,14 @@ class Enum(Module):
                     output += ', +writable'
                 if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'x'}):
                     self.pathdict[path][3] = 1
-                    output += ', +excutable'
-                                         
+                    output += ', +excutable'             
+            
                 self.mprint(output)
-                
+            
+            elif printall:                             
+                self.mprint(output)
+        
+            
             
                         
                     

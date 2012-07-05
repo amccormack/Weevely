@@ -23,11 +23,13 @@ class Module:
         
         self.name = self.__module__[8:]
         
+        
         self._probe()
     
     def mprint(self, str, importance = 5):
-        
-        if importance >= self.modhandler.verbosity[-1]:
+
+        # Considering also an empty self.modhandler.verbosity
+        if not self.modhandler.verbosity or importance >= self.modhandler.verbosity[-1]:
             print str
         
     
@@ -51,6 +53,7 @@ class Module:
                     output = self.run_module(*arglist)
                 except ModuleException, e:
                     self.mprint('[!] [%s] Error: %s' % (e.module, e.error))
+                    
                 
         return output
     

@@ -85,8 +85,9 @@ class Enviroinment:
         else:
             path = (path + "/" + cwd).replace( '//', '/' ) 
         
-        if self.modhandler.load('shell.php').cwd_handler(path):
-            self.cwd = path
+        cwd = self.modhandler.load('shell.php').cwd_handler(path)
+        if cwd:
+            self.cwd = cwd
             return True
         else:
             print "[!] Error changing directory to '%s', wrong path, incorrect permissions or safe mode enabled" % path

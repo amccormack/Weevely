@@ -76,7 +76,7 @@ class Php(Module):
             raise ModuleException(self.name,  "PHP interpreter initialization failed")
         else:
             
-            if self.run_module('is_callable("is_dir") && is_callable("chdir") && print(1);') != '1':
+            if self.run_module('is_callable("is_dir") && is_callable("chdir") && is_callable("getcwd") && print(1);') != '1':
                 self.mprint('[!] Error testing directory change methods, \'cd\' and \'ls\' will not work.')
             else:
                 self.cwd_vector = "chdir('%s'); %s" 
@@ -147,13 +147,14 @@ class Php(Module):
 
     def cwd_handler (self, path):
         
-        self.use_current_path = False
-        response = self.run_module( "is_dir('%s') && print(1);" % path )
-        self.use_current_path = True
-        if response == '1':
-            self.path = path
-            return True
-        return False
+        response = self.run_module( "@chdir('%s'); print(getcwd());" % path)
+        if response.rstrip('/') == path.rstrip('/'):
+            if path != '/':
+                self.path = path.rstrip('/')
+            else:
+                self.path = path
+                
+            return self.path
     
     def ls_handler (self, cmd):
         

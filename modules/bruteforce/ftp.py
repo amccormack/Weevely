@@ -67,7 +67,6 @@ ftp_close($c);
         else:
             
             try:
-                print "opra apro %s" % filename
                 wordlist = open(filename, 'r')
             except Exception, e:
                 raise ModuleException(self.name, "%s" % (str(e)))

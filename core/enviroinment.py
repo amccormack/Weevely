@@ -9,7 +9,6 @@ import readline, atexit, os, re, shlex
 
 
 help_string = ':show'
-cwd_extract = re.compile( "cd\s+(.+)", re.DOTALL )
 respace = re.compile('.*\s+$', re.M)
 set_string = ':set'
 load_string = ':load'
@@ -67,36 +66,31 @@ class Enviroinment:
         return self.prompt % (self.username, self.hostname, self.cwd)
         
     
-    def _handleDirectoryChange( self, cmd):
+    def _handleDirectoryChange(self, cd):
+    
+        cwd  = cd[0].strip()
+        path = self.cwd
+        if cwd[0] == '/':
+            path = cwd
+        elif cwd == '..':
+            dirs = path.split('/')
+            dirs.pop()
+            path = '/' + '/'.join(dirs)[1:]
+        elif cwd == '.':
+            pass
+        elif cwd[0:3] == '../':
+            path = cwd.replace( '../', path )
+        elif cwd[0:2] == './':
+            path = cwd.replace( './', path )
+        else:
+            path = (path + "/" + cwd).replace( '//', '/' ) 
         
-        cd  = cwd_extract.findall(cmd)
-        
-        if cd != None and len(cd) > 0:    
-            cwd  = cd[0].strip()
-            path = self.cwd
-            if cwd[0] == '/':
-                path = cwd
-            elif cwd == '..':
-                dirs = path.split('/')
-                dirs.pop()
-                path = '/' + '/'.join(dirs)[1:]
-            elif cwd == '.':
-                pass
-            elif cwd[0:3] == '../':
-                path = cwd.replace( '../', path )
-            elif cwd[0:2] == './':
-                path = cwd.replace( './', path )
-            else:
-                path = (path + "/" + cwd).replace( '//', '/' ) 
-            
-            if self.modhandler.load('shell.php').cwd_handler(path):
-                self.cwd = path
-            else:
-                print "[!] Error changing directory to '%s', wrong path, incorrect permissions or safe mode enabled" % path
-
+        if self.modhandler.load('shell.php').cwd_handler(path):
+            self.cwd = path
             return True
-
-        return False    
+        else:
+            print "[!] Error changing directory to '%s', wrong path, incorrect permissions or safe mode enabled" % path
+            return False
 
 
     def __complete(self, text, state):

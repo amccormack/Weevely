@@ -15,6 +15,8 @@ set_string = ':set'
 load_string = ':load'
 gen_string = ':generator'
 
+cwd_extract = re.compile( "cd\s+(.+)", re.DOTALL )
+
             
 class Terminal(Enviroinment):
     
@@ -90,11 +92,13 @@ class Terminal(Enviroinment):
         output = ''
         
         if not self.one_shot:
-
-            if self._handleDirectoryChange(cmd_line) == False:
-                if 'shell.sh' not in self.modhandler.loaded_shells and cmd_line.startswith('ls'):
-                    print self.modhandler.load('shell.php').ls_handler(cmd_line)
-                    return
+            cd  = cwd_extract.findall(cmd_line)
+            if cd and len(cd)>0:
+                self._handleDirectoryChange(cd)
+                return
+            if 'shell.sh' not in self.modhandler.loaded_shells and cmd_line.startswith('ls'):
+                print self.modhandler.load('shell.php').ls_handler(cmd_line)
+                return
 
         if not self.modhandler.interpreter:
             self.modhandler.load_interpreters()

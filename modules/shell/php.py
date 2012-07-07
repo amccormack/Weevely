@@ -79,7 +79,7 @@ class Php(Module):
             if self.run_module('is_callable("is_dir") && is_callable("chdir") && print(1);') != '1':
                 self.mprint('[!] Error testing directory change methods, \'cd\' and \'ls\' will not work.')
             else:
-                self.cwd_vector = "chdir('%s') && %s" 
+                self.cwd_vector = "chdir('%s'); %s" 
                 
                 
     def set_post_data(self, post_data = {}):

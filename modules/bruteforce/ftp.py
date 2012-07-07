@@ -63,9 +63,11 @@ ftp_close($c);
 
         if self.substitutive_wl:
             wl_splitted = self.substitutive_wl[:]
+            self.substitutive_wl=[]
         else:
             
             try:
+                print "opra apro %s" % filename
                 wordlist = open(filename, 'r')
             except Exception, e:
                 raise ModuleException(self.name, "%s" % (str(e)))

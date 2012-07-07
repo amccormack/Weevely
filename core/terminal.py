@@ -97,7 +97,9 @@ class Terminal(Enviroinment):
                 self._handleDirectoryChange(cd)
                 return
             if 'shell.sh' not in self.modhandler.loaded_shells and cmd_line.startswith('ls'):
-                print self.modhandler.load('shell.php').ls_handler(cmd_line)
+                ls_output = self.modhandler.load('shell.php').ls_handler(cmd_line)
+                if ls_output:
+                    print ls_output
                 return
 
         if not self.modhandler.interpreter:

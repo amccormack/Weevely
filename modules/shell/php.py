@@ -162,24 +162,23 @@ class Php(Module):
         
         ls_vector = "$dir=@opendir('%s'); $a=array(); while(($f = readdir($dir))) { $a[]=$f; }; sort($a); print(join('\n', $a));"
         
-        if len(cmd_splitted)==2:
+        path = None
+        if len(cmd_splitted)>2:
+            self.mprint('[!] Error, PHP shell \'ls\' replacement support only path as argument')
+        elif len(cmd_splitted)==2:
             path = cmd_splitted[1]
         elif self.path:
             path = self.path
         else:
             path = '.'
             
+        if path:
+            response = self.run_module( ls_vector % (path) )
             
-        
-        self.use_current_path = False
-        response = self.run_module( ls_vector % (path) )
-        self.use_current_path = True
-        
-        if not response:
-            
-            self.mprint('[!] Error listing files in \'%s\', not enough privileges' % path)
-            
-        return response
+            if not response:
+                self.mprint('[!] Error listing files in \'%s\'. Wrong path or not enough privileges' % path)
+            else:
+                return response
             
     
     

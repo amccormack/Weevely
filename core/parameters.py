@@ -142,7 +142,8 @@ class ParametersList:
                         if isinstance(value,str):
                             try:
                                 value = ast.literal_eval(value)
-                            except ValueError:
+                            #except ValueError: It may cause various exception types
+                            except Exception:
                                 print '[!] Error, allowed type %s: %s' % (self.__print_namepos(namepos), repr(param.type))             
                                 check=False
                                 

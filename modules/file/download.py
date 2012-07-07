@@ -79,7 +79,7 @@ class Download(Module):
     
             if not (self.transfer_dir and self.transfer_url_dir and self.file_path):
                 
-                self.modhandler.set_verbosity(2)
+                self.modhandler.set_verbosity(6)
                 if not self.modhandler.load('find.webdir').run({'rpath': 'find'}):
                     self.modhandler.set_verbosity()
                     return
@@ -118,19 +118,15 @@ class Download(Module):
         if self.vector.name == 'copy' or self.vector.name == 'symlink':
             
             if not self.file_path.endswith('.html') and not self.file_path.endswith('.htm'):
-                self.mprint("[%s] Warning, method '%s' use HTTP file download. Assure that remote file\n[%s] has a downloadable extension like 'html', or use another vector" % (self.name, self.vector.name, self.name))
+                self.mprint("[%s] Warning: vector '%s' works better with files with downloadable extension like '.html'" % (self.name, self.vector.name))
                     
             if self.modhandler.load('file.check').run({'rpath' : self.file_path, 'mode': 'exists'}):
-                
                 response = Request(self.url).read()
-
-                if self.modhandler.load('shell.php').run({0: "unlink('%s') && print('1');" % self.file_path}) != '1':
-                    self.mprint("[!] [%s] Error cleaning support file %s" % (self.name, self.file_path))
-                    
-                    
             else:
-                    self.mprint("[!] [%s] Error checking existance of %s" % (self.name, self.file_path))
-                    response = None
+                response = None
+
+            # Force deleting. Does not check existance, because broken links returns False
+            self.modhandler.load('file.rm').run({'rpath' : self.file_path, 'recursive': False})
             
         else:
             if self.encoder_callable:
@@ -174,6 +170,8 @@ class Download(Module):
     
         vectors = self._get_default_vector2()
         
+        
+        file_response = None
         if not vectors:
             vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
         
@@ -184,13 +182,15 @@ class Download(Module):
             if response != None:
                     
                 file_response = self.__process_response(response, remote_path, local_path)
-                self.params.set_and_check_parameters({'vector' : self.vector.name})
                 
-                self.lastreadfile = file_response
-                
-                return
+                if file_response:
+                    self.params.set_and_check_parameters({'vector' : self.vector.name})
+                    self.lastreadfile = file_response     
+                    return
                     
-        raise ModuleException(self.name,  "File read failed")
+                    
+        if not file_response:
+            raise ModuleException(self.name,  "File read failed")
         
         
             

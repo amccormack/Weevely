@@ -96,7 +96,7 @@ class Proxy(Module):
                     P(arg='rurl', help='Skip install and run directly server through remote url', pos=0),
                     P(arg='lport', help='Local proxy port', default=8080, type=int),
                     P(arg='background', help='Go to background', default=False, type=bool),
-                    P(arg='rdir', help='Install in remote directory, or \'find\' it automatically', default='find'),
+                    P(arg='rdir', help='Remote writable web folder or \'find\' automatically', default='find'),
                     P(arg='rname', help='Install with remote file name', default='weepro.php')
                     )
     

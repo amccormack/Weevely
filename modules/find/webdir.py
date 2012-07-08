@@ -29,6 +29,9 @@ class Webdir(Module):
         
         self.probe_filename = ''.join(choice(letters) for i in xrange(4)) + '.html'
 
+        self.found_url = None
+        self.found_dir = None
+
         Module.__init__(self, modhandler, url, password)
         
     
@@ -83,6 +86,11 @@ class Webdir(Module):
 
     def run_module(self, path):
         
+        
+        # Every new call founds are deleted
+        self.found_dir = None
+        self.found_url = None
+        
         start_path = None
         base_dir = None
 
@@ -125,11 +133,6 @@ class Webdir(Module):
                 if self.__check_writability(file_path, file_url):
                     self.found_dir = dir_path
                     self.found_url = dir_url
-                    
-                else:
-                    
-                    self.found_dir = None
-                    self.found_url = None
                     
                     
                 

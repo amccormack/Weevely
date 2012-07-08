@@ -46,8 +46,8 @@ class PhpProxy(Module):
         
         self.modhandler.load('find.webdir').run({ 'rpath' : path })
         
-        url = self.modhandler.load('find.webdir').url
-        dir = self.modhandler.load('find.webdir').dir
+        url = self.modhandler.load('find.webdir').found_url
+        dir = self.modhandler.load('find.webdir').found_dir
         
         self.modhandler.set_verbosity()
         

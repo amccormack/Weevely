@@ -44,7 +44,7 @@ rrmdir("$recurs", "$path");
 if(!exists("$path")) 
     echo("OK");  
 }"""),
-              #Vector('shell.sh', 'rm', "rm %s %s && echo OK")
+              Vector('shell.sh', 'rm', "rm %s %s && echo OK")
         ])
 
 

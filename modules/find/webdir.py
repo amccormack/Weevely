@@ -26,9 +26,6 @@ class Webdir(Module):
     
     
     def __init__( self, modhandler , url, password):
-
-        self.dir = None
-        self.url = None
         
         self.probe_filename = ''.join(choice(letters) for i in xrange(4)) + '.html'
 
@@ -61,7 +58,6 @@ class Webdir(Module):
         
         if self.modhandler.load('shell.php').run( { 0 : "unlink('%s') && print('1');" % file_path }) != '1':
             self.mprint("[!] [find.webdir] Error cleaning test file %s" % (file_path))
-            
                 
                         
     def __enumerate_writable_dirs(self, root_dir):
@@ -78,13 +74,14 @@ class Webdir(Module):
             
         return writable_dirs
            
+           
+    def __check_writability(self, file_path, file_url):
+        
+        result = self.__upload_file_content('1', file_path) and self.__check_remote_test_file(file_path) and self.__check_remote_test_url(file_url)
+        self.__remove_remote_test_file(file_path)
+        return result        
 
     def run_module(self, path):
-
-        
-        if self.url and self.dir:
-            self.mprint("[%s] Writable web dir: %s -> %s" % (self.name, self.dir, self.url))
-            return
         
         start_path = None
         base_dir = None
@@ -111,7 +108,9 @@ class Webdir(Module):
         
         if start_path and base_dir:
             
+            
             writable_dirs = self.__enumerate_writable_dirs(start_path)
+            writable_dirs.append(start_path)
 
             for dir_path in writable_dirs:
 
@@ -122,16 +121,20 @@ class Webdir(Module):
     
                 file_url = http_root + file_path.replace(base_dir,'')
                 dir_url = http_root + dir_path.replace(base_dir,'')
-            
-                if self.__upload_file_content('1', file_path) and self.__check_remote_test_file(file_path) and self.__check_remote_test_url(file_url):
+                   
+                if self.__check_writability(file_path, file_url):
+                    self.found_dir = dir_path
+                    self.found_url = dir_url
                     
-                    self.dir = dir_path
-                    self.url = dir_url
+                else:
                     
-                self.__remove_remote_test_file(file_path)
+                    self.found_dir = None
+                    self.found_url = None
+                    
+                    
                 
-                if self.dir and self.url:
-                   self.mprint("[find.webdir] Found writable web dir %s -> %s" % (self.dir, self.url))
+                if self.found_dir and self.found_url:
+                   self.mprint("[find.webdir] Writable web folder: '%s' -> '%s'" % (self.found_dir, self.found_url))
                    return True
         
         raise ModuleException(self.name,  "Writable web directory not found")

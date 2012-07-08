@@ -85,8 +85,8 @@ class Download(Module):
                     return
                 self.modhandler.set_verbosity()
                
-                self.transfer_url_dir = self.modhandler.load('find.webdir').url
-                self.transfer_dir = self.modhandler.load('find.webdir').dir
+                self.transfer_url_dir = self.modhandler.load('find.webdir').found_url
+                self.transfer_dir = self.modhandler.load('find.webdir').found_dir
                 
                 if not self.transfer_url_dir or not self.transfer_dir:
                     return

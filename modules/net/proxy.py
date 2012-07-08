@@ -120,11 +120,11 @@ class Proxy(Module):
         
         return response
         
-    def __find_writable_dir(self):
+    def __find_writable_dir(self, path = 'find'):
         
         self.modhandler.set_verbosity(6)
         
-        self.modhandler.load('find.webdir').run({ 'rpath' : 'find' })
+        self.modhandler.load('find.webdir').run({ 'rpath' : path })
         
         url = self.modhandler.load('find.webdir').url
         dir = self.modhandler.load('find.webdir').dir
@@ -146,16 +146,8 @@ class Proxy(Module):
 
         if not rurl:
         
-    
-            if rdir == 'find':
-                path, url = self.__find_writable_dir()
-            else:
-                path = rdir
-                if path[-1] != '/': path = '%s/' % path
-                urlparsed = urlparse(self.url)
-                url = '%s://%s/' % (urlparsed.scheme, urlparsed.netloc)
- 
-    
+            path, url = self.__find_writable_dir(rdir)
+        
             if path and url:
     
                 path = path + rname

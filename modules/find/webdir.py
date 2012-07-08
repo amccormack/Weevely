@@ -123,8 +123,6 @@ class Webdir(Module):
                 file_url = http_root + file_path.replace(base_dir,'')
                 dir_url = http_root + dir_path.replace(base_dir,'')
             
-                print file_path, file_url, dir_url
-            
                 if self.__upload_file_content('1', file_path) and self.__check_remote_test_file(file_path) and self.__check_remote_test_url(file_url):
                     
                     self.dir = dir_path

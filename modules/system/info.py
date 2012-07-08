@@ -31,7 +31,9 @@ class Info(Module):
         Vector('shell.php', 'uname', "@print(php_uname());"),
         Vector('shell.php', 'os', "@print(PHP_OS);"),
         Vector('shell.php', 'client_ip', "@print($_SERVER['REMOTE_ADDR']);"),
-        Vector('shell.php', 'max_execution_time', '@print(ini_get("max_execution_time"));')
+        Vector('shell.php', 'max_execution_time', '@print(ini_get("max_execution_time"));'),
+        Vector('shell.php', 'php_self', '@print($_SERVER["PHP_SELF"]);'),
+        Vector('shell.php', 'document_root', '@print($_SERVER["DOCUMENT_ROOT"]);')
         ])
 
 

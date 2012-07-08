@@ -9,6 +9,7 @@ from core.vector import VectorList, Vector as V
 from core.parameters import ParametersList, Parameter as P
 from core.http.request import agents
 import re
+from urlparse import urlparse
 
 import SocketServer
 import urllib

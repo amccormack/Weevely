@@ -87,34 +87,43 @@ class Webdir(Module):
             return
         
         start_path = None
+        base_dir = None
+
+        # Get base dir to remove it and get absolute path
+        try:
+            base_dir = self.modhandler.load('system.info').run({ 0 : 'basedir' })
+        except ModuleException, e:
+            self.mprint('[!] [' + e.module + '] ' + e.error)
+        
         
         if path == 'find':
+            start_path = base_dir
+        else:
+            # Normalize to real path to start in the same basedir condiction
+            
             try:
-                start_path = self.modhandler.load('system.info').run({ 0 : 'basedir' })
+                start_path = self.modhandler.load('shell.php').run({ 0 : 'print(realpath("%s"));' % path })
             except ModuleException, e:
                 self.mprint('[!] [' + e.module + '] ' + e.error)
-
-        else:
-            start_path = path
+            
         
         http_root = '%s://%s/' % (urlparse(self.url).scheme, urlparse(self.url).netloc) 
         
-        
-        if start_path:
+        if start_path and base_dir:
             
             writable_dirs = self.__enumerate_writable_dirs(start_path)
 
             for dir_path in writable_dirs:
 
-                
                 if not dir_path[-1]=='/': 
                     dir_path += '/'
                 
                 file_path = dir_path + self.probe_filename
     
-                file_url = http_root + file_path.replace(start_path,'')
-                dir_url = http_root + dir_path.replace(start_path,'')
+                file_url = http_root + file_path.replace(base_dir,'')
+                dir_url = http_root + dir_path.replace(base_dir,'')
             
+                print file_path, file_url, dir_url
             
                 if self.__upload_file_content('1', file_path) and self.__check_remote_test_file(file_path) and self.__check_remote_test_url(file_url):
                     

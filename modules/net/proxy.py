@@ -94,7 +94,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
     
 class Proxy(Module):
 
-    params = ParametersList('Run proxy through server', [],
+    params = ParametersList('Install and run real proxy through target', [],
                     P(arg='rpath', help='Upload proxy script to web accessible path (ends with \'.php\')'),
                     P(arg='rurl', help='Run directly proxy server using uploaded proxy script HTTP url'),
                     P(arg='finddir', help='Install proxy script automatically starting from web accessible dir', default='.'),
@@ -115,9 +115,7 @@ class Proxy(Module):
         
     def __upload_file_content(self, content, rpath):
         self.modhandler.load('file.upload').set_file_content(content)
-        self.modhandler.set_verbosity(6)
-        response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath })
-        self.modhandler.set_verbosity()
+        response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath, 'chunksize': 512 })
         
         return response
         
@@ -139,7 +137,7 @@ class Proxy(Module):
         
         server = SocketServer.ThreadingTCPServer((lhost, lport), ProxyHandler)
         server.rurl = rurl
-        print '[%s] Proxy running. Set \'http://%s:%i\' as HTTP proxy' % (self.name, lhost, lport)
+        print '[%s] Proxy running. Set \'http://%s:%i\' in your favourite HTTP proxy' % (self.name, lhost, lport)
         server.serve_forever()
         
         
@@ -156,6 +154,7 @@ class Proxy(Module):
                     raise ModuleException(self.name, 'Writable dir in \'%s\' not found. Specify writable dir using \':net.php_proxy rpath=writable_dir/proxy.php\'' % finddir)
                 else:
                     path = path + rname
+                    url = url + rname
             else:
                 if not rpath.endswith('.php'):
                     raise ModuleException(self.name, 'Remote PHP path must ends with \'.php\'')
@@ -170,11 +169,10 @@ class Proxy(Module):
             
                 if response:
                     
-                    output_url = ''
                     if url:
-                        output_url = ' with address \'%s\'' % url
-                    
-                    self.mprint('[%s] PHP proxy uploaded%s, re-execute \':net.proxy rurl=\' specifying HTTP address' % (self.name, output_url))
+                        self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=%s\'' % (self.name, url))
+                    else:
+                        self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=http://\' followed by uploaded script url' % (self.name))
                     
             else:
                 raise ModuleException(self.name,  "Error installing remote PHP proxy, check uploading path")

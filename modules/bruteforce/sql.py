@@ -12,6 +12,11 @@ from core.parameters import ParametersList, Parameter as P
 
 classname = 'Sql'
  
+
+def chunks(l, n):
+    return [l[i:i+n] for i in range(0, len(l), n)]
+    
+ 
 class Sql(Module):
     '''Bruteforce sql user
     '''
@@ -98,26 +103,23 @@ mysql_close($m);
         rand_post_name = parameters[3]
         start_line = int(parameters[4])
         wl = parameters[5][start_line:]
+        wl_length = len(wl)
         
-        chunks = int(ceil(len(wl)/self.chunksize))
+        if wl_length > self.chunksize:
+            wl_chunks = chunks(wl, self.chunksize)
+            self.mprint('[%s] Splitting wordlist of %i words in %i chunks of %i words.' % (self.name, wl_length, len(wl_chunks), len(wl_chunks[0])))
+        else:
+            wl_chunks = [ wl ] 
+            self.mprint('[%s] Using wordlist of %i words' % (self.name, wl_length))
         
         if self.modhandler.load('shell.php').run({0 : "if(function_exists('%s')) echo(1);" % parameters[0]}) != '1':
             self.mprint('[%s] Skipping vector %s: %s not available' % (self.name, vector.name, parameters[0]))
             return
         
-        if len(wl) > self.chunksize:
-            self.mprint('[%s] Splitting wordlist of %i words in %i chunks of %i words.' % (self.name, len(wl), chunks+1, self.chunksize))
-
-        
-        for i in range(chunks+1):
-        
-            startword = i*self.chunksize
-            if i == chunks:
-                endword = len(wl)
-            else:
-                endword = (i+1)*self.chunksize
-                
-            joined_wl='\n'.join(wl[startword:endword])
+        i=0
+        for wl in wl_chunks:
+                    
+            joined_wl='\n'.join(wl)
         
             payload = self.__prepare_payload(vector, parameters[:-2]) 
             
@@ -128,7 +130,9 @@ mysql_close($m);
                 if response.startswith('+'):
                     return "[%s] FOUND! (%s)" % (self.name,response[1:])
             else:
-                self.mprint("Tried password #%i: (%s:%s) ..." % (endword+start_line, parameters[2], wl[endword-1]))
+                self.mprint("Tried password #%i: (%s:%s) ..." % (i*len(wl), parameters[2], wl[-1]))
+
+            i+=1
 
         self.mprint('[%s] Password of \'%s\' not found. Check dbms availability or try with another username and wordlist' % (self.name, parameters[2]));
 

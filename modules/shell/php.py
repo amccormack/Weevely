@@ -105,8 +105,9 @@ class Php(Module):
         if self.use_current_path and self.cwd_vector and self.path:
             cmd = self.cwd_vector % (self.path, cmd)
         
-        if cmd.strip() and cmd.strip()[-1] not in (';', '}'):
-            self.mprint('[!] Warning: PHP command with no trailing semicolon')
+        cmd = cmd.strip()
+        if cmd and cmd[-1] not in (';', '}'):
+            self.mprint('[!] Warning: PHP command \'..%s\' doesn\'t have trailing semicolon' % (cmd[-10:]))
         
         request = CmdRequest( self.url, self.password, self.proxy)
         request.setPayload(cmd, self.current_mode)

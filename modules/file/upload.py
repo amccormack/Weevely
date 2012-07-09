@@ -80,7 +80,7 @@ class Upload(Module):
             content_chunks = [ b64encode(file_content) ]
 
         numchunks = len(content_chunks)
-        if numchunks > 10:
+        if numchunks > 20:
             self.mprint('[%s] Warning: uploading %i bytes using %i requests. Increase \'chunksize\' to reduce time' % (self.name, content_len, numchunks) )
             
         return content_chunks        

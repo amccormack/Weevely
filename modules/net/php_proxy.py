@@ -40,7 +40,7 @@ class PhpProxy(Module):
     def __upload_file_content(self, content, rpath):
         self.modhandler.load('file.upload').set_file_content(content)
         self.modhandler.set_verbosity(6)
-        response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath, 'chunksize' : 512 })
+        response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath, 'chunksize' : 256 })
         self.modhandler.set_verbosity()
         
         return response

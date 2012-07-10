@@ -90,6 +90,8 @@ class PhpProxy(Module):
                 else:
                     self.mprint('[%s] PHP proxy script uploaded. Go with your browser to script URL followed by ?u=http://www.google.com\'' % (self.name))
                 
+                self.mprint('[%s] When finished remove \'%s\' and \'ses_*\' files created in the same folder' % (self.name, path))
+                
                 
                 return 
             

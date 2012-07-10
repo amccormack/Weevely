@@ -173,6 +173,9 @@ class Proxy(Module):
                         self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=%s\'' % (self.name, url))
                     else:
                         self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=http://\' followed by uploaded script url' % (self.name))
+
+                    self.mprint('[%s] When finished remove script \'%s\'' % (self.name, path))
+                
                     
             else:
                 raise ModuleException(self.name,  "Error installing remote PHP proxy, check uploading path")

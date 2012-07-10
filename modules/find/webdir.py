@@ -96,26 +96,32 @@ class Webdir(Module):
 
         # Get base dir to remove it and get absolute path
         try:
-            base_dir = self.modhandler.load('system.info').run({ 0 : 'basedir' })
+            base_dir = self.modhandler.load('system.info').run({ 0 : 'document_root' })
         except ModuleException, e:
             self.mprint('[!] [' + e.module + '] ' + e.error)
         
-        
+        # Where to start to find (usually current dir)
+        try:
+            start_dir = self.modhandler.load('system.info').run({ 0 : 'basedir' })
+        except ModuleException, e:
+            self.mprint('[!] [' + e.module + '] ' + e.error)
+
+
         if path == 'find':
-            start_path = base_dir
+            start_path = start_dir
         else:
-            # Normalize to real path to start in the same basedir condiction
-            
-            try:
-                start_path = self.modhandler.load('shell.php').run({ 0 : 'print(realpath("%s"));' % path })
-            except ModuleException, e:
-                self.mprint('[!] [' + e.module + '] ' + e.error)
+            start_path = path
+        
+        # Normalize start path
+        try:
+            start_path = self.modhandler.load('shell.php').run({ 0 : 'print(realpath("%s"));' % start_path })
+        except ModuleException, e:
+            self.mprint('[!] [' + e.module + '] ' + e.error)
             
         
         http_root = '%s://%s/' % (urlparse(self.url).scheme, urlparse(self.url).netloc) 
         
         if start_path and base_dir:
-            
             
             writable_dirs = self.__enumerate_writable_dirs(start_path)
             writable_dirs.append(start_path)
@@ -126,14 +132,12 @@ class Webdir(Module):
                     dir_path += '/'
                 
                 file_path = dir_path + self.probe_filename
-    
                 file_url = http_root + file_path.replace(base_dir,'')
                 dir_url = http_root + dir_path.replace(base_dir,'')
                    
                 if self.__check_writability(file_path, file_url):
                     self.found_dir = dir_path
                     self.found_url = dir_url
-                    
                     
                 
                 if self.found_dir and self.found_url:

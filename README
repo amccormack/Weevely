@@ -9,10 +9,10 @@ Getting started with a quick Tutorial:
 
 https://github.com/epinna/Weevely/wiki/Tutorial
 
-Or show list of available Modules:
+Or show list of available Modules and backdoor Generators:
 
 https://github.com/epinna/Weevely/wiki/Modules-list
-
+https://github.com/epinna/Weevely/wiki/Generators-list
 
 Main features:
 
@@ -20,9 +20,11 @@ Main features:
   o Execute commands and browse remote filesystem, even with PHP security restriction
   o Audit common server misconfigurations
   o Run SQL console pivoting on target machine
+  o Open HTTP proxy to tunnel your traffic through target
   o Simple file transfer from and to target
   o Spawn reverse and direct TCP shells
   o Bruteforce passwords of target system users
+  o Run port scans from target machine
   o And so on..
 
 * Backdoor communications are hidden in HTTP Cookies

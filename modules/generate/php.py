@@ -17,7 +17,7 @@ class Php(Module):
         self.modhandler = modhandler
         self.modhandler.interpreter = True
         self.password = password
-        self.name = self.__module__[8:]
+	self.name = self.__module__
 
     def run_module( self, filename ):
         out = file( filename, 'wt' )

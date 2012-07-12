@@ -27,7 +27,7 @@ AddType application/x-httpd-php .htaccess
         self.modhandler = modhandler
         self.modhandler.interpreter = True
         self.password = password
-        self.name = self.__module__[8:]
+        self.name = self.__module__
 
 
     def run_module( self, filename ):

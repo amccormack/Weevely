@@ -27,7 +27,7 @@ class Img(Module):
         self.modhandler.interpreter = True
 
         self.password = password
-        self.name = self.__module__[8:]
+        self.name = self.__module__
 
 
     def run_module( self, input_img, output_dir ):

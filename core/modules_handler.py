@@ -1,4 +1,4 @@
-import os
+import os,sys
 from module import ModuleException
 from vector import VectorList, Vector
 from helper import Helper
@@ -9,15 +9,13 @@ class ModHandler(Helper):
     interpreters_priorities = [ 'shell.sh', 'shell.php' ]
 
 
-    def __init__(self, url = None, password = None, path_modules = 'modules'):
+    def __init__(self, url = None, password = None):
 
         self.url = url
         self.password = password
 
-        if not os.path.exists(path_modules):
-            raise Exception( "No module directory %s found." % path_modules )
-
-        self.path_modules = path_modules
+        self.__set_path_modules()
+	sys.path.append(self.path_modules)
 
         self.loaded_shells = []
         self.modules_classes = {}
@@ -31,26 +29,38 @@ class ModHandler(Helper):
 
         self.interpreter = None
 
+    def __set_path_modules(self):
+
+	try:
+		current_path = os.path.realpath( __file__ )
+		weevely_root_path = '/'.join(current_path.split('/')[:-2]) + '/'
+		self.path_modules = weevely_root_path + 'modules'
+	except Exception, e :
+		raise Exception('Error finding module path: %s' % str(e))
+
+        if not os.path.exists(self.path_modules):
+		raise Exception( "No module directory %s found." % self.path_modules )
+
+
 
     def _first_load(self, startpath, recursive = True):
 
-        for f in os.listdir(startpath):
+        for file_name in os.listdir(startpath):
 
-            f = startpath + os.sep + f
+            file_path = startpath + os.sep + file_name
 
-            if os.path.isdir(f) and recursive:
-                self._first_load(f, False)
-            if os.path.isfile(f) and f.endswith('.py') and not f.endswith('__init__.py'):
-                f = f[len(self.path_modules)+1:-3].replace('/','.')
-                mod = __import__('%s.%s' % (self.path_modules, f), fromlist = ["*"])
+            if os.path.isdir(file_path) and recursive:
+                self._first_load(file_path, False)
+            if os.path.isfile(file_path) and file_path.endswith('.py') and file_name != '__init__.py':
+		module_name = '.'.join(file_path[:-3].split('/')[-2:])
+                mod = __import__(module_name, fromlist = ["*"])
                 modclass = getattr(mod, mod.classname)
-                self.modules_classes[f] = modclass
+                self.modules_classes[module_name] = modclass
 
-                parts = f.split('.')
-                if parts[0] not in self.modules_names_by_group:
-                    self.modules_names_by_group[parts[0]] = []
-                self.modules_names_by_group[parts[0]].append(f)
-
+                module_g, module_n = module_name.split('.')
+                if module_g not in self.modules_names_by_group:
+                    self.modules_names_by_group[module_g] = []
+                self.modules_names_by_group[module_g].append(module_name)
 
         self.ordered_groups = self.modules_names_by_group.keys()
         self.ordered_groups.sort()

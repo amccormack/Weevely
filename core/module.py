@@ -21,7 +21,7 @@ class Module:
         self.url = url
         self.password = password
 
-        self.name = self.__module__[8:]
+        self.name = self.__module__
 
 
         self._probe()

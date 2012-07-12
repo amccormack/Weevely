@@ -104,7 +104,7 @@ class Proxy(Module):
 
     def __get_backdoor(self):
 
-        backdoor_path = 'modules/net/external/proxy.php'
+        backdoor_path = self.modhandler.path_modules + '/net/external/proxy.php'
 
         try:
             f = open(backdoor_path)

@@ -28,7 +28,7 @@ class PhpProxy(Module):
 
     def __get_backdoor(self):
 
-        backdoor_path = 'modules/net/external/phpproxy.php'
+	backdoor_path = self.modhandler.path_modules + '/net/external/phpproxy.php'
 
         try:
             f = open(backdoor_path)

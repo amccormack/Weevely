@@ -226,7 +226,7 @@ else { print("."); }
 
         port_list_path = None
         if onlyknownports:
-            port_list_path = 'modules/net/external/nmap-services-tcp'
+            port_list_path = self.modhandler.path_modules + '/net/external/nmap-services-tcp'
 
         self.reqlist = RequestList(self.modhandler, port_list_path)
         self.reqlist.add(addr, port)

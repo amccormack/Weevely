@@ -33,8 +33,8 @@ class ModHandler(Helper):
 
 	try:
 		current_path = os.path.realpath( __file__ )
-		weevely_root_path = '/'.join(current_path.split('/')[:-2]) + '/'
-		self.path_modules = weevely_root_path + 'modules'
+		root_path = '/'.join(current_path.split('/')[:-2]) + '/'
+		self.path_modules = root_path + 'modules'
 	except Exception, e :
 		raise Exception('Error finding module path: %s' % str(e))
 

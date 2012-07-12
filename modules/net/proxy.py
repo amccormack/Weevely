@@ -151,7 +151,7 @@ class Proxy(Module):
             if not rpath and finddir:
                 path, url = self.__find_writable_dir(finddir)
                 if not (path and url):
-                    raise ModuleException(self.name, 'Writable dir in \'%s\' not found. Specify writable dir using \':net.php_proxy rpath=writable_dir/proxy.php\'' % finddir)
+                    raise ModuleException(self.name, 'Writable dir in \'%s\' not found. Specify writable dir using \':net.proxy rpath=writable_dir/proxy.php\'' % finddir)
                 else:
                     path = path + rname
                     url = url + rname

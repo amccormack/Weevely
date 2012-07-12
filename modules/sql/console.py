@@ -11,10 +11,10 @@ from core.parameters import ParametersList, Parameter as P
 
 classname = 'Console'
 
-    
+
 class Console(Module):
     '''Start SQL console'''
-    
+
     params = ParametersList('Start SQL console', [],
             P(arg='dbms', help='Database', choices=['mysql', 'postgres'], required=True, pos=0),
             P(arg='user', help='SQL user', required=True, pos=1),
@@ -27,26 +27,25 @@ class Console(Module):
         self.mprint('[%s] No saved state, commands like \'USE database\' are ineffective. Press Ctrl-C to quit.\n' % (self.name))
 
         prompt        = "%s@%s SQL> " % (user, host)
-        
+
         self.modhandler.set_verbosity(2)
 
         try:
             while True:
-                
+
                 cmd       = raw_input( prompt )
                 cmd       = cmd.strip()
-                
+
                 if cmd:
                     response = self.modhandler.load('sql.query').run({'dbms' : mode, 'user' : user, 'pwd': pwd, 'query' : cmd, 'host' : host})
-                    
+
                     if response:
                         print response
                     else:
                         self.mprint('[%s] No data returned' % self.name)
-        
+
         except KeyboardInterrupt:
             self.modhandler.set_verbosity()
             raise
-            
-    
-    
+
+

@@ -10,13 +10,13 @@ import random
 from core.parameters import ParametersList, Parameter as P
 
 classname = 'Query'
- 
 
-    
+
+
 class Query(Module):
     '''Execute SQL query
     '''
-    
+
     vectors = VectorList([
             Vector('shell.php', 'php_fetch', [ """
 $c="%s"; $q="%s"; $f="%s";
@@ -67,43 +67,42 @@ mysql_close();
             if response != None:
                 self.params.set_and_check_parameters({'vector' : vector.name})
                 return response
-            
-        
+
+
         self.mprint('[%s] No response, check credentials and dbms availability.' % (self.name))
-                
-        
+
+
     def __execute_payload(self, vector, parameters):
-        
-        payload = self.__prepare_payload(vector, parameters) 
+
+        payload = self.__prepare_payload(vector, parameters)
         response = self.modhandler.load(vector.interpreter).run({ 0: payload })
-        
+
         if not response:
-            
-            payload = self.__prepare_payload(vector, parameters, 1) 
+
+            payload = self.__prepare_payload(vector, parameters, 1)
             response = self.modhandler.load(vector.interpreter).run({ 0: payload })
-            
+
             if response:
-                
+
                 self.mprint("[%s] Error connecting to '%s:%s@%s', using default (query 'SELECT USER();' to print out)" % (self.name, parameters[3], parameters[4], parameters[5]),  3);
-                
+
                 return response
         else:
             return response
-        
+
         return None
-    
-    
+
+
 
     def __prepare_payload( self, vector, parameters, payloadnum = 0 ):
-        
+
         if vector.payloads[payloadnum].count( '%s' ) == len(parameters):
             return vector.payloads[payloadnum] % tuple(parameters)
         else:
             raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
-        
 
 
 
-    
-    
-    
+
+
+

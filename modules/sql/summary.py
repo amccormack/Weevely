@@ -11,13 +11,13 @@ from core.parameters import ParametersList, Parameter as P
 
 classname = 'Summary'
 
-    
+
 class Summary(Module):
     '''Get SQL database summary
     '''
-    
+
     vectors = VectorList( [
-            Vector('sql.query', 'mysql', [ "SHOW DATABASES;", "SHOW TABLES FROM %s;", "SHOW COLUMNS FROM %s.%s;" ]) 
+            Vector('sql.query', 'mysql', [ "SHOW DATABASES;", "SHOW TABLES FROM %s;", "SHOW COLUMNS FROM %s.%s;" ])
             ])
 
     params = ParametersList('Get SQL summary of database or single tables', vectors,
@@ -29,12 +29,12 @@ class Summary(Module):
 
 
     def __init__( self, modhandler , url, password):
-            
+
         self.structure = {}
 
         Module.__init__(self, modhandler, url, password)
-        
-        
+
+
 
     def run_module( self, mode, user, pwd , db, host ):
 
@@ -46,48 +46,48 @@ class Summary(Module):
             if response != None:
                 self.params.set_and_check_parameters({'vector' : vector.name})
                 return response
-        
+
     def __execute_payload(self, vector, parameters):
-        
+
         mode = parameters[0]
         host = parameters[1]
         user = parameters[2]
         pwd = parameters[3]
         db = parameters[4]
-        
-        
+
+
         self.structure[db] = {}
-        
+
         # databases
-        payload = self.__prepare_payload(vector, [], 0) 
+        payload = self.__prepare_payload(vector, [], 0)
         response = self.modhandler.load(vector.interpreter).run({'dbms' : mode, 'user' : user, 'pwd': pwd, 'query' : payload, 'host' : host})
         print 'DATABASE LIST: \n\'%s\'' % response
-        
-        
+
+
         self.modhandler.set_verbosity(4)
-        
+
         # tables
-        payload = self.__prepare_payload(vector, [db], 1) 
+        payload = self.__prepare_payload(vector, [db], 1)
         response = self.modhandler.load(vector.interpreter).run({'dbms' : mode, 'user' : user, 'pwd': pwd, 'query' : payload, 'host' : host})
-        
+
         if response:
             for table in response.split('\n'):
-                
-                
+
+
                 self.structure[db][table]={}
-                
+
                 # columns
-                cpayload = self.__prepare_payload(vector, [db, table], 2) 
+                cpayload = self.__prepare_payload(vector, [db, table], 2)
                 #cresponse = self.modhandler.load(vector.interpreter).run_module(mode, user, pwd, payload, host)
-                
+
                 cresponse = self.modhandler.load(vector.interpreter).run({'dbms' : mode, 'user' : user, 'pwd': pwd, 'query' : payload, 'host' : host})
-        
+
                 if cresponse:
-                    for column in response.split('\n'):   
+                    for column in response.split('\n'):
                         self.structure[db][table][column]=[]
-                                            
+
         self.modhandler.set_verbosity()
-        
+
         if self.structure[db]:
             self.__print_db()
         else:
@@ -99,23 +99,22 @@ class Summary(Module):
             return vector.payloads[parameter_num] % tuple(parameters)
         else:
             raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
-        
+
 
     def __print_db(self):
-        
+
         for db in self.structure:
-            
+
             print 'DB \'%s\'' % db
-            
+
             for table in self.structure[db]:
-                print 'TABLE: ' + table 
-                
+                print 'TABLE: ' + table
+
                 print '|',
                 for column in self.structure[db][table]:
                     print column + ' |',
-                    
+
                 print ''
-                
-    
-    
-    
+
+
+

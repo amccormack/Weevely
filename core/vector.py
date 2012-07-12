@@ -7,22 +7,22 @@ class VectorList(list):
         for v in self:
             if v.interpreter in shells:
                 vect.append(v)
-                
+
         return vect
-    
+
     def get_vector_by_name(self, name):
         for v in self:
             if v.name == name:
                 return v
 
     def get_names_list(self):
-        
+
         return [v.name for v in self]
 
     def order(self, names):
         sorted = [v for v in self for n in names if n == v.name]
         print sorted
-    
+
     def __repr__(self):
         for v in self:
             print v

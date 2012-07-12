@@ -8,7 +8,7 @@ classname = 'Enum'
 
 class Enum(Module):
     """Enumerate paths on remote filesystem"""
-     
+
     params = ParametersList('Enumerate remote paths specified by wordlist', None,
                 P(arg='lpath', help='Path of local wordlist', required=True, pos=0),
                 P(arg='printall', help='Print paths not found too', default=False, type=bool, pos=1))
@@ -16,24 +16,24 @@ class Enum(Module):
 
     def __init__(self, modhandler, url, password):
         self.pathdict = {}
-        
+
         Module.__init__(self, modhandler, url, password)
-     
+
     def set_list(self, list):
         """Cleaned after use"""
-     
+
         for p in list:
             self.pathdict[p] = [0,0,0,0]
-     
+
     def get_list(self):
         pathdict = self.pathdict.copy()
         self.pathdict = {}
         return pathdict
-     
+
     def run_module(self, list_path, printall):
-        
+
         if not self.pathdict and list_path:
-            
+
             try:
                 list=open(os.path.expanduser(list_path),'r').read().splitlines()
                 self.set_list(list)
@@ -41,20 +41,20 @@ class Enum(Module):
                 raise ModuleException(self.name,  "Error opening path list \'%s\'" % list_path)
         else:
             list = self.pathdict.keys()
-            
+
 
         self.mprint('[%s] Enumerating %i paths' % (self.name, len(list)))
-        
-        
+
+
         for path in list:
 
             output = path + '' + '\t'*(3-((len(path)+1)/8))
-            
+
             if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'exists'}):
                 output += '\texists'
-                
+
                 self.pathdict[path][0] = 1
-                
+
                 if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'r'}):
                     self.pathdict[path][1] = 1
                     output += ', +readable'
@@ -63,18 +63,17 @@ class Enum(Module):
                     output += ', +writable'
                 if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'x'}):
                     self.pathdict[path][3] = 1
-                    output += ', +excutable'             
-            
+                    output += ', +excutable'
+
                 self.mprint(output)
-            
-            elif printall:                             
+
+            elif printall:
                 self.mprint(output)
-        
-            
-            
-                        
-                    
-                    
-        
-        
-            
+
+
+
+
+
+
+
+

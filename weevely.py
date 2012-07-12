@@ -91,7 +91,7 @@ if __name__ == "__main__":
             Terminal ( ModHandler( url, password ) ).loop()
         except ModuleException, e:
             print e
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, EOFError):
             print '\n[!] Exiting. Bye ^^'
         
     elif len(sys.argv) >= 3 and sys.argv[1].startswith('generate'):

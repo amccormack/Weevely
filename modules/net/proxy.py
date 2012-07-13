@@ -186,6 +186,8 @@ class Proxy(Module):
         else:
 
             try:
+                if urlparse( rurl ).scheme not in ('http', 'https'):
+                    raise ValueError('invalid URL (specify http or https)')
                 self.__run_proxy_server(rurl, lport)
             except Exception, e:
                 raise ModuleException(self.name,'Proxy start on port %i failed with error %s' % (lport, str(e)) )

@@ -33,7 +33,10 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.useragent = choice(agents)
         self.phpproxy = server.rurl
 
-        SocketServer.StreamRequestHandler.__init__(self, request, client_address,server)
+        try:
+            SocketServer.StreamRequestHandler.__init__(self, request, client_address,server)
+        except Exception:
+            pass
 
 
     def handle(self):
@@ -70,7 +73,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     if req_len >= cl:
                         self.send_req(req)
                         return
-        except IOError:
+        except Exception:
             return
 
     def send_req(self, req):

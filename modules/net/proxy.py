@@ -25,8 +25,6 @@ classname = 'Proxy'
 
 class ProxyHandler(SocketServer.StreamRequestHandler):
 
-    allow_reuse_address = 1
-
     def __init__(self, request, client_address, server):
 
         self.proxies = {}
@@ -138,6 +136,7 @@ class Proxy(Module):
 
     def __run_proxy_server(self, rurl, lport, lhost='127.0.0.1'):
 
+        SocketServer.TCPServer.allow_reuse_address = True
         server = SocketServer.ThreadingTCPServer((lhost, lport), ProxyHandler)
         server.rurl = rurl
         print '[%s] Proxy running. Set \'http://%s:%i\' in your favourite HTTP proxy' % (self.name, lhost, lport)

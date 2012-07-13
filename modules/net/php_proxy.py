@@ -20,7 +20,7 @@ classname = 'PhpProxy'
 
 class PhpProxy(Module):
 
-    params = ParametersList('Install PHP proxy to target', [],
+    params = ParametersList('Install PHP proxy to target. Needs \'php-proxy\' installed on target.', [],
                     P(arg='rpath', help='Upload proxy script to web accessible path (ends with \'.php\')'),
                     P(arg='finddir', help='Install proxy script automatically starting from web accessible dir', default='.'),
                     )

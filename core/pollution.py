@@ -19,11 +19,6 @@
 
 import base64, codecs
 from random import random, randrange, choice, shuffle, randint
-#from collections import Counter
-
-
-
-
 
 class Counter(dict):
 
@@ -45,12 +40,6 @@ class Counter(dict):
                     self[elem] = self_get(elem, 0) + 1
         if kwds:
             self.update(kwds)
-
-
-
-
-
-
 
 def random_string(charset = 'abcdefghijklmnopqrstuvwxyz', len=4, fixed=False):
 	if not fixed:

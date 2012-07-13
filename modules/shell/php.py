@@ -24,6 +24,7 @@ class Php(Module):
                              P(arg='cmd', help='PHP command enclosed with brackets and terminated by semi-comma', required=True, pos=0),
                              P(arg='mode', help='Obfuscation mode', choices = ['Cookie', 'Referer' ]),
                              P(arg='proxy', help='HTTP proxy'),
+                             P(arg='precmd', help='Insert string at beginning of commands'),
                              P(arg='debug', help='Enable requests and response debug', type=bool, default=False, hidden=True)
                         )
 
@@ -88,7 +89,7 @@ class Php(Module):
         self.post_data.update(post_data)
 
 
-    def run_module(self, cmd, mode = None, proxy = None, debug = None):
+    def run_module(self, cmd, mode = None, proxy = None, precmd= None, debug = None):
 
         if mode:
             self.mode = mode
@@ -98,12 +99,17 @@ class Php(Module):
                 self.mprint('[!] Proxies can break weevely requests, if possibile use proxychains')
             self.proxy = { 'http' : proxy }
 
-        # Debug is equal to None only if called directly by run_module
+        # Debug and precmd are to force also if called with None like other modules do
         if debug == None:
             debug = self.params.get_parameter_value('debug')
+        if precmd == None:
+            precmd = self.params.get_parameter_value('precmd')
 
         if self.use_current_path and self.cwd_vector and self.path:
             cmd = self.cwd_vector % (self.path, cmd)
+
+        if precmd:
+            cmd = precmd + ' ' + cmd
 
         cmd = cmd.strip()
         if cmd and cmd[-1] not in (';', '}'):

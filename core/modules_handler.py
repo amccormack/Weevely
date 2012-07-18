@@ -15,7 +15,6 @@ class ModHandler(Helper):
         self.password = password
 
         self.__set_path_modules()
-	sys.path.append(self.path_modules)
 
         self.loaded_shells = []
         self.modules_classes = {}
@@ -53,7 +52,7 @@ class ModHandler(Helper):
                 self._first_load(file_path, False)
             if os.path.isfile(file_path) and file_path.endswith('.py') and file_name != '__init__.py':
 		module_name = '.'.join(file_path[:-3].split('/')[-2:])
-                mod = __import__(module_name, fromlist = ["*"])
+                mod = __import__('modules.' + module_name, fromlist = ["*"])
                 modclass = getattr(mod, mod.classname)
                 self.modules_classes[module_name] = modclass
 

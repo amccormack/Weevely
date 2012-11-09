@@ -118,14 +118,24 @@ class TestGroups:
                'create_file' : TG(conf,
                 [
                 TC([ ':set shell.php debug=1' ], PROMPT_PHP_SH),      
+
                 TC([ ':shell.php file_put_contents(\\"%s/%s/newfile\\", \\"1\\");' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs']) ], PROMPT_PHP_SH),      
-                TC([ ':shell.php file_put_contents(\\"%s/newfile\\", \\"1\\");' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),      
-                TC([ ':shell.php file_put_contents(\\"%s/newfile1\\", \\"1\\");' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),      
                 TC([ ':file.check %s/%s/newfile exists' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs']) ], 'True'),
-                TC([ ':file.check %s/newfile exists' % (conf['existant_base_dir']) ], 'True'),
-                TC([ ':file.check %s/newfile1 exists' % (conf['existant_base_dir']) ], 'True'),
                 TC([ ':file.check %s/%s/newfile write' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs']) ], 'True'),
-                TC([ ':file.check %s/newfile1 write' % (conf['existant_base_dir']) ], 'True'),
+
+                TC([ ':shell.php file_put_contents(\\"%s/newfile\\", \\"1\\");' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),      
+                TC([ ':file.check %s/newfile exists' % (conf['existant_base_dir']) ], 'True'),
+                
+                TC([ ':shell.php file_put_contents(\\"%s/newfile1\\", \\"1\\");' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),      
+                TC([ ':file.check %s/newfile1 exists' % (conf['existant_base_dir']) ], 'True'),
+                
+                TC([ ':shell.php file_put_contents(\\"%s/newfile2\\", \\"1\\");' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),      
+                TC([ ':file.check %s/newfile2 exists' % (conf['existant_base_dir']) ], 'True'),
+
+                TC([ ':shell.php file_put_contents(\\"%s/newfile3\\", \\"1\\");' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),      
+                TC([ ':file.check %s/newfile3 exists' % (conf['existant_base_dir']) ], 'True'),
+                
+                
                 ]),
                     
                     
@@ -148,10 +158,25 @@ class TestGroups:
                 
                 TC([ ':file.rm %s/%s -recursive' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], PROMPT_PHP_SH),
                 TC([ ':file.check %s/%s exists' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], 'False'), 
+                    
+                    
+                # VECTORS
+                
+                TC([ ':set shell.php debug=1' ], PROMPT_PHP_SH),  
+                
+                # Delete with php_rmdir vector
+                TC([ ':file.rm %s/newfile2 -vector php_rmdir' % (conf['existant_base_dir']) ], "function rrmdir"),
+                TC([ ':file.check %s/newfile2 exists' % (conf['existant_base_dir']) ], 'False'),
+                
+                # Delete with rm vector
+
+                TC([ ':file.rm %s/newfile3 -vector rm -recursive' % (conf['existant_base_dir']) ], 'rm -rf %s' % (conf['existant_base_dir'])),
+                TC([ ':file.check %s/newfile3 exists' % (conf['existant_base_dir']) ], 'False'),
+                
+
                                 
                 ]),
                 
-                # TODO: il set stderr shell.sh non sta funzionado
-                # differenziare il _output (e' sempre il valore di ritorno o anche l'output di errore? differenziarli
-  
+                # TODO: test :set type different from strings are not correctly casted, use ast
+
         }

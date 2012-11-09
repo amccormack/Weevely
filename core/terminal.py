@@ -109,7 +109,7 @@ class Terminal:
             if cmd:
                 print '[RC exec] %s' % (cmd)
 
-                self.run_cmd_line(cmd)
+                self.run_cmd_line(shlex.split(cmd))
 
     def __cwd_handler (self, cmd = None):
 

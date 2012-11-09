@@ -5,7 +5,6 @@ Created on 22/ago/2011
 '''
 
 from core.moduleexception import ModuleException
-from core.enviroinment import Enviroinment
 from core.configs import Configs, dirpath, rcfilepath
 from core.vector import Vector
 import os, re, shlex, readline, atexit
@@ -17,7 +16,7 @@ load_string = ':load'
 gen_string = ':generator'
 
 
-class Terminal(Enviroinment):
+class Terminal:
 
     def __init__( self, modhandler, one_shot = False):
 

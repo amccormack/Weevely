@@ -1,17 +1,13 @@
-'''
-Created on 22/ago/2011
 
-@author: norby
-'''
 
-from core.module import Module, ModuleException
+from core.moduleprobeall import ModuleProbeAll
+from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
 from core.vector import VectorList, Vector
-from core.parameters import ParametersList, Parameter as P
+from core.savedargparse import SavedArgumentParser as ArgumentParser
 
-classname = 'Rm'
 
-class Rm(Module):
-
+class Rm(ModuleProbeAll):
+    '''Remove remote files and folders'''
 
     vectors = VectorList([
         Vector('shell.php', 'php_rmdir', """
@@ -38,68 +34,41 @@ function rrmdir($recurs,$dir) {
     }
     else rmfile("$dir");
 }
-$recurs="%s"; $path="%s";
-if(exists("$path")) {
-rrmdir("$recurs", "$path");
-if(!exists("$path"))
-    echo("OK");
-}"""),
-              Vector('shell.sh', 'rm', "rm %s %s && echo OK")
-        ])
+$recurs="$recursive"; $path="$rpath";
+if(exists("$path")) 
+rrmdir("$recurs", "$path");"""),
+              Vector('shell.sh', 'rm', "rm $recursive $rpath")
+    ])
+
+    argparser = ArgumentParser(usage=__doc__)
+    argparser.add_argument('rpath', help='Remote starting path')
+    argparser.add_argument('-recursive', help='Remove recursively', action='store_true')
+    argparser.add_argument('-vector', choices = vectors.get_names())
 
 
-
-    params = ParametersList('Remove remote file and directory', vectors,
-                P(arg='rpath', help='Remote path', required=True, pos=0),
-                P(arg='recursive', help='Recursion', default=False, type=bool, pos=1),
-                )
-
-    def __init__(self, modhandler, url, password):
-
-        Module.__init__(self, modhandler, url, password)
-
-    def run_module(self, rpath, recursive):
-
-        vectors = self._get_default_vector2()
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
-
-        for vector in vectors:
-
-            response = self.__execute_payload(vector, [rpath, recursive])
-            if 'OK' in response:
-                self.params.set_and_check_parameters({'vector' : vector.name})
-                return True
-
-        recursive_output = ''
-        if not recursive:
-            recursive_output = ' and use \'recursive\' with unempty folders'
-        raise ModuleException(self.name,  "Delete fail, check existance and permissions%s." % (recursive_output))
+    def _prepare_probe(self):
+        
+        self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
+        if not self.modhandler.load('file.check')._output:
+            raise ProbeException(self.name, '\'%s\' no such file or directory or permission denied' % self.args['rpath'])        
 
 
-    def __execute_payload(self, vector, parameters):
-
-        payload = self.__prepare_payload(vector, parameters)
-
-        try:
-            response = self.modhandler.load(vector.interpreter).run({0 : payload})
-        except ModuleException:
-            response = None
+    def _prepare_vector(self):
+        
+        self.args_formats = { 'rpath' : self.args['rpath'] }
+        
+        if self.current_vector.name == 'rm':
+            self.args_formats['recursive'] = '-rf' if self.args['recursive'] else ''
         else:
-            return response
-
-    def __prepare_payload(self, vector, parameters):
-
-        rpath = parameters[0]
-        recursive = parameters[1]
-
-
-        if vector.interpreter == 'shell.sh' and recursive:
-            recursive = '-rf'
-        elif vector.interpreter == 'shell.php' and recursive:
-            recursive = '1'
+            self.args_formats['recursive'] = '1' if self.args['recursive'] else ''
+            
+            
+    def _verify_execution(self):
+        self._output = ''
+        
+        self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
+        if not self.modhandler.load('file.check')._output:
+            raise ProbeSucceed(self.name,'Command succeeded')
         else:
-            recursive = ''
-
-        return vector.payloads[0] % (recursive, rpath)
-
+            raise ExecutionException(self.name, 'File \'%s\' delete fail, check permissions' % self.args['rpath'])
+     

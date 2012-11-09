@@ -19,19 +19,19 @@
 
 
 from core.terminal import Terminal, module_trigger
-from core.modules_handler import ModHandler
-from core.module import ModuleException
+from core.modulehandler import ModHandler
+from core.moduleexception import ModuleException
 from core.helper import Helper
 
 import sys
 
-print '''      ________                      __
-     |  |  |  |-----.----.-.--.----'  |--.--.
-     |  |  |  |  -__| -__| |  | -__|  |  |  |
-     |________|_____|____|___/|____|__|___  | v0.7
-                                      |_____|
-              Stealth tiny web shell
-'''
+#print '''      ________                      __
+#     |  |  |  |-----.----.-.--.----'  |--.--.
+#     |  |  |  |  -__| -__| |  | -__|  |  |  |
+#     |________|_____|____|___/|____|__|___  | v0.7
+#                                      |_____|
+#              Stealth tiny web shell
+#'''
 
 
 credits = '''
@@ -78,7 +78,6 @@ if __name__ == "__main__":
 
     if  len(sys.argv) == 3 and sys.argv[1].startswith('http'):
 
-        print "[+] Starting terminal, shell probe may take a while"
 
         url = sys.argv[1]
         password = sys.argv[2]
@@ -86,7 +85,7 @@ if __name__ == "__main__":
         try:
             Terminal ( ModHandler( url, password ) ).loop()
         except ModuleException, e:
-            print e
+            print '[!] [%s] %s ' % (e.module, e.error)
         except (KeyboardInterrupt, EOFError):
             print '\n[!] Exiting. Bye ^^'
 
@@ -121,7 +120,8 @@ if __name__ == "__main__":
             modname = ''
             if len(sys.argv)>4:
                 modname = sys.argv[4]
-            print ModHandler(url, password).helps(modname)
+                
+            ModHandler(url, password).load(modname).argparser.print_help()
 
         elif sys.argv[1].startswith('http') or sys.argv[3] == ':set':
 
@@ -129,12 +129,10 @@ if __name__ == "__main__":
                 terminal = Terminal (ModHandler(url, password), True)
 
                 if sys.argv[3][0] == module_trigger:
-                    terminal.run_module_cmd(sys.argv[3:])
-                else:
-                    terminal.run_line_cmd(' '.join(sys.argv[3:]))
+                    terminal.run_cmd_line(sys.argv[3:])
 
             except ModuleException, e:
-                print e
+                print '[!] [%s] %s ' % (e.module, e.error)
             except KeyboardInterrupt:
                 print '\n[!] Exiting. Bye ^^'
 

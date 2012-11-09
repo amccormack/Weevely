@@ -20,7 +20,7 @@
 import base64, codecs
 from random import random, randrange, choice, shuffle
 from pollution import random_string, pollute_with_static_str
-from module import ModuleException
+from core.moduleexception import ModuleException
 
 class Backdoor:
 

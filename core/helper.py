@@ -39,7 +39,8 @@ class Helper:
 
                     usage = ''
                     if not only_name:
-                        usage = self.modules_classes[modname].params.summary()
+                        #usage = self.modules_classes[modname].params.summary()
+                        pass
                     matches.append(':%s %s' % (modname, usage))
 
         return matches
@@ -59,11 +60,12 @@ class Helper:
                 # Considering module name with or without :
                 if not module or (modname.startswith(module)) or (modname.startswith(module[1:])):
 
-                    descr = self.modules_classes[modname].params.module_description
-                    usage = self.modules_classes[modname].params.summary()
+                    #descr = self.modules_classes[modname].params.module_description
+                    #usage = self.modules_classes[modname].params.summary()
                     help = ''
                     if module:
-                       help = self.modules_classes[modname].params.help()
+                       #help = self.modules_classes[modname].params.help()
+                       pass
 
                     passwd = ''
                     if 'generate' in modname:

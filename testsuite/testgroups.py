@@ -12,12 +12,12 @@ testsuites = {
     
     'php' : [ 'php' ],
     'shells' : [ 'php', 'sh', 'info'],
-    'cwd_ls_safemode' : [ 'ls_safemode', 'cwd_safemode', 'ls', 'cwd' ],
-    'cwd_ls' : [ 'ls', 'cwd' ],
+#    'cwd_ls_safemode' : [ 'ls_safemode', 'cwd_safemode', 'ls', 'cwd' ],
+    'cwd_ls' : [ 'mkdirs', 'ls', 'cwd' ],
     'checks' : [ 'checks' ],
     'rms' : [ 'mkdirs', 'create_file', 'rm' ],
-    'finds' : [ 'mkdirs', 'create_file', 'perms_safemode' ],
-    
+#    'finds' : [ 'mkdirs', 'create_file', 'perms_safemode', 'webdir' ],
+    'finds' : [  'webdir' ]
 }
 
 class TestGroups:
@@ -217,6 +217,14 @@ class TestGroups:
                                   
                 ]),
                     
+               'webdir' : TG(conf,
+                [
+                TC([ ':find.webdir' ], '/var/www/%s\r\nhttp://localhost/%s' % (conf['existant_base_dir'], conf['existant_base_dir'])),
+                TC([ ':find.webdir -rpath writable/w1' ], '/var/www/%s/%s\r\nhttp://localhost/%s/%s' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0],  conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0])),
+                TC([ ':find.webdir -rpath writable/w1/../../writable//w1/' ], '/var/www/%s/%s\r\nhttp://localhost/%s/%s' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0],  conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0])),
+
+                ]),
+
                 
                 # TODO: test :set type different from strings are not correctly casted, use ast
 

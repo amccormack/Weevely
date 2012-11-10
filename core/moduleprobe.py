@@ -19,6 +19,7 @@ class ModuleProbe:
 
         self.name = '.'.join(self.__module__.split('.')[-2:])
         
+        self.__init_module_variables()
         self._init_module()
 
     def run(self, arglist = []):
@@ -52,6 +53,9 @@ class ModuleProbe:
             
 
     def _init_module(self):
+        pass
+    
+    def __init_module_variables(self):
         self.stored_args = {}
     
 

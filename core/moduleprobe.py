@@ -27,6 +27,7 @@ class ModuleProbe:
     def run(self, arglist = [], stringify = True):
         
         self._result = None
+        self._output = ''
         
         
         try:
@@ -44,8 +45,7 @@ class ModuleProbe:
                 module = e.module
             self.mprint('[!] Error: %s' % (e.error), 2, module) 
             
-            
-        return self._stringify_output() if stringify else self._result
+        return self._output_result(stringify)
 
     def mprint(self, str, msg_class = 3, module_name = None):
         
@@ -77,14 +77,15 @@ class ModuleProbe:
     def _probe(self):
         pass
 
-    def _stringify_output(self):
+    def _output_result(self, stringify):
+        
         
         # Empty outputs. False is probably a good output value 
         if self._result != False and not self._result:
-            return ''
+            self._output = ''
         # List outputs.
         elif isinstance(self._result, ListType):
-            return '\n'.join(self._result)
+            self._output = '\n'.join(self._result)
         # Dict outputs are display as tables
         elif isinstance(self._result, DictType):
             table = PrettyTable(['Field', 'Value'])
@@ -95,12 +96,12 @@ class ModuleProbe:
                 
                 table.add_row([field, self._result[field]])
                 
-            return table.get_string()
+            self._output = table.get_string()
         # Else, try to stringify
         else:
-            return str(self._result)
+            self._output = str(self._result)
         
-        
+        return self._output if stringify else self._result
         
         
     def save_args(self, args):

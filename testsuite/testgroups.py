@@ -87,11 +87,11 @@ class TestGroups:
   
             'ls' : TG(conf,
                 [
-                TC([ 'ls %s' % conf['existant_base_dir'] ], '\.\r\n\.\.\r\n%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[0], PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % conf['existant_base_dir'] ], '(?=\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[0], PROMPT_PHP_SH)),     
                 TC([ 'cd %s' % conf['existant_base_dir'] ], '%s .*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),     
-                TC([ 'ls %s' % conf['existant_base_4_lvl_subdirs'].split('/')[0] ], '\.\r\n\.\.\r\n%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[1], PROMPT_PHP_SH)),     
-                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:2]) ], '\.\r\n\.\.\r\n%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[2], PROMPT_PHP_SH)),     
-                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:3]) ], '\.\r\n\.\.\r\n.*%s' % (PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % conf['existant_base_4_lvl_subdirs'].split('/')[0] ], '(?=\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[1], PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:2]) ], '(?=\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[2], PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:3]) ], '(?=\.\r\n\.\.\r\n)?.*%s' % (PROMPT_PHP_SH)),     
                 TC([ 'ls %s/.././/../..//////////////./../../%s/' % (conf['existant_base_4_lvl_subdirs'], conf['existant_base_4_lvl_subdirs'].split('/')[0])  ],  '%s .*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),     
 
                 ]),

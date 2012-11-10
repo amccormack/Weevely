@@ -28,7 +28,8 @@ class ModuleProbeAll(ModuleProbe):
         self._output = self.current_vector.execute(self.modhandler, self.args_formats)
     
     def _verify_execution(self):
-        if self._output != '':
+        # If self._output is set. False is probably a good return value.
+        if self._output or self._output == False:
             raise ProbeSucceed(self.name,'Command succeeded')
      
 

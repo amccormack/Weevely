@@ -1,8 +1,9 @@
 
 
 from moduleexception import ModuleException, ProbeException, ProbeSucceed
-import types
 from core.savedargparse import SavedArgumentParser as ArgumentParser, Namespace
+from types import ListType, StringTypes, DictType
+from core.prettytable import PrettyTable
 
 class_name = 'Module'
 
@@ -24,7 +25,7 @@ class ModuleProbe:
 
     def run(self, arglist = []):
         
-        self._output = ''
+        self._output = None
         
         try:
             self._check_args(arglist)
@@ -41,7 +42,7 @@ class ModuleProbe:
                 module = e.module
             self.mprint('[!] Error: %s' % (e.error), 2, module) 
             
-        return self._output
+        return self._stringify_output()
 
     def mprint(self, str, msg_class = 3, module_name = None):
         
@@ -74,6 +75,31 @@ class ModuleProbe:
     def _probe(self):
         pass
 
+    def _stringify_output(self):
+        
+        # Empty outputs. False is probably a good output value 
+        if self._output != False and not self._output:
+            return ''
+        # List outputs.
+        elif isinstance(self._output, ListType):
+            return '\n'.join(self._output)
+        # Dict outputs are display as tables
+        elif isinstance(self._output, DictType):
+            table = PrettyTable(['Field', 'Value'])
+            table.align = 'l'
+            table.header = False
+            
+            for field in self._output:
+                
+                table.add_row([field, self._output[field]])
+                
+            return table.get_string()
+        # Else, try to stringify
+        else:
+            return str(self._output)
+        
+        
+        
         
     def save_args(self, args):
 

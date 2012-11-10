@@ -64,10 +64,10 @@ rrmdir("$recurs", "$path");"""),
             
             
     def _verify_execution(self):
-        self._output = ''
-        
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
-        if not self.modhandler.load('file.check')._output:
+        self._output = self.modhandler.load('file.check')._output
+        
+        if not self._output:
             raise ProbeSucceed(self.name,'Command succeeded')
         else:
             raise ExecutionException(self.name, 'File \'%s\' delete fail, check permissions' % self.args['rpath'])

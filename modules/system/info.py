@@ -7,7 +7,6 @@ Created on 22/ago/2011
 from core.moduleprobe import ModuleProbe
 from core.moduleexception import ModuleException
 from core.vector import VectorList, Vector
-from core.prettytable import PrettyTable
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 import argparse
@@ -45,14 +44,11 @@ class Info(ModuleProbe):
         if self.args['info'] != 'all':
             self._output = self.vectors.get(self.args['info']).execute(self.modhandler)
         else:
-            table = PrettyTable(['Info', 'Value'])
-            table.align = 'l'
-            table.header = False
             
+            self._output = {}
+
             for vect in self.vectors:
+                self._output[vect.name] = vect.execute(self.modhandler)
                 
-                table.add_row([vect.name, vect.execute(self.modhandler)])
-                
-            self._output = table.get_string()
                     
         

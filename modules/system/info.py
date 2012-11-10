@@ -31,9 +31,10 @@ class Info(ModuleProbe):
         Vector('shell.php', 'client_ip', "@print($_SERVER['REMOTE_ADDR']);"),
         Vector('shell.php', 'max_execution_time', '@print(ini_get("max_execution_time"));'),
         Vector('shell.php', 'php_self', '@print($_SERVER["PHP_SELF"]);'),
-        Vector('shell.php', 'document_root', '@print($_SERVER["DOCUMENT_ROOT"]);')
+        Vector('shell.php', 'document_root', '@print($_SERVER["DOCUMENT_ROOT"]);'),
+        Vector('shell.php', 'dir_sep', '@print(DIRECTORY_SEPARATOR);')
         ])
-
+    
     argparser = ArgumentParser(usage=__doc__)
     argparser.add_argument('info', help='Information',  choices = vectors.get_names() + ['all'], default='all', nargs='?')
 

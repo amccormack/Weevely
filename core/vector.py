@@ -42,14 +42,11 @@ class Vector:
         # Payloads and Formats are lists
         self.payloads = []
         
-        if isinstance(payloads, ListType):
+        if payloads and isinstance(payloads, ListType):
             self.payloads = payloads
-        elif isinstance (payloads, StringTypes):
+        elif payloads and isinstance (payloads, StringTypes):
             self.payloads.append(payloads)
-        else:
-            print "[!] Error declaring attack vector"
-
-
+        
     def execute(self, modhandler, format_list = {}, stringify = False):
 
         # Check type dict
@@ -71,6 +68,7 @@ class Vector:
                 formatted_list.append(Template(payload).safe_substitute(**dict_of_formats_in_payload))
             else:
                 formatted_list.append(payload)
+
 
         return modhandler.load(self.interpreter).run(formatted_list, stringify)
 

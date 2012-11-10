@@ -16,6 +16,7 @@ testsuites = {
     'cwd_ls' : [ 'ls', 'cwd' ],
     'checks' : [ 'checks' ],
     'rms' : [ 'mkdirs', 'create_file', 'rm' ],
+    'finds' : [ 'mkdirs', 'create_file', 'perms_safemode' ],
     
 }
 
@@ -26,7 +27,7 @@ class TestGroups:
         config = ConfigParser()
         config.read(confpath)
         conf = config._sections['global']
-        
+
         self.TGs = {
         
             'php' : TG(conf,
@@ -178,6 +179,44 @@ class TestGroups:
                 TC([ ':system.info os' ], '%s\r\n.*%s' % (conf['remote_os'], PROMPT_PHP_SH)),     
                 ]),
 
+
+
+               'perms' : TG(conf,
+                [
+                TC([ ':find.perms' ], '%s.*%s' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),
+                TC([ ':find.perms -vector find' ], '%s.*%s/newfile' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),         
+                TC([ ':find.perms -vector php_recursive' ], '%s.*%s/newfile' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),         
+                
+                # Find only file
+                TC([ ':find.perms -vector find -type f' ], '%s.*%s/newfile' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),         
+                TC([ ':find.perms -vector php_recursive -type f' ], '%s.*%s/newfile' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),         
+                
+                ]),
+                    
+               'perms_safemode' : TG(conf,
+                [
+                TC([ ':find.perms writable' ], '\r\n%s/%s\r\n' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),
+                TC([ ':find.perms -vector php_recursive writable' ], '\r\n%s/%s\r\n' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),         
+                
+                # Find first
+                TC([ ':find.perms writable -first' ], '\r\n%s\r\n.*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),
+                
+                
+                # Find only file
+                TC([ ':find.perms writable -type f' ], '\r\n%s/%s\r\n' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs']), negate=True),   
+                TC([ ':find.perms writable -type f' ], '\r\n%s/%s/newfile\r\n' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),   
+                  
+                # Find only dir
+                TC([ ':find.perms writable -type d' ], '\r\n%s/%s\r\n' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),   
+                TC([ ':find.perms writable -type d' ], '\r\n%s/%s/newfile\r\n' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs']), negate=True),   
+                  
+                  
+                # Checking attributes (files are not readable)
+                TC([ ':find.perms writable -executable -type f' ], '\r\n.*%s' % (PROMPT_PHP_SH)),   
+                TC([ ':find.perms writable -readable -type f' ], '\r\n%s/%s/newfile\r\n' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'])),   
+                                  
+                ]),
+                    
                 
                 # TODO: test :set type different from strings are not correctly casted, use ast
 

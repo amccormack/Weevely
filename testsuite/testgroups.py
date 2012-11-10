@@ -106,6 +106,8 @@ class TestGroups:
                 TC([ ':file.check %s isfile' % conf['existant_base_dir'] ], 'False'),
                 TC([ ':file.check %s exists' % conf['existant_base_dir'] ], 'True'),
                 TC([ ':file.check %s' % conf['existant_base_dir'] ], 'usage'),
+                TC([ ':file.check %s/newfile md5' % conf['existant_base_dir'] ], 'b026324c6904b2a9cb4b88d6d61c81d1'),
+                
                 ]),
 
 

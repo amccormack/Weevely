@@ -62,8 +62,8 @@ class ModuleProbeAll(ModuleProbe):
         except ProbeSucceed:
             # Execution succeed
             pass
-        except ProbeException:
-            raise ModuleException(self.name,  "Probe failed")
+        except ProbeException, e:
+            raise ModuleException(self.name,  e.error)
         
         
     

@@ -132,10 +132,10 @@ class Terminal:
         
         username =  Vector('system.info', "" , "whoami").execute(self.modhandler)
         hostname =  Vector('system.info', "" , "hostname").execute(self.modhandler)
-        
-        self.modhandler.set_verbosity(1)
-        Vector('shell.sh', "", "").execute(self.modhandler)
-        self.modhandler.set_verbosity()
+
+        #self.modhandler.set_verbosity(1)
+        Vector('shell.sh', "sh_env_init", "True").execute(self.modhandler)
+        #self.modhandler.set_verbosity()
         
         if Vector('system.info', "" , "safe_mode").execute(self.modhandler) == '1':
             print '[!] PHP Safe mode enabled'

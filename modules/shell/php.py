@@ -33,7 +33,7 @@ class Php(Module):
 
         self.cwd_vector = None
         self.path = None
-        self.proxy = None
+        self.proxy = {}
 
         self.modhandler = modhandler
 

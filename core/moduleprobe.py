@@ -23,7 +23,7 @@ class ModuleProbe:
         self.__init_module_variables()
         self._init_module()
 
-    def run(self, arglist = []):
+    def run(self, arglist = [], stringify = True):
         
         self._output = None
         
@@ -42,7 +42,8 @@ class ModuleProbe:
                 module = e.module
             self.mprint('[!] Error: %s' % (e.error), 2, module) 
             
-        return self._stringify_output()
+            
+        return self._stringify_output() if stringify else self._output
 
     def mprint(self, str, msg_class = 3, module_name = None):
         

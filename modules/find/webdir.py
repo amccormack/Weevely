@@ -80,12 +80,12 @@ class Webdir(ModuleProbe):
             # Check file reachability though url
             file_content = Request(file_url).read()
             if( file_content == '1'):
-                self._output = [dir_path, dir_url]
+                self._result = [dir_path, dir_url]
             
             # Remove file
             self.vectors.get('remove').execute(self.modhandler, {'path' : file_path})
 
-            if len(self._output)==2 and self._output[0] and self._output[1]:
+            if len(self._result)==2 and self._result[0] and self._result[1]:
                return 
 
         raise ModuleException(self.name,  "Writable web directory not found")

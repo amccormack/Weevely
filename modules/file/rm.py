@@ -49,7 +49,7 @@ rrmdir("$recurs", "$path");"""),
     def _prepare_probe(self):
         
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
-        if not self.modhandler.load('file.check')._output:
+        if not self.modhandler.load('file.check')._result:
             raise ProbeException(self.name, '\'%s\' no such file or directory or permission denied' % self.args['rpath'])        
 
 
@@ -65,9 +65,9 @@ rrmdir("$recurs", "$path");"""),
             
     def _verify_execution(self):
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
-        self._output = self.modhandler.load('file.check')._output
+        self._result = self.modhandler.load('file.check')._result
         
-        if not self._output:
+        if not self._result:
             raise ProbeSucceed(self.name,'Command succeeded')
         else:
             raise ExecutionException(self.name, 'File \'%s\' delete fail, check permissions' % self.args['rpath'])

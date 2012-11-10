@@ -22,10 +22,12 @@ class ModuleProbe:
         
         self.__init_module_variables()
         self._init_module()
+        
 
     def run(self, arglist = [], stringify = True):
         
-        self._output = None
+        self._result = None
+        
         
         try:
             self._check_args(arglist)
@@ -43,7 +45,7 @@ class ModuleProbe:
             self.mprint('[!] Error: %s' % (e.error), 2, module) 
             
             
-        return self._stringify_output() if stringify else self._output
+        return self._stringify_output() if stringify else self._result
 
     def mprint(self, str, msg_class = 3, module_name = None):
         
@@ -60,7 +62,6 @@ class ModuleProbe:
     def __init_module_variables(self):
         self.stored_args = {}
     
-
     def _check_args(self, args):
 
         parsed_namespace, remaining_args = self.argparser.parse_known_stored_and_new_args(args=args, stored_args_dict = self.stored_args)
@@ -79,25 +80,25 @@ class ModuleProbe:
     def _stringify_output(self):
         
         # Empty outputs. False is probably a good output value 
-        if self._output != False and not self._output:
+        if self._result != False and not self._result:
             return ''
         # List outputs.
-        elif isinstance(self._output, ListType):
-            return '\n'.join(self._output)
+        elif isinstance(self._result, ListType):
+            return '\n'.join(self._result)
         # Dict outputs are display as tables
-        elif isinstance(self._output, DictType):
+        elif isinstance(self._result, DictType):
             table = PrettyTable(['Field', 'Value'])
             table.align = 'l'
             table.header = False
             
-            for field in self._output:
+            for field in self._result:
                 
-                table.add_row([field, self._output[field]])
+                table.add_row([field, self._result[field]])
                 
             return table.get_string()
         # Else, try to stringify
         else:
-            return str(self._output)
+            return str(self._result)
         
         
         

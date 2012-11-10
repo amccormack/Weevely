@@ -54,6 +54,7 @@ class Vector:
             print "[!] Error, format vector type is not dict"
             return
 
+
         formatted_list = []
         format_template_list = format_list.keys()
         for payload in self.payloads:
@@ -68,7 +69,6 @@ class Vector:
                 formatted_list.append(Template(payload).safe_substitute(**dict_of_formats_in_payload))
             else:
                 formatted_list.append(payload)
-
 
         return modhandler.load(self.interpreter).run(formatted_list, stringify)
 

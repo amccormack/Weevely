@@ -43,13 +43,13 @@ class Info(ModuleProbe):
     def _probe(self):
         
         if self.args['info'] != 'all':
-            self._output = self.vectors.get(self.args['info']).execute(self.modhandler)
+            self._result = self.vectors.get(self.args['info']).execute(self.modhandler)
         else:
             
-            self._output = {}
+            self._result = {}
 
             for vect in self.vectors:
-                self._output[vect.name] = vect.execute(self.modhandler)
+                self._result[vect.name] = vect.execute(self.modhandler)
                 
                     
         

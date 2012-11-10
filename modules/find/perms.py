@@ -70,4 +70,4 @@ if(($f!='.')&&($f!='..')&&cktp($df,'d')){@swp($fdir, $df, $t, $a, $q);}
     def _verify_probe(self):
         
         # Listify output, to advantage other modules 
-        self._output = self._output.split('\n')
+        self._result = self._result.split('\n')

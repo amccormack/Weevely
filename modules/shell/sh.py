@@ -40,10 +40,10 @@ fclose($pipes[2]); proc_close($h);"""),
 
         if not self.stored_args['vector']:
             self.__slacky_probe()
-
+            
         # Execute if is current vector is saved or choosen
         if self.current_vector.name in (self.stored_args['vector'], self.args['vector'])  :
-            self._output = self.current_vector.execute(self.modhandler, self.args_formats)
+            self._result = self.current_vector.execute(self.modhandler, self.args_formats)
         
         
     def _prepare_vector(self):
@@ -64,7 +64,7 @@ fclose($pipes[2]); proc_close($h);"""),
         
         rand = str(random.randint( 11111, 99999 ))
         
-        slacky_formats = self.args_formats
+        slacky_formats = self.args_formats.copy()
         slacky_formats['cmd'] = 'echo %s' % (rand)
         
         

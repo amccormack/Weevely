@@ -76,9 +76,9 @@ class Php(ModuleProbe):
         
         # If 'ls', execute __ls_handler
         if self.args['cmd'][0][:2] == 'ls':
-            self._output = self.__ls_handler(self.args['cmd'][0])
+            self._result = self.__ls_handler(self.args['cmd'][0])
         else:
-            self._output = self.__do_request(self.args['cmd'], self.args['mode'])
+            self._result = self.__do_request(self.args['cmd'], self.args['mode'])
         
 
 

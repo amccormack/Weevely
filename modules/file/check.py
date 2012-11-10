@@ -26,11 +26,11 @@ class Check(ModuleProbe):
         
         value = self.vectors.get(self.args['attr']).execute(self.modhandler, self.args)
         if value == '1':
-            self._output = True
+            self._result = True
         elif value == '0':
-            self._output = False
+            self._result = False
         elif self.args['attr'] == 'md5' and value:
-            self._output = value
+            self._result = value
         else:
              raise ModuleException(self.name, "Error returned value: '%s'" % (value))
             

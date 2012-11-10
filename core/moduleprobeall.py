@@ -25,15 +25,17 @@ class ModuleProbeAll(ModuleProbe):
         pass
         
     def _execute_vector(self):
-        self._output = self.current_vector.execute(self.modhandler, self.args_formats)
+        self._result = self.current_vector.execute(self.modhandler, self.args_formats)
     
     def _verify_execution(self):
-        # If self._output is set. False is probably a good return value.
-        if self._output or self._output == False:
+        # If self._result is set. False is probably a good return value.
+        if self._result or self._result == False:
             raise ProbeSucceed(self.name,'Command succeeded')
      
 
     def _probe(self):
+        
+        
         
         vectors = []
         
@@ -43,6 +45,7 @@ class ModuleProbeAll(ModuleProbe):
                 vectors = [ selected_vector ]
         else:
             vectors = self.vectors
+
 
         try:
             for vector in vectors:

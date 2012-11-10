@@ -39,12 +39,6 @@ class Webdir(ModuleProbe):
 
         self.probe_filename = ''.join(choice(letters) for i in xrange(4)) + '.html'
 
-    def _prepare_probe(self):
-        self.found_url = None
-        self.found_dir = None
-
-
-
     def _probe(self):
   
         base_dir = None
@@ -86,14 +80,12 @@ class Webdir(ModuleProbe):
             # Check file reachability though url
             file_content = Request(file_url).read()
             if( file_content == '1'):
-                self.found_dir = dir_path
-                self.found_url = dir_url
+                self._output = [dir_path, dir_url]
             
             # Remove file
             self.vectors.get('remove').execute(self.modhandler, {'path' : file_path})
 
-            if self.found_dir and self.found_url:
-               self._output = [self.found_dir, self.found_url]
+            if len(self._output)==2 and self._output[0] and self._output[1]:
                return 
 
         raise ModuleException(self.name,  "Writable web directory not found")

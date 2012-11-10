@@ -39,7 +39,7 @@ class Vector:
         self.interpreter = interpreter
         self.name = name
         
-        # Payloads and Formats are list of lists
+        # Payloads and Formats are lists
         self.payloads = []
         
         if isinstance(payloads, ListType):
@@ -50,41 +50,29 @@ class Vector:
             print "[!] Error declaring attack vector"
 
 
-    def execute(self, modhandler, format_list = []):
+    def execute(self, modhandler, format_list = {}, stringify = False):
 
-        # Normalize type into list of dicts
-        
-        if isinstance(format_list, DictType):
-            format_list = [ format_list ]
-        elif isinstance (format_list, ListType):
-            pass
-        else:
-            print "[!] Error with format vector type"
+        # Check type dict
+        if not isinstance(format_list, DictType):
+            print "[!] Error, format vector type is not dict"
             return
 
-        # Check lenght
-        
-        if format_list and len(format_list) != len(self.payloads):
-            print "[!] Error with format length %i and vector length %i" % (len(format_list), len(self.payloads))
-            return
-
-        
-        i = 0
         formatted_list = []
+        format_template_list = format_list.keys()
         for payload in self.payloads:
             
-            if i >= len(format_list):
-                formatted_list.append(payload)
+            # Search format keys present in current payload part 
+            list_of_key_formats_in_payload = [s for s in format_template_list if '$%s' % s in payload]
+            
+            # Extract from format dict just the ones for current payload part
+            dict_of_formats_in_payload = {k:v for k,v in format_list.iteritems() if k in list_of_key_formats_in_payload}
+            
+            if dict_of_formats_in_payload:
+                formatted_list.append(Template(payload).safe_substitute(**dict_of_formats_in_payload))
             else:
-                
-                try:
-                    formatted_list.append(Template(payload).safe_substitute(**format_list[i]))
-                except KeyError, e:
-                    raise   
-            i+=1
-        
-        
-        return modhandler.load(self.interpreter).run(formatted_list)
+                formatted_list.append(payload)
+
+        return modhandler.load(self.interpreter).run(formatted_list, stringify)
 
             
 

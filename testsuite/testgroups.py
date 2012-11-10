@@ -11,7 +11,7 @@ ERR_NO_SUCH_FILE = 'no such file or directory or permission denied'
 testsuites = {
     
     'php' : [ 'php' ],
-    'shells' : [ 'php', 'sh'],
+    'shells' : [ 'php', 'sh', 'info'],
     'cwd_ls_safemode' : [ 'ls_safemode', 'cwd_safemode', 'ls', 'cwd' ],
     'cwd_ls' : [ 'ls', 'cwd' ],
     'checks' : [ 'checks' ],
@@ -155,13 +155,10 @@ class TestGroups:
                 TC([ ':file.check %s/%s exists' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], 'True'), 
                 
                 # Delete dir tree with recursion
-                
                 TC([ ':file.rm %s/%s -recursive' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], PROMPT_PHP_SH),
                 TC([ ':file.check %s/%s exists' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], 'False'), 
                     
-                    
                 # VECTORS
-                
                 TC([ ':set shell.php debug=1' ], PROMPT_PHP_SH),  
                 
                 # Delete with php_rmdir vector
@@ -169,13 +166,18 @@ class TestGroups:
                 TC([ ':file.check %s/newfile2 exists' % (conf['existant_base_dir']) ], 'False'),
                 
                 # Delete with rm vector
-
                 TC([ ':file.rm %s/newfile3 -vector rm -recursive' % (conf['existant_base_dir']) ], 'rm -rf %s' % (conf['existant_base_dir'])),
                 TC([ ':file.check %s/newfile3 exists' % (conf['existant_base_dir']) ], 'False'),
-                
-
-                                
+                               
                 ]),
+
+
+               'info' : TG(conf,
+                [
+                TC([ ':system.info' ], '\+-+\+.*safe_mode.*\+-+\+'),      
+                TC([ ':system.info os' ], '%s\r\n.*%s' % (conf['remote_os'], PROMPT_PHP_SH)),     
+                ]),
+
                 
                 # TODO: test :set type different from strings are not correctly casted, use ast
 

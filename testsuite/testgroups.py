@@ -23,6 +23,7 @@ testsuites = {
     'finds' : [ 'mkdirs', 'create_file', 'perms_safemode', 'webdir' ],
     'download_read' : [ 'download', 'read' ],
     'upload' : [ 'upload' ],
+    'enum' : [ 'enum' ],
     
 }
 
@@ -273,6 +274,13 @@ class TestGroups:
                 TC([ ':file.read  /tmp/%s8' % randomstring ], 'TEXT'),
                 ]),
                  
+
+               'enum' : TG(conf,
+                [
+                TC([ ":file.enum a -paths \"['/etc/passwd', 'writable']\"" ], 'writable[\S ]+exists[\S ]+readable[\S ]+writable[\S ]+\r\n[\S ]+/etc/passwd[\S ]+exists[\S ]+readable[\S ]+'),
+                TC([ ":file.enum a -paths \"['/bin/bash', 'unexistant']\" -printall" ], '[\S ]+unexistant[\S ]+\r\n[\S ]+/bin/bash[\S ]+exists[\S ]+readable[\S ]+executable[\S ]+'),
+                TC([ ":file.enum a -paths \"['unexistant']\" -printall" ], 'exists', negate=True),
+                ]),
                  
                 # TODO: test :set type different from strings are not correctly casted, use ast
 

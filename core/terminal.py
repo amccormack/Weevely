@@ -79,7 +79,9 @@ class Terminal:
                 
             ## Raw command call. Command is re-joined to be considered as single command
             else:
-                print self.modhandler.load(self.modhandler.interpreter).run([ ' '.join(command) ] )
+                output = self.modhandler.load(self.modhandler.interpreter).run([ ' '.join(command) ] ) 
+                if output:
+                    print output
 
         except KeyboardInterrupt:
             print '[!] Stopped execution' 

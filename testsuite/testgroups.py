@@ -2,11 +2,15 @@
 
 from testclasses import TG, TC, TGproc, TCproc
 from ConfigParser import ConfigParser
+from random import choice
+from string import ascii_lowercase
 
 
 ERR_REQ_NO_BD_RESPONSE = 'No backdoor response from remote side'
-PROMPT_PHP_SH = '[$>] '
 ERR_NO_SUCH_FILE = 'no such file or directory or permission denied'
+PROMPT_PHP_SH = '(?:(?:PHP >)|\$)'
+JUST_PROMPT = '\r\n[\S\ ]+' + PROMPT_PHP_SH
+
 
 testsuites = {
     
@@ -18,6 +22,8 @@ testsuites = {
     'rms' : [ 'mkdirs', 'create_file', 'rm' ],
     'finds' : [ 'mkdirs', 'create_file', 'perms_safemode', 'webdir' ],
     'download_read' : [ 'download', 'read' ],
+    'upload' : [ 'upload' ],
+    
 }
 
 class TestGroups:
@@ -27,6 +33,8 @@ class TestGroups:
         config = ConfigParser()
         config.read(confpath)
         conf = config._sections['global']
+        
+        randomstring = ''.join(choice(ascii_lowercase) for x in range(4))
 
         self.TGs = {
         
@@ -88,11 +96,11 @@ class TestGroups:
   
             'ls' : TG(conf,
                 [
-                TC([ 'ls %s' % conf['existant_base_dir'] ], '(?=\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[0], PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % conf['existant_base_dir'] ], '(?:\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[0], PROMPT_PHP_SH)),     
                 TC([ 'cd %s' % conf['existant_base_dir'] ], '%s .*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),     
-                TC([ 'ls %s' % conf['existant_base_4_lvl_subdirs'].split('/')[0] ], '(?=\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[1], PROMPT_PHP_SH)),     
-                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:2]) ], '(?=\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[2], PROMPT_PHP_SH)),     
-                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:3]) ], '(?=\.\r\n\.\.\r\n)?.*%s' % (PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % conf['existant_base_4_lvl_subdirs'].split('/')[0] ], '(?:\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[1], PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:2]) ], '(?:\.\r\n\.\.\r\n)?%s.*%s' % (conf['existant_base_4_lvl_subdirs'].split('/')[2], PROMPT_PHP_SH)),     
+                TC([ 'ls %s' % '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:3]) ], '(?:\.\r\n\.\.\r\n)?.*%s' % (PROMPT_PHP_SH)),     
                 TC([ 'ls %s/.././/../..//////////////./../../%s/' % (conf['existant_base_4_lvl_subdirs'], conf['existant_base_4_lvl_subdirs'].split('/')[0])  ],  '%s .*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),     
 
                 ]),
@@ -232,27 +240,35 @@ class TestGroups:
                 TC([ ':file.download /etc/gne /tmp/asd' ], ERR_NO_SUCH_FILE),
                 TC([ ':file.download /etc/passwd /tmpsakdsa/jhgsd' ], 'Errno'),
                 TC([ ':file.download /etc/shadow /tmp/asd' ], ERR_NO_SUCH_FILE), 
-                TC([ ':file.download /etc/passwd /tmp/passwd -vector file' ], 'Error', negate=True),
-                TC([ ':file.download /etc/passwd /tmp/passwd -vector fread' ], 'Error', negate=True),
-                TC([ ':file.download /etc/passwd /tmp/passwd -vector file_get_contents' ], 'Error', negate=True),
-                TC([ ':file.download /etc/passwd /tmp/passwd -vector base64' ], 'Error', negate=True),
-                TC([ ':file.download /etc/passwd /tmp/passwd -vector copy' ], 'Error', negate=True),
-                TC([ ':file.download /etc/passwd /tmp/passwd -vector symlink' ], 'Error', negate=True),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector file' ], JUST_PROMPT),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector fread' ], JUST_PROMPT),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector file_get_contents' ], JUST_PROMPT),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector base64' ], JUST_PROMPT),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector copy' ], JUST_PROMPT),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector symlink' ], JUST_PROMPT),
                 ]),
                
                'read' : TG(conf,
                 [
                 TC([ ':file.read /etc/gne' ], ERR_NO_SUCH_FILE),
                 TC([ ':file.read /etc/shadow' ], ERR_NO_SUCH_FILE), 
-                TC([ ':file.read /etc/passwd -vector file' ], 'Error', negate=True),
-                TC([ ':file.read /etc/passwd -vector fread' ], 'Error', negate=True),
-                TC([ ':file.read /etc/passwd -vector file_get_contents' ], 'Error', negate=True),
-                TC([ ':file.read /etc/passwd -vector base64' ], 'Error', negate=True),
-                TC([ ':file.read /etc/passwd -vector copy' ], 'Error', negate=True),
-                TC([ ':file.read /etc/passwd -vector symlink' ], 'Error', negate=True),
+                TC([ ':file.read /etc/passwd -vector file' ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ':file.read /etc/passwd -vector fread' ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ':file.read /etc/passwd -vector file_get_contents' ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ':file.read /etc/passwd -vector base64' ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ':file.read /etc/passwd -vector copy' ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ':file.read /etc/passwd -vector symlink' ], 'root:x:0:0:root:/root:/bin/bash'),
+                ]),
+
+               'upload' : TG(conf,
+                [
+                TC([ ':file.upload /etc/protocols /tmp/%s1' % randomstring ], JUST_PROMPT),
+                TC([ ':file.upload /etc/protocolsA /tmp/%s2' % randomstring ], ERR_NO_SUCH_FILE),
+                TC([ ':file.upload /etc/protocols /tmpdsadsasad'  ], 'Error'),
+                TC([ ':file.upload /bin/true /tmp/%s4' % randomstring ], 'Error', negate=True),
                 ]),
                  
-                
+                 
                 # TODO: test :set type different from strings are not correctly casted, use ast
 
         }

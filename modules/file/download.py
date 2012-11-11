@@ -28,7 +28,6 @@ class Download(ModuleProbeAll):
 
     support_vectors = VectorList([
         V('file.check',  "check_readable", "$rpath read".split(' ')),
-        V('file.check',  "check_exists", "r$path exists".split(' ')),
         V('find.webdir',  "find_webdir", ''),
         V('file.rm', 'remove', '$rpath'),
         V('file.check', 'md5', '$rpath md5'.split(' ')),

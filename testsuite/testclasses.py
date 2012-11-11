@@ -3,7 +3,7 @@ import types
 from commands import getstatusoutput as run
 from re import search, DOTALL
 import pexpect
-
+import testgroups
 
 class TestException(Exception):
     pass
@@ -115,15 +115,21 @@ class TC(TCproc):
             
         result = 'KO'
         
-        proc.send(' '.join(self.params) + '\n')
-        expected_list = [ ".*%s.*" % out for out in self.expected_output] + [ pexpect.TIMEOUT ]
+        command = ' '.join(self.params) + '\r\n'
+        proc.send(command)
+        
+        if self.expected_output[0] == testgroups.JUST_PROMPT:
+            self.expected_output = [ command[-10:] + out for out in self.expected_output ]
+        
+        expected_list = self.expected_output + [ pexpect.TIMEOUT ]
         
         result_index = proc.expect(expected_list)
         output = str(proc.before) + str(proc.after)
         
+        #print  expected_list, result_index, '|' + output + '|'
+        
         if self.negate != (result_index < len(expected_list) - 1):
             result = "OK [ '%s' ]" % (expected_list[result_index] if expected_list[result_index] == pexpect.TIMEOUT else ''.join(expected_list[result_index].splitlines()))
-        
         
         print '[+] %s .. %s' % (' '.join(self.params), result) 
             

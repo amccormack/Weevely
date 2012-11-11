@@ -14,10 +14,10 @@ testsuites = {
     'shells' : [ 'php', 'sh', 'info'],
 #    'cwd_ls_safemode' : [ 'ls_safemode', 'cwd_safemode', 'ls', 'cwd' ],
     'cwd_ls' : [ 'mkdirs', 'ls', 'cwd' ],
-    'checks' : [ 'checks' ],
+    'checks' : [ 'mkdirs', 'create_file', 'checks' ],
     'rms' : [ 'mkdirs', 'create_file', 'rm' ],
-#    'finds' : [ 'mkdirs', 'create_file', 'perms_safemode', 'webdir' ],
-    'finds' : [  'webdir' ]
+    'finds' : [ 'mkdirs', 'create_file', 'perms_safemode', 'webdir' ],
+    'download' : [ 'download' ],
 }
 
 class TestGroups:
@@ -106,7 +106,7 @@ class TestGroups:
                 TC([ ':file.check %s isfile' % conf['existant_base_dir'] ], 'False'),
                 TC([ ':file.check %s exists' % conf['existant_base_dir'] ], 'True'),
                 TC([ ':file.check %s' % conf['existant_base_dir'] ], 'usage'),
-                TC([ ':file.check %s/newfile md5' % conf['existant_base_dir'] ], 'b026324c6904b2a9cb4b88d6d61c81d1'),
+                TC([ ':file.check %s/newfile md5' % conf['existant_base_dir'] ], 'c4ca4238a0b923820dcc509a6f75849b'),
                 
                 ]),
 
@@ -227,6 +227,18 @@ class TestGroups:
 
                 ]),
 
+               'download' : TG(conf,
+                [
+                TC([ ':file.download /etc/gne /tmp/asd' ], ERR_NO_SUCH_FILE),
+                TC([ ':file.download /etc/passwd /tmpsakdsa/jhgsd' ], 'Errno'),
+                TC([ ':file.download /etc/shadow /tmp/asd' ], ERR_NO_SUCH_FILE), 
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector file' ], 'Error', negate=True),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector fread' ], 'Error', negate=True),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector file_get_contents' ], 'Error', negate=True),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector base64' ], 'Error', negate=True),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector copy' ], 'Error', negate=True),
+                TC([ ':file.download /etc/passwd /tmp/passwd -vector symlink' ], 'Error', negate=True),
+                ]),
                 
                 # TODO: test :set type different from strings are not correctly casted, use ast
 

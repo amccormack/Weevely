@@ -12,8 +12,6 @@ from random import randint
 from core.vector import VectorList, Vector as V
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
-classname = 'Download'
-
 class Download(ModuleProbeAll):
     '''Download binary/ascii files from target filesystem
 :file.download <remote path> <locale path>

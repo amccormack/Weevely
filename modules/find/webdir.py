@@ -13,8 +13,6 @@ from core.http.request import Request
 from urlparse import urlparse
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
-classname = 'Webdir'
-
 def join_abs_paths(paths,sep = '/'):
     return sep.join([p.strip(sep) for p in paths])
 

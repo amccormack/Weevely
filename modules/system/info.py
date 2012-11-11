@@ -11,8 +11,6 @@ from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 import argparse
 
-classname = 'Info'
-
 class Info(ModuleProbe):
     """Collect system informations
     :system.info <info>

@@ -80,7 +80,7 @@ class Terminal:
             ## Raw command call. Command is re-joined to be considered as single command
             else:
                 output = self.modhandler.load(self.modhandler.interpreter).run([ ' '.join(command) ] ) 
-                if output:
+                if output != None:
                     print output
 
         except KeyboardInterrupt:

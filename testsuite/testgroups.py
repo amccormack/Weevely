@@ -34,7 +34,7 @@ class TestGroups:
         config.read(confpath)
         conf = config._sections['global']
         
-        randomstring = ''.join(choice(ascii_lowercase) for x in range(4))
+        randomstring = 'weevtest_' + ''.join(choice(ascii_lowercase) for x in range(4))
 
         self.TGs = {
         
@@ -266,6 +266,11 @@ class TestGroups:
                 TC([ ':file.upload /etc/protocolsA /tmp/%s2' % randomstring ], ERR_NO_SUCH_FILE),
                 TC([ ':file.upload /etc/protocols /tmpdsadsasad'  ], 'Error'),
                 TC([ ':file.upload /bin/true /tmp/%s4' % randomstring ], 'Error', negate=True),
+                TC([ ':file.upload /etc/protocols /tmp/%s5 -vector file_put_contents' % randomstring ], JUST_PROMPT),
+                TC([ ':file.upload /etc/protocols /tmp/%s6 -vector fwrite' % randomstring ], JUST_PROMPT),
+                TC([ ':file.upload /bin/true /tmp/%s7 -chunksize 2048' % randomstring ], 'Error', negate=True),
+                TC([ ':file.upload /bin/true /tmp/%s8 -chunksize 2048 -content TEXT' % randomstring ], JUST_PROMPT),
+                TC([ ':file.read  /tmp/%s8' % randomstring ], 'TEXT'),
                 ]),
                  
                  

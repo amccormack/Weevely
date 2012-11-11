@@ -17,7 +17,7 @@ testsuites = {
     'checks' : [ 'mkdirs', 'create_file', 'checks' ],
     'rms' : [ 'mkdirs', 'create_file', 'rm' ],
     'finds' : [ 'mkdirs', 'create_file', 'perms_safemode', 'webdir' ],
-    'download' : [ 'download' ],
+    'download_read' : [ 'download', 'read' ],
 }
 
 class TestGroups:
@@ -239,6 +239,19 @@ class TestGroups:
                 TC([ ':file.download /etc/passwd /tmp/passwd -vector copy' ], 'Error', negate=True),
                 TC([ ':file.download /etc/passwd /tmp/passwd -vector symlink' ], 'Error', negate=True),
                 ]),
+               
+               'read' : TG(conf,
+                [
+                TC([ ':file.read /etc/gne' ], ERR_NO_SUCH_FILE),
+                TC([ ':file.read /etc/shadow' ], ERR_NO_SUCH_FILE), 
+                TC([ ':file.read /etc/passwd -vector file' ], 'Error', negate=True),
+                TC([ ':file.read /etc/passwd -vector fread' ], 'Error', negate=True),
+                TC([ ':file.read /etc/passwd -vector file_get_contents' ], 'Error', negate=True),
+                TC([ ':file.read /etc/passwd -vector base64' ], 'Error', negate=True),
+                TC([ ':file.read /etc/passwd -vector copy' ], 'Error', negate=True),
+                TC([ ':file.read /etc/passwd -vector symlink' ], 'Error', negate=True),
+                ]),
+                 
                 
                 # TODO: test :set type different from strings are not correctly casted, use ast
 

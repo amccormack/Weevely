@@ -1,5 +1,5 @@
 from core.moduleprobe import ModuleProbe
-from core.moduleexception import ModuleException
+from core.moduleexception import ProbeException
 from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
@@ -32,5 +32,5 @@ class Check(ModuleProbe):
         elif self.args['attr'] == 'md5' and value:
             self._result = value
         else:
-             raise ModuleException(self.name, "Error returned value: '%s'" % (value))
+             raise ProbeException(self.name, "Incorrect returned value: '%s'" % (value))
             

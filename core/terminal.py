@@ -72,7 +72,7 @@ class Terminal:
     
             ## Module call
             elif command[0][0] == module_trigger:
-                print self.modhandler.load(command[0][1:]).run(command[1:])
+                output = self.modhandler.load(command[0][1:]).run(command[1:])
                 
             elif command[0] == 'cd':
                 self.__cwd_handler(command)
@@ -80,8 +80,9 @@ class Terminal:
             ## Raw command call. Command is re-joined to be considered as single command
             else:
                 output = self.modhandler.load(self.modhandler.interpreter).run([ ' '.join(command) ] ) 
-                if output != None:
-                    print output
+                
+            if output != None:
+                print output
 
         except KeyboardInterrupt:
             print '[!] Stopped execution' 

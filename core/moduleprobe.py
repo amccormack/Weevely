@@ -44,8 +44,8 @@ class ModuleProbe:
             if e.module:
                 module = e.module
             self.mprint('[!] Error: %s' % (e.error), 2, module) 
-            
-        return self._output_result(stringify)
+        else:
+            return self._output_result(stringify)
 
     def mprint(self, str, msg_class = 3, module_name = None):
         

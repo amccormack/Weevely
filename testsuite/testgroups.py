@@ -23,7 +23,7 @@ testsuites = {
     'finds' : [ 'mkdirs', 'create_file', 'perms_safemode', 'webdir' ],
     'download_read' : [ 'download', 'read' ],
     'upload' : [ 'upload' ],
-    'enum' : [ 'enum' ],
+    'enum' : [ 'enum', 'userfiles' ],
     'audit' : [ 'etcpasswd' ],
     
 }
@@ -278,9 +278,10 @@ class TestGroups:
 
                'enum' : TG(conf,
                 [
-                TC([ ":file.enum a -paths \"['/etc/passwd', 'writable']\"" ], 'writable[\S ]+exists[\S ]+readable[\S ]+writable[\S ]+\r\n[\S ]+/etc/passwd[\S ]+exists[\S ]+readable[\S ]+'),
-                TC([ ":file.enum a -paths \"['/bin/bash', 'unexistant']\" -printall" ], '[\S ]+unexistant[\S ]+\r\n[\S ]+/bin/bash[\S ]+exists[\S ]+readable[\S ]+executable[\S ]+'),
-                TC([ ":file.enum a -paths \"['unexistant']\" -printall" ], 'exists', negate=True),
+                TC([ ":file.enum a -pathlist \"['/etc/passwd', 'writable']\"" ], 'writable[\S ]+exists[\S ]+readable[\S ]+writable[\S ]+\r\n[\S ]+/etc/passwd[\S ]+exists[\S ]+readable[\S ]+'),
+                TC([ ":file.enum a -pathlist \"['/bin/bash', 'unexistant']\" -printall" ], '[\S ]+unexistant[\S ]+\r\n[\S ]+/bin/bash[\S ]+exists[\S ]+readable[\S ]+executable[\S ]+'),
+                TC([ ":file.enum a -pathlist \"['unexistant']\" -printall" ], 'exists', negate=True),
+                TC([ ":file.enum unexistant" ], 'Error opening'),
                 ]),
 
 
@@ -295,7 +296,15 @@ class TestGroups:
 
                 ]),
                  
-                 
+               'userfiles' : TG(conf,
+                [
+                TC([ ":audit.userfiles" ], '%s[\S ]+readable' % conf['userfiles_readable_common']),
+                TC([ ":audit.userfiles -pathlist \"['%s']\"" % '/'.join(conf['userfiles_readable_specified'].split('/')[3:]) ], '%s[\S ]+readable' % conf['userfiles_readable_specified']),
+                TC([ ":audit.userfiles -auto-web"  ], '%s[\S ]+readable' % conf['userfiles_readable_common'], negate=True),
+                TC([ ":audit.userfiles -auto-user" ], '%s[\S ]+readable' % conf['userfiles_readable_common']),
+                
+                ]),
+                                     
                 # TODO: test :set type different from strings are not correctly casted, use ast
 
         }

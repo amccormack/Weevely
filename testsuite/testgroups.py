@@ -10,6 +10,7 @@ ERR_REQ_NO_BD_RESPONSE = 'No backdoor response from remote side'
 ERR_NO_SUCH_FILE = 'no such file or directory or permission denied'
 PROMPT_PHP_SH = '(?:(?:PHP >)|\$)'
 JUST_PROMPT = '\r\n[\S\ ]+' + PROMPT_PHP_SH
+ERR_CRAWL = 'Error: No sub URLs crawled. Check URL.'
 
 
 testsuites = {
@@ -25,6 +26,7 @@ testsuites = {
     'upload' : [ 'upload' ],
     'enum' : [ 'enum', 'userfiles' ],
     'audit' : [ 'etcpasswd' ],
+    'mapweb' : [ 'mapwebfiles' ],
     
 }
 
@@ -302,6 +304,24 @@ class TestGroups:
                 TC([ ":audit.userfiles -pathlist \"['%s']\"" % '/'.join(conf['userfiles_readable_specified'].split('/')[3:]) ], '%s[\S ]+readable' % conf['userfiles_readable_specified']),
                 TC([ ":audit.userfiles -auto-web"  ], '%s[\S ]+readable' % conf['userfiles_readable_common'], negate=True),
                 TC([ ":audit.userfiles -auto-user" ], '%s[\S ]+readable' % conf['userfiles_readable_common']),
+                
+                ]),
+                    
+                    
+               'mapwebfiles' : TG(conf,
+                [
+                TC([ ':file.upload asd writable/web_page1.html -content "%s"' % conf['web_page1_content'].replace('"','\"') ], JUST_PROMPT),
+                TC([ ':file.upload asd writable/web_page2.html -content "%s"' % conf['web_page2_content'].replace('"','\"') ], JUST_PROMPT),
+                TC([ ':file.upload asd writable/web_page3.html -content "%s"' % conf['web_page2_content'].replace('"','\"') ], JUST_PROMPT),
+
+                TC([ ':audit.mapwebfiles http://localhost/writable/web_page1.html http://localhost/writable/ /var/www/writable/' ] , '(?:web_page[0-9]\.html | exists | readable.*){3}' ),
+
+                TC([ ':file.rm writable/web_page1.html' ], JUST_PROMPT),
+                TC([ ':file.rm writable/web_page2.html' ], JUST_PROMPT),
+                TC([ ':file.rm writable/web_page3.html' ], JUST_PROMPT),
+                
+                TC([ ':audit.mapwebfiles http://localhost/writable/web_page1.html http://localhost/writable/ /var/www/writable/' ] , ERR_CRAWL ),
+                TC([ ':audit.mapwebfiles http://wronghost/writable/web_page1.html http://localhost/writable/ /var/www/writable/' ] , ERR_CRAWL ),
                 
                 ]),
                                      

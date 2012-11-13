@@ -24,6 +24,7 @@ testsuites = {
     'download_read' : [ 'download', 'read' ],
     'upload' : [ 'upload' ],
     'enum' : [ 'enum' ],
+    'audit' : [ 'etcpasswd' ],
     
 }
 
@@ -281,6 +282,19 @@ class TestGroups:
                 TC([ ":file.enum a -paths \"['/bin/bash', 'unexistant']\" -printall" ], '[\S ]+unexistant[\S ]+\r\n[\S ]+/bin/bash[\S ]+exists[\S ]+readable[\S ]+executable[\S ]+'),
                 TC([ ":file.enum a -paths \"['unexistant']\" -printall" ], 'exists', negate=True),
                 ]),
+
+
+               'etcpasswd' : TG(conf,
+                [
+                TC([ ":audit.etcpasswd" ], 'mail:x:8:8:mail:/var/mail:/bin/sh'),
+                TC([ ":audit.etcpasswd -real" ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ":audit.etcpasswd -real" ], 'mail:x:8:8:mail:/var/mail:/bin/sh', negate=True),
+                TC([ ":audit.etcpasswd -real -vector posix_getpwuid" ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ":audit.etcpasswd -real -vector cat" ], 'root:x:0:0:root:/root:/bin/bash'),
+                TC([ ":audit.etcpasswd -real -vector read" ], 'root:x:0:0:root:/root:/bin/bash'),
+
+                ]),
+                 
                  
                 # TODO: test :set type different from strings are not correctly casted, use ast
 

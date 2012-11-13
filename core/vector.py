@@ -1,6 +1,7 @@
 from core.moduleexception import ModuleException
 from string import Template
 from types import ListType, StringTypes, DictType
+import thread
 
 
 class VectorList(list):
@@ -72,7 +73,10 @@ class Vector:
 
         return modhandler.load(self.interpreter).run(formatted_list, stringify)
 
-            
+
+    def execute_background(self, modhandler, format_list = {}, stringify = False):
+        thread.start_new_thread(self.execute, (modhandler, format_list, stringify))
+        
 
     def __repr__(self):
         return '[%s, %s, %s]' % (self.name,self.interpreter,  self.payloads)

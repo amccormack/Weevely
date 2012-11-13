@@ -39,7 +39,7 @@ class ModuleProbeAll(ModuleProbe):
         
         vectors = []
         
-        if self.args['vector']:
+        if 'vector' in self.args and self.args['vector']:
             selected_vector = self.vectors.get(self.args['vector'])
             if selected_vector:
                 vectors = [ selected_vector ]

@@ -312,7 +312,7 @@ class TestGroups:
                 [
                 TC([ ':file.upload asd writable/web_page1.html -content "%s"' % conf['web_page1_content'].replace('"','\"') ], JUST_PROMPT),
                 TC([ ':file.upload asd writable/web_page2.html -content "%s"' % conf['web_page2_content'].replace('"','\"') ], JUST_PROMPT),
-                TC([ ':file.upload asd writable/web_page3.html -content "%s"' % conf['web_page2_content'].replace('"','\"') ], JUST_PROMPT),
+                TC([ ':file.upload asd writable/web_page3.html -content "%s"' % conf['web_page3_content'].replace('"','\"') ], JUST_PROMPT),
 
                 TC([ ':audit.mapwebfiles http://localhost/writable/web_page1.html http://localhost/writable/ /var/www/writable/' ] , '(?:web_page[0-9]\.html | exists | readable.*){3}' ),
 

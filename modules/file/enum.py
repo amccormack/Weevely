@@ -13,9 +13,9 @@ class Enum(ModuleProbe):
 
 
     argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('lpath', help='Local wordlist path')
-    argparser.add_argument('-printall', help='Print also when not found', action='store_true')
-    argparser.add_argument('-paths', help=SUPPRESS, type=literal_eval, default=[])
+    argparser.add_argument('pathfile', help='Enuemrate paths written in PATHFILE')
+    argparser.add_argument('-printall', help='Print also paths not found', action='store_true')
+    argparser.add_argument('-pathlist', help='Enumerate paths written as [\'/path/1\', \'/path/2\',]', type=literal_eval, default=[])
 
     support_vectors = VectorList([
        Vector('shell.php', 'getperms', "$f='$rpath'; if(file_exists($f)) { print('e'); if(is_readable($f)) print('r'); if(is_writable($f)) print('w'); if(is_executable($f)) print('x'); }"),
@@ -26,16 +26,16 @@ class Enum(ModuleProbe):
         
         self._result = {}
         
-        if not self.args['paths']:
+        if not self.args['pathlist']:
             try:
-                self.args['paths']=open(os.path.expanduser(self.args['lpath']),'r').read().splitlines()
+                self.args['pathlist']=open(os.path.expanduser(self.args['pathfile']),'r').read().splitlines()
             except:
-                raise ProbeException(self.name,  "Error opening path list \'%s\'" % self.args['lpath'])
+                raise ProbeException(self.name,  "Error opening path list \'%s\'" % self.args['pathfile'])
                 
 
     def _probe(self):
         
-        for entry in self.args['paths']:
+        for entry in self.args['pathlist']:
             
             perms = self.support_vectors.get('getperms').execute(self.modhandler, {'rpath' : entry})
             if perms or perms == '' and self.args['printall']:

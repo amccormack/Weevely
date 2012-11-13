@@ -69,7 +69,7 @@ class Etcpasswd(ModuleProbeAll):
 
         self._output = output_str[:-1] # Stringified /etc/passwd without last \n
         self._result = response_dict # Objectified /etc/passwd
-        return self._output
+        return self._output if stringify else self._result
 
 
 

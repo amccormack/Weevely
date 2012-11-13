@@ -2,7 +2,6 @@ from core.moduleprobe import ModuleProbe
 from core.moduleexception import ProbeException
 from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
-from argparse import SUPPRESS
 from ast import literal_eval
 from core.prettytable import PrettyTable
 import os

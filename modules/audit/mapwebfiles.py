@@ -31,7 +31,7 @@ class Mapwebfiles(ModuleProbe):
         urls = []
     
         try:
-            crawler = Crawler(url, self.args['deep'], url, '')
+            crawler = Crawler(url, self.args['deep'], '', '')
             crawler.crawl()
         except Exception, e:
             raise ProbeException(self.name, "Crawler exception: %s" % str(e))

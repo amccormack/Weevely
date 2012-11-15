@@ -90,7 +90,7 @@ class TestGroups:
                 TC([ 'cd ..' ], '%s/%s .*%s' % (conf['existant_base_dir'], '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:-2]), PROMPT_PHP_SH)),       
                 TC([ 'cd ..' ], '%s/%s .*%s' % (conf['existant_base_dir'], '/'.join(conf['existant_base_4_lvl_subdirs'].split('/')[:-3]), PROMPT_PHP_SH)),       
                 TC([ 'cd ..' ], '%s .*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),      
-
+                TC([ 'cd ..' ], '%s' % (JUST_PROMPT)),      
                 TC([ 'cd %s' % conf['existant_base_dir'] ], '%s .*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),     
                 TC([ 'cd %s' % conf['existant_base_4_lvl_subdirs'] ], '%s/%s .*%s' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'], PROMPT_PHP_SH)),       
                 TC([ 'cd .././/../..//////////////./../../%s/' % conf['existant_base_dir'] ], '%s .*%s' % (conf['existant_base_dir'], PROMPT_PHP_SH)),       

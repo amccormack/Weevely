@@ -78,13 +78,11 @@ class CmdRequest(Request):
 		data	 = self.extractor.findall(response)
 		
 		if len(data) < 1 or not data:
-			raise NoDataException( 'No backdoor response from remote side' )
+			raise NoDataException()
 		else:
 			return data[0].strip()
 		
 class NoDataException(Exception):
-	def __init__(self, value):
-		self.strerror = value
-	def __str__(self):
-   		return repr(self.error)
+	pass
+
 

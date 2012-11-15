@@ -13,6 +13,17 @@ from ast import literal_eval
 
 import random, os, shlex, types
 
+
+WARN_PROXY = '[!] Proxies can break weevely requests, use proxychains'
+WARN_TRAILING_SEMICOLON = 'command does not have trailing semicolon'
+WARN_NO_RESPONSE = 'No weevely response from remote side'
+WARN_UNREACHABLE = 'URL or proxy unreachable'
+WARN_CONN_ERR = 'Error connecting to backdoor URL or proxy'
+WARN_INVALID_RESPONSE = 'skipping invalid response'
+WARN_PHP_INTERPRETER_FAIL = 'PHP interpreter loading failed'
+WARN_LS_FAIL = 'listing failed, no such file or directory or permission denied'
+WARN_LS_ARGS = 'Error, PHP shell \'ls\' replacement supports only one <path> argument'
+
 class Php(ModuleProbe):
     '''Shell to execute PHP commands'''
 
@@ -35,7 +46,7 @@ class Php(ModuleProbe):
         
         # Set proxy 
         if self.args['proxy']:
-            self.mprint('[!] Proxies can break weevely requests, use proxychains')
+            self.mprint(WARN_PROXY)
             self.args['proxy'] = { 'http' : self.args['proxy'] }
         else:
             self.args['proxy'] = {}        
@@ -60,7 +71,7 @@ class Php(ModuleProbe):
                 
             # Warn about not ending semicolon
             if self.args['cmd'] and self.args['cmd'][-1][-1] not in (';', '}'):
-                self.mprint('PHP command \'..%s\' does not have trailing semicolon' % (self.args['cmd'][-1]))
+                self.mprint('\'..%s\' %s' % (self.args['cmd'][-1], WARN_TRAILING_SEMICOLON))
           
             # Prepend chdir
             if self.stored_args['path']:
@@ -106,14 +117,14 @@ class Php(ModuleProbe):
         try:
             response = request.execute()
         except NoDataException, e:
-            raise ProbeException(self.name, e.strerror)
+            raise ProbeException(self.name, WARN_NO_RESPONSE)
         except IOError, e:
-            raise ProbeException(self.name, '%s. Are backdoor URL or proxy reachable?' % e.strerror)
+            raise ProbeException(self.name, '%s. %s' % (e.strerror, WARN_UNREACHABLE))
         except Exception, e:
-            raise ProbeException(self.name, '%s. Error connecting to backdoor URL or proxy' % e.strerror)
+            raise ProbeException(self.name, '%s. %s' % (e.strerror, WARN_CONN_ERR))
     
         if 'error' in response and 'eval()\'d code' in response:
-            raise ProbeException(self.name, 'Invalid response \'%s\', skipping' % (cmd))
+            raise ProbeException(self.name, '\'%s\' %s' % (cmd, WARN_INVALID_RESPONSE))
         
         self.mprint( "Response: %s" % response, msg_class)
         
@@ -128,7 +139,7 @@ class Php(ModuleProbe):
             try:
                 response = self.__do_request('print(%s);' % (rand), currentmode)
             except Exception, e:
-                raise InitException(self.name, 'PHP interpreter loading failed: %s' % e)
+                raise InitException(self.name, '%s %s' % (e, WARN_PHP_INTERPRETER_FAIL))
             
             if response == rand:
                 
@@ -141,7 +152,7 @@ class Php(ModuleProbe):
                 return
         
         
-        raise InitException(self.name, 'PHP interpreter loading failed')
+        raise InitException(self.name, WARN_PHP_INTERPRETER_FAIL)
         
 
     def __ls_handler (self, cmd):
@@ -150,7 +161,7 @@ class Php(ModuleProbe):
         cmd_splitted = cmd.split(' ')
         
         if len(cmd_splitted)>2:
-            raise ProbeException(self.name,'Error, PHP shell \'ls\' replacement supports only one <path> argument')
+            raise ProbeException(self.name, WARN_LS_ARGS)
         elif len(cmd_splitted)==2 and self.stored_args['path']:
             # Should join with remote os.sep, but this should work (PHP support '\' as '/')
             path = os.path.join(self.stored_args['path'], cmd_splitted[1])
@@ -168,7 +179,7 @@ class Php(ModuleProbe):
             if response:
                 return response
         
-        raise ProbeException('', "List directory '%s' contents failed, no such file or directory or permission denied'" % path)
+        raise ProbeException('', "'%s' %s" % (path, WARN_LS_FAIL ))
             
 
 

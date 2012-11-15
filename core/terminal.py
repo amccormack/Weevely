@@ -18,7 +18,7 @@ gen_string = ':generator'
 
 class Terminal:
 
-    def __init__( self, modhandler, one_shot = False):
+    def __init__( self, modhandler):
 
         self.modhandler = modhandler
 

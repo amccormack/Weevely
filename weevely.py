@@ -100,7 +100,7 @@ if __name__ == "__main__":
         args_list = [':%s' % genname ] + sys.argv[3:]
 
         try:
-            Terminal (ModHandler(genname, password), True).run_module_cmd(args_list)
+            Terminal (ModHandler(genname, password)).run_module_cmd(args_list)
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
 

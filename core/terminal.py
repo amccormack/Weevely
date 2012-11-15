@@ -47,16 +47,17 @@ class Terminal:
 
             self.run_cmd_line(cmd)
 
-    def run_cmd_line(self, command):
+    def run_cmd_line(self, command, clear_last_output = True):
 
-        output = ''
+        if clear_last_output:
+            self._last_output = ''
         
         try:
     
             ## Help call
             if command[0] == help_string:
                 if len(command) == 2:
-                    self.modhandler.load(modname).argparser.print_help()
+                    self._last_output += self.modhandler.load(modname).argparser.format_help() 
                 else:
                     pass
                     # PRINT SUMMARY
@@ -64,7 +65,7 @@ class Terminal:
             ## Set call if ":set module" or ":set module param value"
             elif command[0] == set_string and len(command) > 1: 
                     self.modhandler.load(command[1]).save_args(command[2:])
-                    self.modhandler.load(command[1]).print_saved_args()
+                    self._last_output += self.modhandler.load(command[1]).get_stored_args_str()
 
             ## Load call
             elif command[0] == load_string and len(command) == 2:
@@ -72,22 +73,23 @@ class Terminal:
     
             ## Module call
             elif command[0][0] == module_trigger:
-                output = self.modhandler.load(command[0][1:]).run(command[1:])
+                self._last_output += self.modhandler.load(command[0][1:]).run(command[1:], stringify=True)
                 
             elif command[0] == 'cd':
                 self.__cwd_handler(command)
                 
             ## Raw command call. Command is re-joined to be considered as single command
             else:
-                output = self.modhandler.load(self.modhandler.interpreter).run([ ' '.join(command) ] ) 
+                self._last_output +=  self.modhandler.load(self.modhandler.interpreter).run([ ' '.join(command) ] )  
                 
-            if output != None:
-                print output
-
         except KeyboardInterrupt:
-            print '[!] Stopped execution' 
+            self._last_output += '[!] Stopped execution'  
         except ModuleException, e:
-            print '[!] [%s] Error: %s' % (e.module, e.error)
+            self._last_output += '[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep) 
+        
+        if self._last_output != None:
+            print self._last_output
+
         
 
     def __load_rcfile(self, path, default_rcfile=False):
@@ -101,7 +103,7 @@ class Terminal:
                 try:
                     rcfile = open(path, 'w').close()
                 except Exception, e:
-                    print "[!] Error creating '%s' rc file." % path
+                    self._last_output += "[!] Error creating '%s' rc file%s" % (path, os.linesep)
                 else:
                     return []
 
@@ -110,9 +112,9 @@ class Terminal:
             cmd       = cmd.strip()
 
             if cmd:
-                print '[RC exec] %s' % (cmd)
+                print '[RC exec] %s%s' % (cmd, os.linesep)
 
-                self.run_cmd_line(shlex.split(cmd))
+                self.run_cmd_line(shlex.split(cmd), clear_last_output=False)
 
     def __cwd_handler (self, cmd = None):
 
@@ -121,10 +123,7 @@ class Terminal:
         elif len(cmd) == 2:
             cwd_new = Vector('shell.php', '', 'chdir("$path") && print(getcwd());').execute(self.modhandler, { 'path' : cmd[1] })
             if not cwd_new:
-                print "[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1]
-                return
-        else:
-            return
+                self._last_output += "[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1]                
             
         self.modhandler.load('shell.php').stored_args['path'] = cwd_new
         

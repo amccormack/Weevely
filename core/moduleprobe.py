@@ -26,7 +26,7 @@ class ModuleProbe:
 
     def run(self, arglist = [], stringify = True):
         
-        self._result = None
+        self._result = ''
         self._output = ''
         
         
@@ -45,7 +45,9 @@ class ModuleProbe:
                 module = e.module
             self.mprint('[!] Error: %s' % (e.error), 2, module) 
         else:
-            return self._output_result(stringify)
+            self._output_result()
+            
+        return self._output if stringify else self._result
 
     def mprint(self, str, msg_class = 3, module_name = None):
         
@@ -77,7 +79,7 @@ class ModuleProbe:
     def _probe(self):
         pass
 
-    def _output_result(self, stringify):
+    def _output_result(self):
         
         
         # Empty outputs. False is probably a good output value 
@@ -87,21 +89,33 @@ class ModuleProbe:
         elif isinstance(self._result, ListType):
             self._output = '\n'.join(self._result)
         # Dict outputs are display as tables
-        elif isinstance(self._result, DictType):
-            table = PrettyTable(['Field', 'Value'])
-            table.align = 'l'
-            table.header = False
-            
-            for field in self._result:
+        elif isinstance(self._result, DictType) and self._result:
+
+            # Populate the rows
+            randomitem = next(self._result.itervalues())
+            if isinstance(randomitem, ListType):
+                table = PrettyTable(['']*(len(randomitem)+1))
+                table.align = 'l'
+                table.header = False
                 
-                table.add_row([field, self._result[field]])
+                for field in self._result:
+                    table.add_row([field] + self._result[field])
+                
+            else:
+                table = PrettyTable(['']*2)
+                table.align = 'l'
+                table.header = False
+                
+                for field in self._result:
+                    table.add_row([field, str(self._result[field])])
+                
+
                 
             self._output = table.get_string()
         # Else, try to stringify
         else:
             self._output = str(self._result)
         
-        return self._output if stringify else self._result
         
         
     def save_args(self, args):
@@ -117,12 +131,12 @@ class ModuleProbe:
                 self.stored_args[key] = value
         
                 
-    def print_saved_args(self):
+    def get_stored_args_str(self):
     
-        saved_args_str = ''
+        stored_args_str = ''
         for argument in [ action.dest for action in self.argparser._actions if action.dest != 'help' ]:
             value = self.stored_args[argument] if argument in self.stored_args else ''
-            saved_args_str += '%s=\'%s\' ' % (argument, value)
-        self.mprint(saved_args_str)
+            stored_args_str += '%s=\'%s\' ' % (argument, value)
+        return stored_args_str
         
     

@@ -21,7 +21,5 @@ class Read(Download):
         
         return Download._verify_execution(self)
     
-    def _output_result(self, stringify):
-        
-        return ModuleProbe._output_result(self, stringify)
-        
+    def _output_result(self):
+        return ModuleProbe._output_result(self)

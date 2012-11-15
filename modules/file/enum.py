@@ -43,19 +43,5 @@ class Enum(ModuleProbe):
                 if 'r' in perms: self._result[entry][1] = 'readable'
                 if 'w' in perms: self._result[entry][2] = 'writable'
                 if 'x' in perms: self._result[entry][3] = 'executable'
-                
-    def _output_result(self, stringify):
-        
-        if self._result:
-            
-            table = PrettyTable(['Field', 'Exists', 'Readable', 'Writable', 'Executable'])
-            table.align = 'l'
-            table.header = False
-            
-            for entry in self._result:
-                table.add_row([entry] + self._result[entry])
-                
-            self._output = table.get_string()   
-                 
-        return self._output
+
         

@@ -47,7 +47,7 @@ class Etcpasswd(ModuleProbeAll):
             raise ExecutionException(self.name, 'Enumeration execution failed')
             
 
-    def _output_result(self, stringify):
+    def _output_result(self):
         
         filter_real_users = self.args['real']
         response_splitted = self._result.split('\n')
@@ -69,7 +69,6 @@ class Etcpasswd(ModuleProbeAll):
 
         self._output = output_str[:-1] # Stringified /etc/passwd without last \n
         self._result = response_dict # Objectified /etc/passwd
-        return self._output if stringify else self._result
 
 
 

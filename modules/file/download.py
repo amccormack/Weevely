@@ -128,7 +128,7 @@ class Download(ModuleProbeAll):
     
     
     
-    def _output_result(self, stringify):
+    def _output_result(self):
         # Not convert self._result to self._output (no output prints)
-        return self._output
+        self._output = ''
     

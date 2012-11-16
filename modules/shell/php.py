@@ -16,7 +16,7 @@ import random, os, shlex, types
 
 WARN_PROXY = '[!] Proxies can break weevely requests, use proxychains'
 WARN_TRAILING_SEMICOLON = 'command does not have trailing semicolon'
-WARN_NO_RESPONSE = 'No weevely response from remote side'
+WARN_NO_RESPONSE = 'No response'
 WARN_UNREACHABLE = 'URL or proxy unreachable'
 WARN_CONN_ERR = 'Error connecting to backdoor URL or proxy'
 WARN_INVALID_RESPONSE = 'skipping invalid response'
@@ -99,7 +99,6 @@ class Php(ModuleProbe):
         if isinstance(listcmd, types.ListType):
             cmd = ' '.join(listcmd)
         
-
         request = CmdRequest( self.modhandler.url, self.modhandler.password, self.args['proxy'])
         request.setPayload(cmd, mode)
 
@@ -138,8 +137,9 @@ class Php(ModuleProbe):
 
             try:
                 response = self.__do_request('print(%s);' % (rand), currentmode)
-            except Exception, e:
-                raise InitException(self.name, '%s %s' % (e, WARN_PHP_INTERPRETER_FAIL))
+            except ProbeException, e:
+                self.mprint('%s with %s method' % (e.error, currentmode))
+                continue
             
             if response == rand:
                 
@@ -147,8 +147,6 @@ class Php(ModuleProbe):
                 
                 # Set as best interpreter
                 self.modhandler.interpreter = self.name
-                
-                
                 return
         
         

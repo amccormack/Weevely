@@ -1,6 +1,6 @@
 
 
-from moduleexception import ModuleException, ProbeException, ProbeSucceed
+from moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
 from core.savedargparse import SavedArgumentParser as ArgumentParser, Namespace
 from types import ListType, StringTypes, DictType
 from core.prettytable import PrettyTable
@@ -40,6 +40,8 @@ class ModuleProbe:
             self.mprint('[!] Error: %s' % (e.error), 2, e.module) 
         except ProbeSucceed, e:
             pass
+        except InitException, e:
+            raise
         except ModuleException, e:
             module = self.name
             if e.module:

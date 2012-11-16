@@ -119,7 +119,7 @@ class TC(TCproc):
         proc.send(command)
         
         if self.expected_output[0] == testgroups.JUST_PROMPT:
-            self.expected_output = [ command[-5:] + out for out in self.expected_output ]
+            self.expected_output = self.expected_output 
         
         expected_list = self.expected_output + [ pexpect.TIMEOUT ]
         

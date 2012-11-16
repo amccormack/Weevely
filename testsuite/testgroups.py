@@ -6,10 +6,10 @@ from random import choice
 from string import ascii_lowercase
 
 
-ERR_REQ_NO_BD_RESPONSE = 'No backdoor response from remote side'
+ERR_REQ_NO_BD_RESPONSE = 'No weevely response from remote side'
 ERR_NO_SUCH_FILE = 'no such file or directory or permission denied'
 PROMPT_PHP_SH = '(?:(?:PHP >)|\$)'
-JUST_PROMPT = '\r\n[\S\ ]+' + PROMPT_PHP_SH
+JUST_PROMPT = '[\S\ ]+' + PROMPT_PHP_SH
 ERR_CRAWL = 'Error: No sub URLs crawled. Check URL.'
 
 
@@ -321,7 +321,7 @@ class TestGroups:
                 TC([ ':file.rm writable/web_page3.html' ], JUST_PROMPT),
                 
                 TC([ ':audit.mapwebfiles http://localhost/writable/web_page1.html http://localhost/writable/ /var/www/writable/' ] , ERR_CRAWL ),
-                TC([ ':audit.mapwebfiles http://wronghost/writable/web_page1.html http://localhost/writable/ /var/www/writable/' ] , ERR_CRAWL ),
+                TC([ ':audit.mapwebfiles http://localhost:90/writable/web_page1.html http://localhost/writable/ /var/www/writable/' ] , ERR_CRAWL ),
                 
                 ]),
                                      

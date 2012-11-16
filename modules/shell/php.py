@@ -68,8 +68,8 @@ class Php(Module):
 
             rand = str(random.randint( 11111, 99999 ))
 
+            self.current_mode = currentmode
             if self.run_module('echo %s;' % (rand)) == rand:
-                self.current_mode = currentmode
                 self.params.set_and_check_parameters({'mode' : currentmode}, False)
                 break
 

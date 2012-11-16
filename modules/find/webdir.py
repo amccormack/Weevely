@@ -60,7 +60,7 @@ class Webdir(ModuleProbe):
             return
 
         
-        writable_dirs = self.vectors.get('find_writable_dirs').execute(self.modhandler, {'path' : start_path}, stringify=False)
+        writable_dirs = self.vectors.get('find_writable_dirs').execute(self.modhandler, {'path' : start_path})
         writable_dirs.append(start_path)
 
         for dir_path in writable_dirs:

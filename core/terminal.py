@@ -47,17 +47,24 @@ class Terminal:
 
             self.run_cmd_line(cmd)
 
+
+    def __tprint(self, msg):
+        self._last_warns += msg + os.linesep
+        print msg,
+        
+
     def run_cmd_line(self, command, clear_last_output = True):
 
         if clear_last_output:
             self._last_output = ''
+            self._last_warns = ''
         
         try:
     
             ## Help call
             if command[0] == help_string:
                 if len(command) == 2:
-                    self._last_output += self.modhandler.load(modname).argparser.format_help() 
+                    self.__tprint(self.modhandler.load(modname).argparser.format_help())
                 else:
                     pass
                     # PRINT SUMMARY
@@ -65,31 +72,37 @@ class Terminal:
             ## Set call if ":set module" or ":set module param value"
             elif command[0] == set_string and len(command) > 1: 
                     self.modhandler.load(command[1]).save_args(command[2:])
-                    self._last_output += self.modhandler.load(command[1]).get_stored_args_str()
+                    self.__tprint(self.modhandler.load(command[1]).get_stored_args_str())
 
             ## Load call
             elif command[0] == load_string and len(command) == 2:
                 self.__load_rcfile(command[1])
-    
-            ## Module call
-            elif command[0][0] == module_trigger:
-                self._last_output += self.modhandler.load(command[0][1:]).run(command[1:], stringify=True)
-                
+
             elif command[0] == 'cd':
                 self.__cwd_handler(command)
                 
-            ## Raw command call. Command is re-joined to be considered as single command
             else:
-                self._last_output +=  self.modhandler.load(self.modhandler.interpreter).run([ ' '.join(command) ] )  
+                    
+                ## Module call
+                if command[0][0] == module_trigger:
+                    interpreter = command[0][1:]
+                    cmd = command[1:]
+                ## Raw command call. Command is re-joined to be considered as single command
+                else:
+                    interpreter = self.modhandler.interpreter
+                    cmd = [ ' '.join(command) ] 
+                
+                res, out, warn = self.modhandler.load(interpreter).run(cmd)
+                if out: self._last_output += out + os.linesep
+                if warn: self._last_warns += warn + os.linesep
                 
         except KeyboardInterrupt:
-            self._last_output += '[!] Stopped execution'  
+            self.__tprint('[!] Stopped execution')
         except ModuleException, e:
-            self._last_output += '[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep) 
+            self.__tprint('[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep))
         
-        if self._last_output != None:
-            print self._last_output
-
+        if self._last_output:
+            print self._last_output,
         
 
     def __load_rcfile(self, path, default_rcfile=False):
@@ -103,7 +116,7 @@ class Terminal:
                 try:
                     rcfile = open(path, 'w').close()
                 except Exception, e:
-                    self._last_output += "[!] Error creating '%s' rc file%s" % (path, os.linesep)
+                    raise ModuleException("Creation '%s' rc file failed%s" % (path, os.linesep))
                 else:
                     return []
 
@@ -112,7 +125,7 @@ class Terminal:
             cmd       = cmd.strip()
 
             if cmd:
-                print '[RC exec] %s%s' % (cmd, os.linesep)
+                self.__tprint('[RC exec] %s%s' % (cmd, os.linesep))
 
                 self.run_cmd_line(shlex.split(cmd), clear_last_output=False)
 
@@ -123,7 +136,7 @@ class Terminal:
         elif len(cmd) == 2:
             cwd_new = Vector('shell.php', '', 'chdir("$path") && print(getcwd());').execute(self.modhandler, { 'path' : cmd[1] })
             if not cwd_new:
-                self._last_output += "[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1]                
+                self.__tprint("[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1])                
             
         self.modhandler.load('shell.php').stored_args['path'] = cwd_new
         
@@ -140,7 +153,7 @@ class Terminal:
         #self.modhandler.set_verbosity()
         
         if Vector('system.info', "" , "safe_mode").execute(self.modhandler) == '1':
-            print '[!] PHP Safe mode enabled'
+            self.__tprint('[!] PHP Safe mode enabled')
             
         
         return username, hostname
@@ -199,4 +212,4 @@ class Terminal:
             return results[state]
 
         except Exception, e:
-            print '[!] Completion error: %s' % e
+            self.__tprint('[!] Completion error: %s' % e)

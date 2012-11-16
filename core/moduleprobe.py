@@ -4,8 +4,8 @@ from moduleexception import ModuleException, ProbeException, ProbeSucceed
 from core.savedargparse import SavedArgumentParser as ArgumentParser, Namespace
 from types import ListType, StringTypes, DictType
 from core.prettytable import PrettyTable
+from os import linesep
 
-class_name = 'Module'
 
 class ModuleProbe:
     '''Generic class Module to inherit'''
@@ -24,10 +24,11 @@ class ModuleProbe:
         self._init_module()
         
 
-    def run(self, arglist = [], stringify = True):
+    def run(self, arglist = []):
         
         self._result = ''
         self._output = ''
+        self._warns = ''
         
         
         try:
@@ -47,7 +48,7 @@ class ModuleProbe:
         else:
             self._output_result()
             
-        return self._output if stringify else self._result
+        return self._result, self._output, self._warns
 
     def mprint(self, str, msg_class = 3, module_name = None):
         
@@ -56,6 +57,8 @@ class ModuleProbe:
                 module_name = self.name
                 
             print '[%s] %s' % (module_name, str)
+        
+        self._warns += str + linesep
             
 
     def _init_module(self):
@@ -115,7 +118,6 @@ class ModuleProbe:
         # Else, try to stringify
         else:
             self._output = str(self._result)
-        
         
         
     def save_args(self, args):

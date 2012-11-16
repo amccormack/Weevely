@@ -93,7 +93,7 @@ class Terminal:
                     cmd = [ ' '.join(command) ] 
                 
                 res, out, warn = self.modhandler.load(interpreter).run(cmd)
-                if out: self._last_output += out + os.linesep
+                if out: self._last_output += out
                 if warn: self._last_warns += warn + os.linesep
                 
         except KeyboardInterrupt:
@@ -102,7 +102,7 @@ class Terminal:
             self.__tprint('[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep))
         
         if self._last_output:
-            print self._last_output,
+            print self._last_output
         
 
     def __load_rcfile(self, path, default_rcfile=False):

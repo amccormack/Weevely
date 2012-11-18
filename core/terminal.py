@@ -167,6 +167,7 @@ class Terminal:
             self.matching_words =  [':%s' % m for m in self.modhandler.modules_classes.keys()] + [help_string, load_string, set_string]
         
             try:
+                readline.set_history_length(100)
                 readline.set_completer_delims(' \t\n;')
                 readline.parse_and_bind( 'tab: complete' )
                 readline.set_completer( self.__complete )

@@ -123,13 +123,11 @@ if __name__ == "__main__":
                 
             ModHandler(url, password).load(modname).argparser.print_help()
 
-        elif sys.argv[1].startswith('http') or sys.argv[3] == ':set':
+        elif sys.argv[1].startswith('http'):
 
             try:
-                terminal = Terminal (ModHandler(url, password), True)
-
-                if sys.argv[3][0] == module_trigger:
-                    terminal.run_cmd_line(sys.argv[3:])
+                terminal = Terminal (ModHandler(url, password))
+                terminal.run_cmd_line(sys.argv[3:])
 
             except ModuleException, e:
                 print '[!] [%s] %s ' % (e.module, e.error)

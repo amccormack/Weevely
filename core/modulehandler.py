@@ -6,9 +6,6 @@ from helper import Helper
 
 class ModHandler:
 
-     
-
-
     def __init__(self, url = None, password = None):
 
         self.url = url
@@ -68,7 +65,7 @@ class ModHandler:
         self.ordered_groups = self.modules_names_by_group.keys()
         self.ordered_groups.sort()
 
-    def load(self, module_name, slack_interpreter_probe=True):
+    def load(self, module_name):
             
         if not module_name:
             module_name = self.interpreter

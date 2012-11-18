@@ -11,6 +11,7 @@ from argparse import SUPPRESS
 import random
 
 MSG_SH_INTERPRETER_SUCCEED = 'Shell interpreter load succeed'
+WARN_SH_INTERPRETER_FAIL = 'Shell interpreters load failed'
 
 class Sh(ModuleProbeAll):
     '''Shell to execute system commands'''
@@ -83,7 +84,7 @@ fclose($pipes[2]); proc_close($h);"""),
             
             return
         
-        raise ModuleException(self.name, 'System shell interpreter loading failed')
+        raise ModuleException(self.name, WARN_SH_INTERPRETER_FAIL)
             
             
             

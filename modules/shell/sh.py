@@ -7,7 +7,10 @@ from core.moduleexception import ModuleException, ProbeException, ExecutionExcep
 from core.moduleprobeall import ModuleProbeAll
 from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
+from argparse import SUPPRESS
 import random
+
+MSG_SH_INTERPRETER_SUCCEED = 'Shell interpreter load succeed'
 
 class Sh(ModuleProbeAll):
     '''Shell to execute system commands'''
@@ -31,14 +34,14 @@ fclose($pipes[2]); proc_close($h);"""),
     argparser.add_argument('cmd', help='Shell command', nargs='+' )
     argparser.add_argument('-stderr', help='Print standard error output', action='store_const', const=False, default=True)
     argparser.add_argument('-vector', choices = vectors.get_names())
+    argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
     
     def _init_module(self):
-        
         self.stored_args = { 'vector' : None }
 
     def _execute_vector(self):
 
-        if not self.stored_args['vector']:
+        if not self.stored_args['vector'] or self.args['just_probe']:
             self.__slacky_probe()
             
         # Execute if is current vector is saved or choosen
@@ -74,6 +77,9 @@ fclose($pipes[2]); proc_close($h);"""),
             
             # Set as best interpreter
             self.modhandler.interpreter = self.name
+
+            if self.args['just_probe']:
+                raise ProbeSucceed(self.name, MSG_SH_INTERPRETER_SUCCEED)
             
             return
         

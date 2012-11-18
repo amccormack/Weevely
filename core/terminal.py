@@ -89,6 +89,10 @@ class Terminal:
                     cmd = command[1:]
                 ## Raw command call. Command is re-joined to be considered as single command
                 else:
+                    # If interpreter is not set yet, try to probe automatically best one
+                    if not self.modhandler.interpreter:
+                        Vector('shell.sh', "" , '--just-probe sh').execute(self.modhandler)
+                    
                     interpreter = self.modhandler.interpreter
                     cmd = [ ' '.join(command) ] 
                 
@@ -145,12 +149,11 @@ class Terminal:
         
         print "[+] Starting terminal, shell probe may take a while"
         
+        # At terminal start, try to probe automatically best interpreter
+        username =  Vector('shell.sh', "" , '--just-probe sh').execute(self.modhandler)
+        
         username =  Vector('system.info', "" , "whoami").execute(self.modhandler)
         hostname =  Vector('system.info', "" , "hostname").execute(self.modhandler)
-
-        #self.modhandler.set_verbosity(1)
-        Vector('shell.sh', "sh_env_init", "True").execute(self.modhandler)
-        #self.modhandler.set_verbosity()
         
         if Vector('system.info', "" , "safe_mode").execute(self.modhandler) == '1':
             self.__tprint('[!] PHP Safe mode enabled')
@@ -193,10 +196,6 @@ class Terminal:
                 else:
                     return []
 
-            # account for last argument ending in a space
-#            if respace.match(buffer):
-#                line.append('')
-            # resolve command to the implementation function
 
             cmd = line[0].strip()
 

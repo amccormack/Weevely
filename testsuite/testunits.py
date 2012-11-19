@@ -47,7 +47,6 @@ class SimpleTestCase(unittest.TestCase):
         
 
     def _outp(self, command):
-        
         self._run_test_quietly(command)
         return self.term._last_output
  
@@ -59,7 +58,7 @@ class SimpleTestCase(unittest.TestCase):
     @classmethod  
     def _run_cmd(cls, cmd):
         #print '\n[env] %s' % cmd,
-        child = pexpect.spawn(cmd)
+        child = pexpect.spawn(cmd, timeout=1)
         idx = child.expect([pexpect.TIMEOUT, pexpect.EOF])
         if idx == 0: child.interact()
         

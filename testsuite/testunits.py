@@ -20,18 +20,21 @@ conf = configparser._sections['global']
 
 class SimpleTestCase(unittest.TestCase):
     
-    def setUp(self):
-        self._setenv()        
-        self.term = core.terminal.Terminal (ModHandler(conf['url'], conf['pwd']))
+    @classmethod  
+    def setUpClass(cls):  
+        cls._setenv()        
+        cls.term = core.terminal.Terminal (ModHandler(conf['url'], conf['pwd']))
 
+    @classmethod  
+    def tearDownClass(cls):  
+        cls._unsetenv()
 
-    def tearDown(self):
-        self._unsetenv()
-
-    def _setenv(self):
+    @classmethod  
+    def _setenv(cls):  
         pass
     
-    def _unsetenv(self):
+    @classmethod     
+    def _unsetenv(cls):  
         pass
 
 
@@ -47,26 +50,29 @@ class SimpleTestCase(unittest.TestCase):
         
         self._run_test_quietly(command)
         return self.term._last_output
-
+ 
     def _warn(self, command):
         self._run_test_quietly(command)
         return self.term._last_warns
     
 
-    def _run_cmd(self, cmd):
+    @classmethod  
+    def _run_cmd(cls, cmd):
         #print '\n[env] %s' % cmd,
         child = pexpect.spawn(cmd)
         idx = child.expect([pexpect.TIMEOUT, pexpect.EOF])
         if idx == 0: child.interact()
         
 
-    def _env_mkdir(self, relpath):
+    @classmethod  
+    def _env_mkdir(cls, relpath):
         abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
         cmd = Template(conf['env_mkdir_command']).safe_substitute(path=abspath)
-        self._run_cmd(cmd)
+        cls._run_cmd(cmd)
 
         
-    def _env_newfile(self, relpath, content = '1'):
+    @classmethod  
+    def _env_newfile(cls, relpath, content = '1'):
     
         file = NamedTemporaryFile()
         file.close()
@@ -78,14 +84,16 @@ class SimpleTestCase(unittest.TestCase):
         
         abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
         cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
-        self._run_cmd(cmd)
+        cls._run_cmd(cmd)
 
-    def _env_chmod(self, relpath, mode='644'):
+    @classmethod  
+    def _env_chmod(cls, relpath, mode='644'):
         abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
         cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode)
-        self._run_cmd(cmd)
+        cls._run_cmd(cmd)
 
-    def _env_rm(self, relpath):
+    @classmethod  
+    def _env_rm(cls, relpath):
         abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
         
         if conf['env_base_writable_web_dir'].count('/') < 3:
@@ -93,7 +101,7 @@ class SimpleTestCase(unittest.TestCase):
             return
         
         cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
-        self._run_cmd(cmd)
+        cls._run_cmd(cmd)
 
 class Shells(SimpleTestCase):
 
@@ -126,15 +134,19 @@ class Shells(SimpleTestCase):
 
 class ShellsFSBrowse(SimpleTestCase):
 
-    def _setenv(self):
-        
-        self.basedir = conf['env_base_writable_web_dir']
-        self.newdirs = ['w1', 'w2', 'w3', 'w4']
-        self._env_rm(self.newdirs[0])   
-        self._env_mkdir(os.path.join(*self.newdirs))
 
-    def _unsetenv(self):
-        self._env_rm(self.newdirs[0])        
+
+    @classmethod
+    def _setenv(cls):
+        
+        cls.basedir = conf['env_base_writable_web_dir']
+        cls.newdirs = ['w1', 'w2', 'w3', 'w4']
+        cls._env_rm(cls.newdirs[0])   
+        cls._env_mkdir(os.path.join(*cls.newdirs))
+
+    @classmethod
+    def _unsetenv(cls):
+        cls._env_rm(cls.newdirs[0])        
         
     def test_ls(self):
         
@@ -165,26 +177,28 @@ class ShellsFSBrowse(SimpleTestCase):
 
 class FSInteract(SimpleTestCase):
 
-    def _setenv(self):
+    @classmethod
+    def _setenv(cls):
         
-        self.basedir = conf['env_base_writable_web_dir']
-        self.newdirs = ['w1', 'w2', 'w3', 'w4']
-        self.filenames = []
-        self._env_mkdir(os.path.join(*self.newdirs))
+        cls.basedir = conf['env_base_writable_web_dir']
+        cls.newdirs = ['w1', 'w2', 'w3', 'w4']
+        cls.filenames = []
+        cls._env_mkdir(os.path.join(*cls.newdirs))
         
         i=1
-        for i in range(len(self.newdirs)):
-            pathlist = self.newdirs[:i] + [ 'file-%s.txt' % self.newdirs[i] ]
+        for i in range(len(cls.newdirs)):
+            pathlist = cls.newdirs[:i] + [ 'file-%s.txt' % cls.newdirs[i] ]
             filename = os.path.join(*pathlist)
-            self._env_newfile(filename)
-            self.filenames.append(filename)
+            cls._env_newfile(filename)
+            cls.filenames.append(filename)
             i+=1
 
         
-    def _unsetenv(self):
-        self._env_rm(self.newdirs[0])   
-        for path in self.filenames:
-            self._env_rm(path)   
+    @classmethod
+    def _unsetenv(cls):
+        cls._env_rm(cls.newdirs[0])   
+        for path in cls.filenames:
+            cls._env_rm(path)   
             
         
     

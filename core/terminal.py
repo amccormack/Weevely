@@ -144,7 +144,7 @@ class Terminal:
 
     def __cwd_handler (self, cmd = None):
 
-        if cmd == None:
+        if cmd == None or len(cmd) ==1:
             cwd_new = Vector('system.info', '', 'basedir').execute(self.modhandler)
         elif len(cmd) == 2:
             cwd_new = Vector('shell.php', '', 'chdir("$path") && print(getcwd());').execute(self.modhandler, { 'path' : cmd[1] })

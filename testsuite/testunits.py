@@ -135,9 +135,7 @@ class Shells(SimpleTestCase):
         self.assertEqual(self._outp(':shell.sh \'(echo "INVISIBLE" >&2)\''), '')
         
 
-class ShellsFSBrowse(SimpleTestCase):
-
-
+class FolderFSTestCase(SimpleTestCase):
 
     @classmethod
     def _setenv(cls):
@@ -150,6 +148,31 @@ class ShellsFSBrowse(SimpleTestCase):
     @classmethod
     def _unsetenv(cls):
         cls._env_rm(cls.newdirs[0])        
+
+
+class FolderFileFSTestCase(FolderFSTestCase):
+    
+    @classmethod
+    def _setenv(cls):    
+        FolderFSTestCase._setenv.im_func(FolderFileFSTestCase)
+        
+        i=1
+        for i in range(len(cls.newdirs)):
+            pathlist = cls.newdirs[:i] + [ 'file-%s.txt' % cls.newdirs[i] ]
+            filename = os.path.join(*pathlist)
+            cls._env_newfile(filename)
+            cls.filenames.append(filename)
+            i+=1
+
+    @classmethod
+    def _unsetenv(cls):
+        FolderFSTestCase._unsetenv.im_func(FolderFileFSTestCase)
+        #FolderFSTestCase._unsetenv()
+        for path in cls.filenames:
+            cls._env_rm(path)  
+
+class ShellsFSBrowse(FolderFSTestCase):
+
         
     def test_ls(self):
         
@@ -178,32 +201,8 @@ class ShellsFSBrowse(SimpleTestCase):
         self.assertEqual(self._path('cd .././/../..//////////////./../%s/../' % self.newdirs[0]), self.basedir)
 
 
-class FSInteract(SimpleTestCase):
+class FSInteract(FolderFileFSTestCase):
 
-    @classmethod
-    def _setenv(cls):
-        
-        cls.basedir = conf['env_base_writable_web_dir']
-        cls.newdirs = ['w1', 'w2', 'w3', 'w4']
-        cls.filenames = []
-        cls._env_mkdir(os.path.join(*cls.newdirs))
-        
-        i=1
-        for i in range(len(cls.newdirs)):
-            pathlist = cls.newdirs[:i] + [ 'file-%s.txt' % cls.newdirs[i] ]
-            filename = os.path.join(*pathlist)
-            cls._env_newfile(filename)
-            cls.filenames.append(filename)
-            i+=1
-
-        
-    @classmethod
-    def _unsetenv(cls):
-        cls._env_rm(cls.newdirs[0])   
-        for path in cls.filenames:
-            cls._env_rm(path)   
-            
-        
     
     def test_check(self):
         

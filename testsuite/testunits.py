@@ -38,7 +38,7 @@ class SimpleTestCase(unittest.TestCase):
         pass
 
 
-    def _run_test(self, command, quiet=False):
+    def _run_test(self, command, quiet=True):
         if quiet:
             stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')  

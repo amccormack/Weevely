@@ -38,20 +38,24 @@ class SimpleTestCase(unittest.TestCase):
         pass
 
 
-    def _run_test_quietly(self, command):
-        stdout = sys.stdout
+    def _run_test(self, command, quiet=False):
+        if quiet:
+            stdout = sys.stdout
+            sys.stdout = open(os.devnull, 'w')  
+            
         #print '[>] %s' % command
-        sys.stdout = open(os.devnull, 'w')  
         self.term.run_cmd_line(shlex.split(command))
-        sys.stdout = stdout
+        
+        if quiet: 
+            sys.stdout = stdout
         
 
     def _outp(self, command):
-        self._run_test_quietly(command)
+        self._run_test(command)
         return self.term._last_output
  
     def _warn(self, command):
-        self._run_test_quietly(command)
+        self._run_test(command)
         return self.term._last_warns
     
 
@@ -158,7 +162,7 @@ class ShellsFSBrowse(SimpleTestCase):
 
 
     def _path(self, command):
-        self._run_test_quietly(command)
+        self._run_test(command)
         return self.term.modhandler.load('shell.php').stored_args['path']
 
     def test_cwd(self):

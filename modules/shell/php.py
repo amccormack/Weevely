@@ -148,9 +148,10 @@ class Php(ModuleProbe):
                 self.stored_args['mode'] = currentmode
                 
                 # Set as best interpreter
-                self.modhandler.interpreter = self.name
+                #self.modhandler.interpreter = self.name
                 
                 if self.args['just_probe']:
+                    self._result = True 
                     raise ProbeSucceed(self.name, MSG_PHP_INTERPRETER_SUCCEED)
                 
                 return

@@ -71,15 +71,15 @@ fclose($pipes[2]); proc_close($h);"""),
         slacky_formats = self.args_formats.copy()
         slacky_formats['cmd'] = 'echo %s' % (rand)
         
-        
         if self.current_vector.execute(self.modhandler, slacky_formats) == rand:
             
             self.stored_args['vector'] = self.current_vector.name
             
             # Set as best interpreter
-            self.modhandler.interpreter = self.name
-
+            #self.modhandler.interpreter = self.name
             if self.args['just_probe']:
+                
+                self._result = True 
                 raise ProbeSucceed(self.name, MSG_SH_INTERPRETER_SUCCEED)
             
             return

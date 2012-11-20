@@ -91,7 +91,7 @@ class Terminal:
                 else:
                     # If interpreter is not set yet, try to probe automatically best one
                     if not self.modhandler.interpreter:
-                        Vector('shell.sh', "" , '--just-probe sh').execute(self.modhandler)
+                        self.__guess_best_interpreter()
                     
                     interpreter = self.modhandler.interpreter
                     cmd = [ ' '.join(command) ] 
@@ -107,6 +107,15 @@ class Terminal:
         
         if self._last_output:
             print self._last_output
+        
+
+    def __guess_best_interpreter(self):
+        if Vector('shell.sh', "" , ['-just-probe', 'sh']).execute(self.modhandler):
+            self.modhandler.interpreter = 'shell.sh'
+        elif Vector('shell.php', "" , ['-just-probe', 'php']).execute(self.modhandler):
+            self.modhandler.interpreter = 'shell.php'
+        else:
+            raise Exception('A InitException should be raised here')
         
 
     def __load_rcfile(self, path, default_rcfile=False):
@@ -150,7 +159,7 @@ class Terminal:
         print "[+] Starting terminal, shell probe may take a while"
         
         # At terminal start, try to probe automatically best interpreter
-        username =  Vector('shell.sh', "" , '--just-probe sh').execute(self.modhandler)
+        self.__guess_best_interpreter()
         
         username =  Vector('system.info', "" , "whoami").execute(self.modhandler)
         hostname =  Vector('system.info', "" , "hostname").execute(self.modhandler)

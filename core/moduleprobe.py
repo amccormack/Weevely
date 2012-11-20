@@ -39,7 +39,7 @@ class ModuleProbe:
         except ProbeException, e:
             self.mprint('[!] Error: %s' % (e.error), 2, e.module) 
         except ProbeSucceed, e:
-            pass
+            self._output_result()
         except InitException, e:
             raise
         except ModuleException, e:

@@ -51,6 +51,7 @@ rrmdir("$recurs", "$path");"""),
 
     def _prepare_probe(self):
         
+        self._result = False
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
         if not self.modhandler.load('file.check')._result:
             raise ProbeException(self.name, WARN_NO_SUCH_FILE)        
@@ -71,11 +72,11 @@ rrmdir("$recurs", "$path");"""),
         result = self.modhandler.load('file.check')._result
         
         if result == False:
+            self._result = True
             raise ProbeSucceed(self.name, WARN_DELETE_OK)
         
     def _verify_probe(self):
-        self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
-        result = self.modhandler.load('file.check')._result        
-        
-        if result == True:
-            raise ProbeException(self.name, WARN_DELETE_FAIL)
+        raise ProbeException(self.name, WARN_DELETE_FAIL)
+    
+    def _output_result(self):
+        self._output = ''

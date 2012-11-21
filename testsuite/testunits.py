@@ -23,8 +23,8 @@ class SimpleTestCase(unittest.TestCase):
     @classmethod  
     def setUpClass(cls):  
         
-        cls._setenv()        
         cls.term = core.terminal.Terminal (ModHandler(conf['url'], conf['pwd']))
+        cls._setenv()        
 
     @classmethod  
     def tearDownClass(cls):  
@@ -38,27 +38,30 @@ class SimpleTestCase(unittest.TestCase):
     def _unsetenv(cls):  
         pass
 
-
-    def _run_test(self, command, quiet=True):
+    @classmethod
+    def _run_test(cls, command, quiet=True):
         if quiet:
             stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')  
             
         #print '[>] %s' % command
-        self.term.run_cmd_line(shlex.split(command))
+        cls.term.run_cmd_line(shlex.split(command))
         
         if quiet: 
             sys.stdout = stdout
         
 
     def _outp(self, command):
-        self._run_test(command)
+        self.__class__._run_test(command)
         return self.term._last_output
  
     def _warn(self, command):
-        self._run_test(command)
+        self.__class__._run_test(command)
         return self.term._last_warns
-    
+
+    def _res(self, command):
+        self.__class__._run_test(command)
+        return self.term._last_result
 
     @classmethod  
     def _run_cmd(cls, cmd):
@@ -90,6 +93,8 @@ class SimpleTestCase(unittest.TestCase):
         cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
         cls._run_cmd(cmd)
 
+
+
     @classmethod  
     def _env_chmod(cls, relpath, mode='644'):
         abspath = os.path.join(cls.basedir, relpath)
@@ -97,7 +102,7 @@ class SimpleTestCase(unittest.TestCase):
         cls._run_cmd(cmd)
 
     @classmethod  
-    def _env_rm(cls, relpath):
+    def _env_rm(cls, relpath = ''):
         abspath = os.path.join(cls.basedir, relpath)
         
         if cls.basedir.count('/') < 3:
@@ -143,14 +148,18 @@ class FolderFSTestCase(SimpleTestCase):
         
         SimpleTestCase._setenv.im_func(cls)
         
-        cls.newdirs = ['w1', 'w2', 'w3', 'w4']
-        cls._env_rm(cls.newdirs[0])      
-        cls._env_mkdir(os.path.join(*cls.newdirs))
+        cls.dirs =  []
+        newdirs = ['w1', 'w2', 'w3', 'w4']
+        
+        for i in range(1,len(newdirs)+1):
+            folder = os.path.join(*newdirs[:i])
+            cls._env_mkdir(folder)
+            cls.dirs.append(folder)
 
     @classmethod
     def _unsetenv(cls):
         SimpleTestCase._unsetenv.im_func(cls)
-        cls._env_rm(cls.newdirs[0])        
+        cls._env_rm()        
 
 
 class FolderFileFSTestCase(FolderFSTestCase):
@@ -161,48 +170,41 @@ class FolderFileFSTestCase(FolderFSTestCase):
         
         cls.filenames = []
         i=1
-        for i in range(len(cls.newdirs)):
-            pathlist = cls.newdirs[:i] + [ 'file-%s.txt' % cls.newdirs[i] ]
-            filename = os.path.join(*pathlist)
+        for dir in cls.dirs:
+            filename = os.path.join(dir, 'file-%d.txt' % i )
             cls._env_newfile(filename)
             cls.filenames.append(filename)
             i+=1
 
-    @classmethod
-    def _unsetenv(cls):
-        FolderFSTestCase._unsetenv.im_func(cls)
-        for path in cls.filenames:
-            cls._env_rm(path)  
 
 class ShellsFSBrowse(FolderFSTestCase):
 
         
     def test_ls(self):
         
-        self.assertEqual(self._outp('ls %s' % self.basedir), self.newdirs[0])
-        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,self.newdirs[0])), self.newdirs[1])
-        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,*self.newdirs[:2])), self.newdirs[2])
-        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,*self.newdirs[:3])), self.newdirs[3])
-        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,*self.newdirs[:4])), '')
-        self.assertEqual(self._outp('ls %s/.././/../..//////////////./../../%s/' % (self.basedir, self.basedir)), self.newdirs[0])
-
+        self.assertEqual(self._outp('ls %s' % self.basedir), self.dirs[0])
+        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,self.dirs[0])), self.dirs[1].split('/')[-1])
+        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,self.dirs[1])), self.dirs[2].split('/')[-1])
+        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,self.dirs[2])), self.dirs[3].split('/')[-1])
+        self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,self.dirs[3])), '')
+        self.assertEqual(self._outp('ls %s/.././/../..//////////////./../../%s/' % (self.basedir, self.basedir)), self.dirs[0])
 
     def _path(self, command):
-        self._run_test(command)
+        self.__class__._run_test(command)
         return self.term.modhandler.load('shell.php').stored_args['path']
 
     def test_cwd(self):
         
         
         self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)
-        self.assertEqual(self._path('cd %s' % os.path.join(self.basedir,*self.newdirs[:4])), os.path.join(self.basedir,*self.newdirs[:4]))
-        self.assertEqual(self._path('cd .'), os.path.join(self.basedir,*self.newdirs[:4]))
-        self.assertEqual(self._path('cd ..'), os.path.join(self.basedir,*self.newdirs[:3]))
-        self.assertEqual(self._path('cd ..'), os.path.join(self.basedir,*self.newdirs[:2]))
-        self.assertEqual(self._path('cd ..'), os.path.join(self.basedir,*self.newdirs[:1]))
+        self.assertEqual(self._path('cd %s' % os.path.join(self.basedir,self.dirs[3])), os.path.join(self.basedir,self.dirs[3]))
+        self.assertEqual(self._path('cd .'), os.path.join(self.basedir,self.dirs[3]))
+        self.assertEqual(self._path('cd ..'), os.path.join(self.basedir,self.dirs[2]))
+        self.assertEqual(self._path('cd ..'), os.path.join(self.basedir,self.dirs[1]))
+        self.assertEqual(self._path('cd ..'), os.path.join(self.basedir,self.dirs[0]))
         self.assertEqual(self._path('cd ..'), self.basedir)
-        self.assertEqual(self._path('cd %s' % os.path.join(self.basedir,*self.newdirs)), os.path.join(self.basedir,*self.newdirs))
-        self.assertEqual(self._path('cd .././/../..//////////////./../%s/../' % self.newdirs[0]), self.basedir)
+        self.assertEqual(self._path('cd %s' % os.path.join(self.basedir,self.dirs[3])), os.path.join(self.basedir,self.dirs[3]))
+        self.assertEqual(self._path('cd .././/../..//////////////./../%s/../' % self.dirs[0]), self.basedir)
 
 
 class FSInteract(FolderFileFSTestCase):
@@ -222,7 +224,24 @@ class FSInteract(FolderFileFSTestCase):
 class FSRemove(FolderFileFSTestCase):
 
     def test_rm(self):
-        pass
+        
+        # Delete a single file
+        self.assertEqual(self._res(':file.rm %s' % os.path.join(self.basedir,self.filenames[0])), True)
+        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,self.filenames[0])), modules.file.rm.WARN_NO_SUCH_FILE)
+        
+        # Delete a single file recursively
+        self.assertEqual(self._res(':file.rm %s -recursive' % os.path.join(self.basedir,self.filenames[1])), True)
+        self.assertRegexpMatches(self._warn(':file.rm %s -recursive' % os.path.join(self.basedir,self.filenames[1])), modules.file.rm.WARN_NO_SUCH_FILE)
+        
+        # Try to delete dir tree without recursion
+        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,self.dirs[0])), modules.file.rm.WARN_DELETE_FAIL)
+        
+        # Delete dir tree with recursion
+        self.assertEqual(self._res(':file.rm %s -recursive' % os.path.join(self.basedir,self.dirs[3])), True)
+        
+        # Vectors
+        self.assertRegexpMatches(self._warn(':set shell.php debug=1'), 'debug=\'1\'')
+        self.assertRegexpMatches(self._warn(':file.rm %s -recursive -vector php_rmdir' % os.path.join(self.basedir,self.dirs[2])), 'function rrmdir')
         
         
 #                        'rm' : TG(conf,

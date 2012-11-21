@@ -7,10 +7,10 @@ from core.moduleexception import ModuleException
 from ConfigParser import ConfigParser
 import unittest, shlex
 import modules.shell.php
-from string import Template
+from string import Template, ascii_lowercase
 from commands import getstatusoutput
 from tempfile import NamedTemporaryFile
-import pexpect
+import pexpect, random
 
 confpath = 'conf.ini'
 
@@ -22,6 +22,7 @@ class SimpleTestCase(unittest.TestCase):
     
     @classmethod  
     def setUpClass(cls):  
+        
         cls._setenv()        
         cls.term = core.terminal.Terminal (ModHandler(conf['url'], conf['pwd']))
 
@@ -31,8 +32,8 @@ class SimpleTestCase(unittest.TestCase):
 
     @classmethod  
     def _setenv(cls):  
-        pass
-    
+        cls.basedir = os.path.join(conf['env_base_writable_web_dir'], ''.join(random.choice(ascii_lowercase) for x in range(4)))
+        
     @classmethod     
     def _unsetenv(cls):  
         pass
@@ -69,7 +70,7 @@ class SimpleTestCase(unittest.TestCase):
 
     @classmethod  
     def _env_mkdir(cls, relpath):
-        abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
+        abspath = os.path.join(cls.basedir, relpath)
         cmd = Template(conf['env_mkdir_command']).safe_substitute(path=abspath)
         cls._run_cmd(cmd)
 
@@ -85,22 +86,22 @@ class SimpleTestCase(unittest.TestCase):
         f.write('1')
         f.close()
         
-        abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
+        abspath = os.path.join(cls.basedir, relpath)
         cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
         cls._run_cmd(cmd)
 
     @classmethod  
     def _env_chmod(cls, relpath, mode='644'):
-        abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
+        abspath = os.path.join(cls.basedir, relpath)
         cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode)
         cls._run_cmd(cmd)
 
     @classmethod  
     def _env_rm(cls, relpath):
-        abspath = os.path.join(conf['env_base_writable_web_dir'], relpath)
+        abspath = os.path.join(cls.basedir, relpath)
         
-        if conf['env_base_writable_web_dir'].count('/') < 3:
-            print 'Please check %s, not removing' % conf['env_base_writable_web_dir']
+        if cls.basedir.count('/') < 3:
+            print 'Please check %s, not removing' % cls.basedir
             return
         
         cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
@@ -140,13 +141,15 @@ class FolderFSTestCase(SimpleTestCase):
     @classmethod
     def _setenv(cls):
         
-        cls.basedir = conf['env_base_writable_web_dir']
+        SimpleTestCase._setenv.im_func(cls)
+        
         cls.newdirs = ['w1', 'w2', 'w3', 'w4']
-        cls._env_rm(cls.newdirs[0])   
+        cls._env_rm(cls.newdirs[0])      
         cls._env_mkdir(os.path.join(*cls.newdirs))
 
     @classmethod
     def _unsetenv(cls):
+        SimpleTestCase._unsetenv.im_func(cls)
         cls._env_rm(cls.newdirs[0])        
 
 
@@ -154,8 +157,9 @@ class FolderFileFSTestCase(FolderFSTestCase):
     
     @classmethod
     def _setenv(cls):    
-        FolderFSTestCase._setenv.im_func(FolderFileFSTestCase)
+        FolderFSTestCase._setenv.im_func(cls)
         
+        cls.filenames = []
         i=1
         for i in range(len(cls.newdirs)):
             pathlist = cls.newdirs[:i] + [ 'file-%s.txt' % cls.newdirs[i] ]
@@ -166,8 +170,7 @@ class FolderFileFSTestCase(FolderFSTestCase):
 
     @classmethod
     def _unsetenv(cls):
-        FolderFSTestCase._unsetenv.im_func(FolderFileFSTestCase)
-        #FolderFSTestCase._unsetenv()
+        FolderFSTestCase._unsetenv.im_func(cls)
         for path in cls.filenames:
             cls._env_rm(path)  
 
@@ -189,6 +192,7 @@ class ShellsFSBrowse(FolderFSTestCase):
         return self.term.modhandler.load('shell.php').stored_args['path']
 
     def test_cwd(self):
+        
         
         self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)
         self.assertEqual(self._path('cd %s' % os.path.join(self.basedir,*self.newdirs[:4])), os.path.join(self.basedir,*self.newdirs[:4]))
@@ -214,6 +218,8 @@ class FSInteract(FolderFileFSTestCase):
         self.assertEqual(self._outp(':file.check %s isfile' % os.path.join(self.basedir,self.filenames[0])), 'True')
         self.assertEqual(self._outp(':file.check %s md5' % os.path.join(self.basedir,self.filenames[0])), 'c4ca4238a0b923820dcc509a6f75849b')
 
+
+class FSRemove(FolderFileFSTestCase):
 
     def test_rm(self):
         pass

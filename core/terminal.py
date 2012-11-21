@@ -58,6 +58,7 @@ class Terminal:
         if clear_last_output:
             self._last_output = ''
             self._last_warns = ''
+            self._last_result = ''
         
         try:
     
@@ -98,6 +99,7 @@ class Terminal:
                 
                 res, out, warn = self.modhandler.load(interpreter).run(cmd)
                 if out: self._last_output += out
+                if res: self._last_result = res
                 if warn: self._last_warns += warn + os.linesep
                 
         except KeyboardInterrupt:

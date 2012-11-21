@@ -5,6 +5,9 @@ from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, 
 from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
+WARN_NO_SUCH_FILE = 'No such file or permission denied'
+WARN_DELETE_FAIL = 'Cannot remove, check permission'
+WARN_DELETE_OK = 'File deleted'
 
 class Rm(ModuleProbeAll):
     '''Remove remote files and folders'''
@@ -50,7 +53,7 @@ rrmdir("$recurs", "$path");"""),
         
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
         if not self.modhandler.load('file.check')._result:
-            raise ProbeException(self.name, '\'%s\' no such file or directory or permission denied' % self.args['rpath'])        
+            raise ProbeException(self.name, WARN_NO_SUCH_FILE)        
 
 
     def _prepare_vector(self):
@@ -67,8 +70,12 @@ rrmdir("$recurs", "$path");"""),
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
         result = self.modhandler.load('file.check')._result
         
-        if not result:
-            raise ProbeSucceed(self.name,'Command succeeded')
-        else:
-            raise ExecutionException(self.name, 'File \'%s\' delete fail, check permissions' % self.args['rpath'])
-     
+        if result == False:
+            raise ProbeSucceed(self.name, WARN_DELETE_OK)
+        
+    def _verify_probe(self):
+        self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
+        result = self.modhandler.load('file.check')._result        
+        
+        if result == True:
+            raise ProbeException(self.name, WARN_DELETE_FAIL)

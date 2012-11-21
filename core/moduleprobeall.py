@@ -58,10 +58,7 @@ class ModuleProbeAll(ModuleProbe):
                     
                 except ExecutionException:
                     pass
-                
-        except ProbeSucceed:
-            # Execution succeed
-            pass
+
         except ProbeException, e:
             raise ModuleException(self.name,  e.error)
         

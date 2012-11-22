@@ -28,7 +28,6 @@ class ModuleProbe:
         
         self._result = ''
         self._output = ''
-        self._warns = ''
         
         
         try:
@@ -50,7 +49,7 @@ class ModuleProbe:
         else:
             self._output_result()
             
-        return self._result, self._output, self._warns
+        return self._result, self._output
 
     def mprint(self, str, msg_class = 3, module_name = None):
         
@@ -60,7 +59,7 @@ class ModuleProbe:
                 
             print '[%s] %s' % (module_name, str)
         
-        self._warns += str + linesep
+        self.modhandler._last_warns += str + linesep
             
 
     def _init_module(self):

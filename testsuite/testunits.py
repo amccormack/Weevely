@@ -57,7 +57,7 @@ class SimpleTestCase(unittest.TestCase):
  
     def _warn(self, command):
         self.__class__._run_test(command)
-        return self.term._last_warns
+        return self.term.modhandler._last_warns
 
     def _res(self, command):
         self.__class__._run_test(command)

@@ -49,7 +49,7 @@ class Terminal:
 
 
     def __tprint(self, msg):
-        self._last_warns += msg + os.linesep
+        self.modhandler._last_warns += msg + os.linesep
         print msg,
         
 
@@ -57,7 +57,7 @@ class Terminal:
 
         if clear_last_output:
             self._last_output = ''
-            self._last_warns = ''
+            self.modhandler._last_warns = ''
             self._last_result = None
         
         try:
@@ -97,10 +97,9 @@ class Terminal:
                     interpreter = self.modhandler.interpreter
                     cmd = [ ' '.join(command) ] 
                 
-                res, out, warn = self.modhandler.load(interpreter).run(cmd)
-                if out: self._last_output += out
+                res, out = self.modhandler.load(interpreter).run(cmd)
+                if out != '': self._last_output += out
                 if res != None: self._last_result = res
-                if warn: self._last_warns += warn + os.linesep
                 
         except KeyboardInterrupt:
             self.__tprint('[!] Stopped execution')

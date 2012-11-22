@@ -71,10 +71,10 @@ class Vector:
             else:
                 formatted_list.append(payload)
 
-        res, out, warn = modhandler.load(self.interpreter).run(formatted_list)
+        res, out = modhandler.load(self.interpreter).run(formatted_list)
         
         if return_out_res_warn:
-            return out, res, warn
+            return out, res
         else:
             return res
 

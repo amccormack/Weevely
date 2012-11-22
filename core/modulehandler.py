@@ -23,6 +23,8 @@ class ModHandler:
 
         self.verbosity=[ 3 ]
         
+        self._last_warns = ''
+        
 
     def __set_path_modules(self):
     

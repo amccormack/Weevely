@@ -79,7 +79,7 @@ class SimpleTestCase(unittest.TestCase):
 
         
     @classmethod  
-    def _env_newfile(cls, relpath, content = '1'):
+    def _env_newfile(cls, relpath, content = '1', otheruser=False):
     
         file = NamedTemporaryFile()
         file.close()
@@ -90,7 +90,11 @@ class SimpleTestCase(unittest.TestCase):
         f.close()
         
         abspath = os.path.join(cls.basedir, relpath)
-        cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
+        if not otheruser:
+            cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
+        else:
+            cmd = Template(conf['env_cp_command_otheruser']).safe_substitute(frompath=frompath, topath=abspath)
+            
         cls._run_cmd(cmd)
 
 
@@ -102,14 +106,17 @@ class SimpleTestCase(unittest.TestCase):
         cls._run_cmd(cmd)
 
     @classmethod  
-    def _env_rm(cls, relpath = ''):
+    def _env_rm(cls, relpath = '', otheruser=False):
         abspath = os.path.join(cls.basedir, relpath)
         
         if cls.basedir.count('/') < 3:
             print 'Please check %s, not removing' % cls.basedir
             return
         
-        cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
+        if not otheruser:
+            cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
+        else:
+            cmd = Template(conf['env_rm_command_otheruser']).safe_substitute(path=abspath)
         cls._run_cmd(cmd)
 
 class Shells(SimpleTestCase):
@@ -226,12 +233,12 @@ class FSRemove(FolderFileFSTestCase):
     def test_rm(self):
         
         # Delete a single file
-        self.assertEqual(self._res(':file.rm %s' % os.path.join(self.basedir,self.filenames[0])), True)
-        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,self.filenames[0])), modules.file.rm.WARN_NO_SUCH_FILE)
+        self.assertEqual(self._res(':file.rm %s' % os.path.join(self.basedir,self.filenames[1])), True)
+        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,self.filenames[1])), modules.file.rm.WARN_NO_SUCH_FILE)
         
         # Delete a single file recursively
-        self.assertEqual(self._res(':file.rm %s -recursive' % os.path.join(self.basedir,self.filenames[1])), True)
-        self.assertRegexpMatches(self._warn(':file.rm %s -recursive' % os.path.join(self.basedir,self.filenames[1])), modules.file.rm.WARN_NO_SUCH_FILE)
+        self.assertEqual(self._res(':file.rm %s -recursive' % os.path.join(self.basedir,self.filenames[2])), True)
+        self.assertRegexpMatches(self._warn(':file.rm %s -recursive' % os.path.join(self.basedir,self.filenames[2])), modules.file.rm.WARN_NO_SUCH_FILE)
         
         # Try to delete dir tree without recursion
         self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,self.dirs[0])), modules.file.rm.WARN_DELETE_FAIL)
@@ -242,39 +249,16 @@ class FSRemove(FolderFileFSTestCase):
         # Vectors
         self.assertRegexpMatches(self._warn(':set shell.php debug=1'), 'debug=\'1\'')
         self.assertRegexpMatches(self._warn(':file.rm %s -recursive -vector php_rmdir' % os.path.join(self.basedir,self.dirs[2])), 'function rrmdir')
+
+        # Vectors
+        self.assertRegexpMatches(self._warn(':set shell.php debug=1'), 'debug=\'1\'')
+        self.assertRegexpMatches(self._warn(':file.rm %s -recursive -vector rm' % os.path.join(self.basedir,self.dirs[1])), 'rm -rf %s' % os.path.join(self.basedir,self.dirs[1]) )
         
+        # No permissions
+        self.__class__._env_newfile('%s-otheruser' % self.filenames[0],otheruser=True)
+        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,'%s-otheruser' % self.filenames[0])), modules.file.rm.WARN_NO_SUCH_FILE)
+        self.__class__._env_rm('%s-otheruser' % self.filenames[0],otheruser=True)
         
-#                        'rm' : TG(conf,
-#                [
-#                TC([ ':file.rm unexistant' ], ERR_NO_SUCH_FILE),
-#                # Delete a single file
-#                TC([ ':file.rm %s/newfile' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),
-#                TC([ ':file.check %s/newfile exists' % (conf['existant_base_dir']) ], 'False'),
-#                
-#                # Delete a single file recursively
-#                TC([ ':file.rm %s/newfile1 -recursive' % (conf['existant_base_dir']) ], PROMPT_PHP_SH),
-#                TC([ ':file.check %s/newfile1 exists' % (conf['existant_base_dir']) ], 'False'),               
-#                
-#                # Try to delete dir tree without recursion
-#                TC([ ':file.rm %s/%s ' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], PROMPT_PHP_SH),
-#                TC([ ':file.check %s/%s exists' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], 'True'), 
-#                
-#                # Delete dir tree with recursion
-#                TC([ ':file.rm %s/%s -recursive' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], PROMPT_PHP_SH),
-#                TC([ ':file.check %s/%s exists' % (conf['existant_base_dir'], conf['existant_base_4_lvl_subdirs'].split('/')[0]) ], 'False'), 
-#                    
-#                # VECTORS
-#                TC([ ':set shell.php debug=1' ], PROMPT_PHP_SH),  
-#                
-#                # Delete with php_rmdir vector
-#                TC([ ':file.rm %s/newfile2 -vector php_rmdir' % (conf['existant_base_dir']) ], "function rrmdir"),
-#                TC([ ':file.check %s/newfile2 exists' % (conf['existant_base_dir']) ], 'False'),
-#                
-#                # Delete with rm vector
-#                TC([ ':file.rm %s/newfile3 -vector rm -recursive' % (conf['existant_base_dir']) ], 'rm -rf %s' % (conf['existant_base_dir'])),
-#                TC([ ':file.check %s/newfile3 exists' % (conf['existant_base_dir']) ], 'False'),
-#                               
-#                ]),
 
 
 if __name__ == '__main__':

@@ -146,6 +146,11 @@ class Shells(SimpleTestCase):
         self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector proc_open'), '2')
         self.assertEqual(self._outp(':shell.sh \'(echo "VISIBLE" >&2)\' -stderr'), 'VISIBLE')
         self.assertEqual(self._outp(':shell.sh \'(echo "INVISIBLE" >&2)\''), '')
+      
+      
+    def test_info(self):
+        self.assertEqual(self._outp(':system.info os'), 'Linux')
+        self.assertRegexpMatches(self._outp(':system.info'), 'safe_mode')
         
 
 class FolderFSTestCase(SimpleTestCase):
@@ -167,6 +172,11 @@ class FolderFSTestCase(SimpleTestCase):
     def _unsetenv(cls):
         SimpleTestCase._unsetenv.im_func(cls)
         cls._env_rm()        
+
+
+    def _path(self, command):
+        self.__class__._run_test(command)
+        return self.term.modhandler.load('shell.php').stored_args['path']
 
 
 class FolderFileFSTestCase(FolderFSTestCase):
@@ -196,10 +206,6 @@ class ShellsFSBrowse(FolderFSTestCase):
         self.assertEqual(self._outp('ls %s' % os.path.join(self.basedir,self.dirs[3])), '')
         self.assertEqual(self._outp('ls %s/.././/../..//////////////./../../%s/' % (self.basedir, self.basedir)), self.dirs[0])
 
-    def _path(self, command):
-        self.__class__._run_test(command)
-        return self.term.modhandler.load('shell.php').stored_args['path']
-
     def test_cwd(self):
         
         
@@ -226,6 +232,23 @@ class FSInteract(FolderFileFSTestCase):
         self.assertEqual(self._outp(':file.check %s exists' % self.basedir), 'True')
         self.assertEqual(self._outp(':file.check %s isfile' % os.path.join(self.basedir,self.filenames[0])), 'True')
         self.assertEqual(self._outp(':file.check %s md5' % os.path.join(self.basedir,self.filenames[0])), 'c4ca4238a0b923820dcc509a6f75849b')
+
+class FSFind(FolderFileFSTestCase):
+    
+    def test_perms(self):
+        
+        sorted_files = sorted(['./%s' % x for x in self.filenames])
+        sorted_folders = sorted(['./%s' % x for x in self.dirs] + ['.'])
+        sorted_files_and_folders = sorted(sorted_files + sorted_folders)
+
+        self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)
+        self.assertEqual(sorted(self._outp(':find.perms').split('\n')), sorted_files_and_folders)
+        self.assertEqual(sorted(self._outp(':find.perms -vector find').split('\n')), sorted_files_and_folders)
+        self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive').split('\n')), sorted_files_and_folders)
+        self.assertEqual(sorted(self._outp(':find.perms -vector find -type f').split('\n')), sorted_files)
+        self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -type f').split('\n')), sorted_files)
+        self.assertEqual(sorted(self._outp(':find.perms -vector find -type d').split('\n')), sorted_folders)
+        self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -type d').split('\n')), sorted_folders)
 
 
 class FSRemove(FolderFileFSTestCase):

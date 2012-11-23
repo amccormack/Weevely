@@ -65,7 +65,7 @@ class SimpleTestCase(unittest.TestCase):
 
     @classmethod  
     def _run_cmd(cls, cmd):
-        #print '\n[env] %s' % cmd,
+        print '\n%s' % cmd,
         child = pexpect.spawn(cmd, timeout=1)
         idx = child.expect([pexpect.TIMEOUT, pexpect.EOF])
         if idx == 0: child.interact()
@@ -100,14 +100,18 @@ class SimpleTestCase(unittest.TestCase):
 
 
     @classmethod  
-    def _env_chmod(cls, relpath, mode='644'):
+    def _env_chmod(cls, relpath, mode='744'):
         abspath = os.path.join(cls.basedir, relpath)
         cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode)
+
         cls._run_cmd(cmd)
 
     @classmethod  
     def _env_rm(cls, relpath = '', otheruser=False):
         abspath = os.path.join(cls.basedir, relpath)
+        
+        # Restore modes
+        cls._env_chmod(cls.basedir)
         
         if cls.basedir.count('/') < 3:
             print 'Please check %s, not removing' % cls.basedir
@@ -117,6 +121,7 @@ class SimpleTestCase(unittest.TestCase):
             cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
         else:
             cmd = Template(conf['env_rm_command_otheruser']).safe_substitute(path=abspath)
+
         cls._run_cmd(cmd)
 
 class Shells(SimpleTestCase):
@@ -165,8 +170,9 @@ class FolderFSTestCase(SimpleTestCase):
         
         for i in range(1,len(newdirs)+1):
             folder = os.path.join(*newdirs[:i])
-            cls._env_mkdir(folder)
             cls.dirs.append(folder)
+        
+        cls._env_mkdir(os.path.join(*newdirs))
 
     @classmethod
     def _unsetenv(cls):
@@ -192,6 +198,9 @@ class FolderFileFSTestCase(FolderFSTestCase):
             cls._env_newfile(filename)
             cls.filenames.append(filename)
             i+=1
+
+        # Restore modes
+        cls._env_chmod(cls.basedir)
 
 
 class ShellsFSBrowse(FolderFSTestCase):
@@ -249,6 +258,26 @@ class FSFind(FolderFileFSTestCase):
         self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -type f').split('\n')), sorted_files)
         self.assertEqual(sorted(self._outp(':find.perms -vector find -type d').split('\n')), sorted_folders)
         self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -type d').split('\n')), sorted_folders)
+
+        self.__class__._env_chmod(self.dirs[3], mode='555') # -xr
+        self.assertEqual(self._outp(':find.perms %s -vector find -writable' % self.dirs[3]), '')
+        self.assertEqual(sorted(self._outp(':find.perms %s -vector find -executable' % self.dirs[3]).split('\n')), [self.dirs[3], self.filenames[3]])
+        self.assertEqual(sorted(self._outp(':find.perms %s -vector find -readable' % self.dirs[3]).split('\n')), [self.dirs[3], self.filenames[3]])
+ 
+
+        self.__class__._env_chmod(self.filenames[3], mode='111') #--x 
+        self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -executable' % self.dirs[3]), self.filenames[3])
+        self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -writable' % self.dirs[3]), self.filenames[3])
+        self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
+        self.__class__._env_chmod(self.filenames[3], mode='222') #-w-
+        self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -executable' % self.dirs[3]), self.filenames[3])
+        self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -writable' % self.dirs[3]), self.filenames[3])
+        self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
+        self.__class__._env_chmod(self.filenames[3], mode='444') #r--
+        self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -executable' % self.dirs[3]), self.filenames[3])
+        self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -writable' % self.dirs[3]), self.filenames[3])
+        self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
+
 
 
 class FSRemove(FolderFileFSTestCase):

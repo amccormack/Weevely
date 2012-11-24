@@ -67,7 +67,8 @@ if(($f!='.')&&($f!='..')&&cktp($df,'d')){@swp($fdir, $df, $t, $a, $q);}
             self.args_formats['attr'] += 'r' if self.args['readable'] else ''
             self.args_formats['attr'] += 'x' if self.args['executable'] else ''
             
-    def _verify_probe(self):
+    def _output_result(self):
         
         # Listify output, to advantage other modules 
+        self._output = self._result
         self._result = self._result.split('\n')

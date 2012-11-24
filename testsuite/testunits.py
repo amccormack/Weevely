@@ -79,7 +79,7 @@ class SimpleTestCase(unittest.TestCase):
 
         
     @classmethod  
-    def _env_newfile(cls, relpath, content = '1', otheruser=False):
+    def _env_newfile(cls, relpath, content = '1', currentuser=False):
     
         file = NamedTemporaryFile()
         file.close()
@@ -90,37 +90,47 @@ class SimpleTestCase(unittest.TestCase):
         f.close()
         
         abspath = os.path.join(cls.basedir, relpath)
-        if not otheruser:
+        if not currentuser:
             cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
         else:
-            cmd = Template(conf['env_cp_command_otheruser']).safe_substitute(frompath=frompath, topath=abspath)
+            cmd = Template(conf['env_cp_command_currentuser']).safe_substitute(frompath=frompath, topath=abspath)
             
         cls._run_cmd(cmd)
 
 
 
     @classmethod  
-    def _env_chmod(cls, relpath, mode='744'):
+    def _env_chmod(cls, relpath, mode='744', currentuser=False, recursion=False):
         abspath = os.path.join(cls.basedir, relpath)
-        cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode)
+        
+        if not recursion:
+            recursive = ''
+        else:
+            recursive = ' -R '
+        
+        if not currentuser:
+            cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode, recursive=recursive)
+        else:
+            cmd = Template(conf['env_chmod_command_currentuser']).safe_substitute(path=abspath, mode=mode, recursive=recursive)
+            
 
         cls._run_cmd(cmd)
 
     @classmethod  
-    def _env_rm(cls, relpath = '', otheruser=False):
+    def _env_rm(cls, relpath = '', currentuser=False):
         abspath = os.path.join(cls.basedir, relpath)
         
         # Restore modes
-        cls._env_chmod(cls.basedir)
+        cls._env_chmod(cls.basedir, recursion=True)
         
         if cls.basedir.count('/') < 3:
             print 'Please check %s, not removing' % cls.basedir
             return
         
-        if not otheruser:
+        if not currentuser:
             cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
         else:
-            cmd = Template(conf['env_rm_command_otheruser']).safe_substitute(path=abspath)
+            cmd = Template(conf['env_rm_command_currentuser']).safe_substitute(path=abspath)
 
         cls._run_cmd(cmd)
 
@@ -199,7 +209,7 @@ class FolderFileFSTestCase(FolderFSTestCase):
             i+=1
 
         # Restore modes
-        cls._env_chmod(cls.basedir)
+        cls._env_chmod(cls.basedir, recursion=True)
 
 
 class ShellsFSBrowse(FolderFSTestCase):
@@ -258,7 +268,7 @@ class FSFind(FolderFileFSTestCase):
         self.assertEqual(sorted(self._outp(':find.perms -vector find -type d').split('\n')), sorted_folders)
         self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -type d').split('\n')), sorted_folders)
 
-        self.__class__._env_chmod(self.dirs[3], mode='555') # -xr
+        self.__class__._env_chmod(self.dirs[3], mode='555', recursion=True) # -xr
         self.assertEqual(self._outp(':find.perms %s -vector find -writable' % self.dirs[3]), '')
         self.assertEqual(sorted(self._outp(':find.perms %s -vector find -executable' % self.dirs[3]).split('\n')), [self.dirs[3], self.filenames[3]])
         self.assertEqual(sorted(self._outp(':find.perms %s -vector find -readable' % self.dirs[3]).split('\n')), [self.dirs[3], self.filenames[3]])
@@ -293,9 +303,6 @@ class FSFind(FolderFileFSTestCase):
 
 class WebMap(SimpleTestCase):
     
-    @classmethod
-    def _unsetenv(cls):
-        pass
     
     @classmethod
     def _setenv(cls):    
@@ -353,9 +360,9 @@ class FSRemove(FolderFileFSTestCase):
         self.assertRegexpMatches(self._warn(':file.rm %s -recursive -vector rm' % os.path.join(self.basedir,self.dirs[1])), 'rm -rf %s' % os.path.join(self.basedir,self.dirs[1]) )
         
         # No permissions
-        self.__class__._env_newfile('%s-otheruser' % self.filenames[0],otheruser=True)
-        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,'%s-otheruser' % self.filenames[0])), modules.file.rm.WARN_NO_SUCH_FILE)
-        self.__class__._env_rm('%s-otheruser' % self.filenames[0],otheruser=True)
+        self.__class__._env_newfile('%s-currentuser' % self.filenames[0],currentuser=True)
+        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,'%s-currentuser' % self.filenames[0])), modules.file.rm.WARN_NO_SUCH_FILE)
+        self.__class__._env_rm('%s-currentuser' % self.filenames[0],currentuser=True)
         
 class FSDownload(FolderFileFSTestCase):
 
@@ -436,8 +443,58 @@ class FSEnum(SimpleTestCase):
         self.assertRegexpMatches(self._outp(":file.enum %s -printall" % temp_path.name), 'unexistant')        
         
         temp_path.close();
+    
+class FSUserFiles(SimpleTestCase):
+    
+    @classmethod
+    def _setenv(cls):    
+        FolderFSTestCase._setenv.im_func(cls)
+        cls._env_chmod(conf['currentuser_home_path'], '755', currentuser=True)
+        cls._env_chmod(conf['currentuser_path_1'], '644', currentuser=True)
+        cls._env_chmod(conf['currentuser_path_2'], '644', currentuser=True)
         
+    @classmethod
+    def _unsetenv(cls):
+        FolderFSTestCase._unsetenv.im_func(cls)
+        cls._env_chmod(conf['currentuser_home_path'], conf['currentuser_home_mode'], currentuser=True)
+        cls._env_chmod(conf['currentuser_path_1'], conf['currentuser_default_mode_1'], currentuser=True)
+        cls._env_chmod(conf['currentuser_path_2'], conf['currentuser_default_mode_2'], currentuser=True)
+        
+    
+    
+    def test_userfiles(self):
+        
+        expected_enum_map = {
+            os.path.join(conf['currentuser_home_path'],conf['currentuser_path_1']): ['exists', 'readable', '', ''],
+            os.path.join(conf['currentuser_home_path'],conf['currentuser_path_2']): ['exists', 'readable', '', '']
+            }
+        
+        path_list = [conf['currentuser_path_1'], conf['currentuser_path_2'] ]
+        
+        temp_path = NamedTemporaryFile(); 
+        temp_path.write('\n'.join(path_list)+'\n')
+        temp_path.flush() 
+        
+        self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles"))
+        self.assertEqual(self._res(":audit.userfiles -pathlist \"%s\"" % str(path_list)), expected_enum_map)
+        self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles -auto-user"))
+        self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles -pathfile %s" % temp_path.name))
 
+        temp_path.close()
+      
+    
+class AuditEtcPwd(SimpleTestCase):
+    
+    def test_etcpwd(self):
+        
+        self.assertRegexpMatches(self._outp(":audit.etcpasswd"), 'mail:x:8:8:mail:/var/mail:/bin/sh')    
+        self.assertRegexpMatches(self._outp(":audit.etcpasswd -real"), 'root:x:0:0:root:/root:/bin/bash')   
+        self.assertNotRegexpMatches(self._outp(":audit.etcpasswd -real"), 'mail:x:8:8:mail:/var/mail:/bin/sh')  
+        self.assertRegexpMatches(self._outp(":audit.etcpasswd -real -vector posix_getpwuid"), 'root:x:0:0:root:/root:/bin/bash')         
+        self.assertRegexpMatches(self._outp(":audit.etcpasswd -real -vector cat"), 'root:x:0:0:root:/root:/bin/bash')         
+        self.assertRegexpMatches(self._outp(":audit.etcpasswd -real -vector read"), 'root:x:0:0:root:/root:/bin/bash')         
+        
+        
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 

@@ -35,6 +35,7 @@ class Userfiles(ModuleProbe):
                               ".ssh/id_rsa",
                               ".ssh/id_rsa.pub",
                               ".mysql_history",
+                              ".bash_logout",
                               ],
                     "web" : [ "public_html/",
                              "public_html/wp-config.php", # wordpress
@@ -65,17 +66,21 @@ class Userfiles(ModuleProbe):
             filelist = self.common_files['web'] + self.common_files['home']   
              
 
-        self._result = self.support_vectors.get('users').execute(self.modhandler)
-        if not self._result:
+        result = self.support_vectors.get('users').execute(self.modhandler)
+        if not result:
             raise ProbeException(self.name, 'Cant extract system users')
         
         
         self.args['paths'] = []
-        for u in self._result:
+        for u in result:
             for f in filelist:
-                self.args['paths'].append('/' + join_abs_paths([self._result[u].home, f]) )
+                self.args['paths'].append('/' + join_abs_paths([result[u].home, f]) )
                 
 
     def _probe(self):
+        result = self.support_vectors.get('enum').execute(self.modhandler, {'pathlist' : str(self.args['paths']) })
+        for user in result:
+            if result[user] != ['', '', '', '']:
+                self._result[user] = result[user]
         
-        self._result = self.support_vectors.get('enum').execute(self.modhandler, {'pathlist' : str(self.args['paths']) })
+            

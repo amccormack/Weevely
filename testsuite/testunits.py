@@ -33,10 +33,11 @@ class SimpleTestCase(unittest.TestCase):
     @classmethod  
     def _setenv(cls):  
         cls.basedir = os.path.join(conf['env_base_writable_web_dir'], ''.join(random.choice(ascii_lowercase) for x in range(4)))
+        cls._env_mkdir(cls.basedir)
         
     @classmethod     
     def _unsetenv(cls):  
-        pass
+        cls._env_rm()        
 
     @classmethod
     def _run_test(cls, command, quiet=True):
@@ -44,7 +45,6 @@ class SimpleTestCase(unittest.TestCase):
             stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')  
             
-        #print '[>] %s' % command
         cls.term.run_cmd_line(shlex.split(command))
         
         if quiet: 
@@ -65,7 +65,7 @@ class SimpleTestCase(unittest.TestCase):
 
     @classmethod  
     def _run_cmd(cls, cmd):
-        print '\n%s' % cmd,
+        #print '\n%s' % cmd,
         child = pexpect.spawn(cmd, timeout=1)
         idx = child.expect([pexpect.TIMEOUT, pexpect.EOF])
         if idx == 0: child.interact()
@@ -177,7 +177,6 @@ class FolderFSTestCase(SimpleTestCase):
     @classmethod
     def _unsetenv(cls):
         SimpleTestCase._unsetenv.im_func(cls)
-        cls._env_rm()        
 
 
     def _path(self, command):
@@ -278,6 +277,25 @@ class FSFind(FolderFileFSTestCase):
         self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -writable' % self.dirs[3]), self.filenames[3])
         self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
 
+class WebMap(FolderFSTestCase):
+    
+    @classmethod
+    def _setenv(cls):    
+        FolderFSTestCase._setenv.im_func(cls)
+        
+        cls._env_newfile('web_page1.html', conf['web_page1_content'])
+        cls._env_newfile('web_page2.html', conf['web_page2_content'])
+        cls._env_newfile('web_page3.html', conf['web_page3_content'])
+    
+    def test_webmap(self):
+        
+        self.assertEqual(self._res(':find.webdir -rpath %s' % self.basedir), [ self.basedir, 'http://localhost/%s' % (self.basedir.replace(conf['env_base_web_dir'],'')) ])
+        folder_abs_path = os.path.join(self.basedir,self.dirs[0])
+        folder_rel_path = os.path.join(self.basedir.replace(conf['env_base_web_dir'],''),self.dirs[0])
+        self.assertEqual(self._res(':find.webdir -rpath %s' % folder_rel_path), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
+        folder_rel_path_deepness = folder_rel_path.count('/')+1
+        self.assertEqual(self._res(':find.webdir -rpath %s%s./%s' % (folder_rel_path, '/../'*folder_rel_path_deepness, folder_rel_path)), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
+        
 
 
 class FSRemove(FolderFileFSTestCase):

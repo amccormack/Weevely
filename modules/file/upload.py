@@ -14,6 +14,11 @@ from hashlib import md5
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 
+WARN_FILE_EXISTS = 'File exists'
+WARN_NO_SUCH_FILE = 'No such file or permission denied'
+WARN_MD5_MISMATCH = 'MD5 hash mismatch'
+WARN_UPLOAD_FAIL = 'Upload fail, check path and permission'
+
 def b64_chunks(l, n):
     return [b64encode(l[i:i+n]) for i in range(0, len(l), n)]
 
@@ -47,13 +52,13 @@ class Upload(ModuleProbeAll):
         chunksize = self.args['chunksize']
 
         if self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : remote_path}):
-            raise ProbeException(self.name, 'file already exists, delete it with \':file.rm %s\'' % (remote_path))
+            raise ProbeException(self.name, '%s. Delete it first using \':file.rm %s\'' % (WARN_FILE_EXISTS, remote_path))
 
         if not file_content:
             try:
                 local_file = open(local_path, 'r')
             except Exception, e:
-                raise ProbeException(self.name,  '\'%s\', no such file or directory or permission denied' % local_path)
+                raise ProbeException(self.name,  '\'%s\' %s' % (local_path, WARN_NO_SUCH_FILE))
 
             file_content = local_file.read()
             local_file.close()
@@ -64,11 +69,13 @@ class Upload(ModuleProbeAll):
         
     def _execute_vector(self):       
 
+        self._result = False
+
         i=1
         for chunk in self.args['content_chunks']:
             
             args_formats = { 'rpath' : self.args['rpath'], 'post_field' : self.args['post_field'], 'data' : chunk }
-            self._result = self.current_vector.execute(self.modhandler, args_formats)  
+            self.current_vector.execute(self.modhandler, args_formats)  
             
             i+=1
 
@@ -76,13 +83,14 @@ class Upload(ModuleProbeAll):
     
         if self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : self.args['rpath']}):
             if self.support_vectors.get('md5').execute(self.modhandler, {'rpath' : self.args['rpath']}) == self.args['content_md5']:
+                self._result = True
                 raise ProbeSucceed(self.name, 'File uploaded')
             else:
-                self.mprint('MD5 hash of \'%s\' file mismatch' % (self.args['rpath']))
+                self.mprint('\'%s\' %s' % (self.args['rpath'], WARN_MD5_MISMATCH))
 
     def _verify_probe(self):
         if not self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : self.args['rpath']}):
-            raise ProbeException(self.name, '\'%s\' upload fail, check path and permissions' % (self.args['rpath']))
+            raise ProbeException(self.name, '\'%s\' %s' % (self.args['rpath'], WARN_UPLOAD_FAIL))
 
     def __chunkify(self, file_content, chunksize):
 

@@ -35,13 +35,24 @@ class Enum(ModuleProbe):
     def _probe(self):
         
         for entry in self.args['pathlist']:
-            
+            self._result[entry] = ['', '', '', '']
             perms = self.support_vectors.get('getperms').execute(self.modhandler, {'rpath' : entry})
-            if perms or perms == '' and self.args['printall']:
-                self._result[entry] = ['', '', '', '']
+            
+            if perms:
                 if 'e' in perms: self._result[entry][0] = 'exists'
                 if 'r' in perms: self._result[entry][1] = 'readable'
                 if 'w' in perms: self._result[entry][2] = 'writable'
                 if 'x' in perms: self._result[entry][3] = 'executable'
 
+    def _output_result(self):
+    
+        table = PrettyTable(['']*5)
+        table.align = 'l'
+        table.header = False
+        
+        for field in self._result:
+            if self._result[field] != ['', '', '', ''] or self.args['printall']:
+                table.add_row([field] + self._result[field])
+                
+        self._output = table.get_string()
         

@@ -12,6 +12,8 @@ from random import randint
 from core.vector import VectorList, Vector as V
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
+WARN_NO_SUCH_FILE = 'No such file or permission denied'
+
 class Download(ModuleProbeAll):
     '''Download binary/ascii files from target filesystem
 :file.download <remote path> <locale path>
@@ -51,7 +53,7 @@ class Download(ModuleProbeAll):
         # First check remote file existance
         
         if not self.support_vectors.get('check_readable').execute(self.modhandler, {'rpath' : remote_path}):
-            raise ProbeException(self.name, '\'%s\', no such file or directory or permission denied' % remote_path)
+            raise ProbeException(self.name, '\'%s\' %s' % (remote_path, WARN_NO_SUCH_FILE))
          
         # Vectory copy and symlink needs to search a writable directory before
         

@@ -8,6 +8,10 @@ from core.prettytable import PrettyTable
 import os
 from modules.find.webdir import join_abs_paths
 
+WARN_CRAWLER_EXCEPT = 'Crawler exception'
+WARN_CRAWLER_NO_URLS = "No sub URLs crawled. Check URL."
+
+
 class Mapwebfiles(ModuleProbe):
     '''Enumerate webroot files properties '''
 
@@ -34,14 +38,14 @@ class Mapwebfiles(ModuleProbe):
             crawler = Crawler(url, self.args['deep'], '', '')
             crawler.crawl()
         except Exception, e:
-            raise ProbeException(self.name, "Crawler exception: %s" % str(e))
+            raise ProbeException(self.name, "%s: %s" % (ERR_CRAWLER_EXCEPT, str(e)))
         else:
             urls = set(crawler.visited_links.union(crawler.urls_seen))
             
             # If no url, or the only one is the specified one
             
             if not urls or (urls and len(urls) == 1 and list(urls)[0] == url):
-                raise ProbeException(self.name, "No sub URLs crawled. Check URL." )
+                raise ProbeException(self.name, WARN_CRAWLER_NO_URLS )
         
         
             self.args['paths'] = []

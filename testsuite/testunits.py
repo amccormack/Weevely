@@ -86,7 +86,7 @@ class SimpleTestCase(unittest.TestCase):
         frompath = file.name
         
         f = open(frompath, 'w')
-        f.write('1')
+        f.write(content)
         f.close()
         
         abspath = os.path.join(cls.basedir, relpath)
@@ -277,25 +277,53 @@ class FSFind(FolderFileFSTestCase):
         self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -writable' % self.dirs[3]), self.filenames[3])
         self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
 
-class WebMap(FolderFSTestCase):
+    
+    def test_webdir(self):
+        self.__class__._unsetenv()
+        self.__class__._setenv()
+        
+        self.assertEqual(self._res(':find.webdir -rpath %s' % self.basedir), [ self.basedir, 'http://localhost/%s' % (self.basedir.replace(conf['env_base_web_dir'],'')) ])
+        folder_abs_path = os.path.join(self.basedir,self.dirs[0])
+        folder_rel_path = os.path.join(self.basedir.replace(conf['env_base_web_dir'],''),self.dirs[0])
+        self.assertEqual(self._res(':find.webdir -rpath %s' % folder_rel_path), [ folder_abs_path, '%s%s' % (conf['env_base_web_url'], folder_abs_path.replace(conf['env_base_web_dir'],'')) ])
+        folder_rel_path_deepness = folder_rel_path.count('/')+1
+        self.assertEqual(self._res(':find.webdir -rpath %s%s./%s' % (folder_rel_path, '/../'*folder_rel_path_deepness, folder_rel_path)), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
+        
+
+
+class WebMap(SimpleTestCase):
+    
+    @classmethod
+    def _unsetenv(cls):
+        pass
     
     @classmethod
     def _setenv(cls):    
         FolderFSTestCase._setenv.im_func(cls)
         
-        cls._env_newfile('web_page1.html', conf['web_page1_content'])
-        cls._env_newfile('web_page2.html', conf['web_page2_content'])
-        cls._env_newfile('web_page3.html', conf['web_page3_content'])
-    
-    def test_webmap(self):
+        cls._env_newfile('web_page1.html', content=conf['web_page1_content'])
+        cls._env_newfile('web_page2.html', content=conf['web_page2_content'])
+        cls._env_newfile('web_page3.html', content=conf['web_page3_content'])
+
+    def test_mapweb(self):
         
-        self.assertEqual(self._res(':find.webdir -rpath %s' % self.basedir), [ self.basedir, 'http://localhost/%s' % (self.basedir.replace(conf['env_base_web_dir'],'')) ])
-        folder_abs_path = os.path.join(self.basedir,self.dirs[0])
-        folder_rel_path = os.path.join(self.basedir.replace(conf['env_base_web_dir'],''),self.dirs[0])
-        self.assertEqual(self._res(':find.webdir -rpath %s' % folder_rel_path), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
-        folder_rel_path_deepness = folder_rel_path.count('/')+1
-        self.assertEqual(self._res(':find.webdir -rpath %s%s./%s' % (folder_rel_path, '/../'*folder_rel_path_deepness, folder_rel_path)), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
+        web_page1_relative_path = os.path.join(self.basedir.replace(conf['env_base_web_dir'],''), 'web_page1.html')
+        web_page1_url = '%s%s' %  (conf['env_base_web_url'], web_page1_relative_path)
+        web_base_url = '%s%s' %  (conf['env_base_web_url'], self.basedir.replace(conf['env_base_web_dir'],''))
         
+        webmap = {
+                  os.path.join(self.basedir, 'web_page1.html'): ['exists', 'readable', 'writable', ''],
+                  os.path.join(self.basedir, 'web_page2.html'): ['exists', 'readable', 'writable', ''],
+                  os.path.join(self.basedir, 'web_page3.html'): ['exists', 'readable', 'writable', ''],
+                  }
+
+
+
+        self.assertEqual(self._res(':audit.mapwebfiles %s %s %s' % (web_page1_url, web_base_url, self.basedir)), webmap)
+        self.assertRegexpMatches(self._warn(':audit.mapwebfiles %s_unexistant.html %s %s' % (web_page1_url, web_base_url, self.basedir)), modules.audit.mapwebfiles.WARN_CRAWLER_NO_URLS)
+
+        web_page1_badurl = 'http://localhost:90/%s' %  (web_page1_relative_path)
+        self.assertRegexpMatches(self._warn(':audit.mapwebfiles %s %s %s' % (web_page1_badurl, web_base_url, self.basedir)), modules.audit.mapwebfiles.WARN_CRAWLER_NO_URLS)
 
 
 class FSRemove(FolderFileFSTestCase):

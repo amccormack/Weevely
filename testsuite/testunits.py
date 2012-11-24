@@ -357,25 +357,58 @@ class FSRemove(FolderFileFSTestCase):
         self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,'%s-otheruser' % self.filenames[0])), modules.file.rm.WARN_NO_SUCH_FILE)
         self.__class__._env_rm('%s-otheruser' % self.filenames[0],otheruser=True)
         
+class FSDownload(FolderFileFSTestCase):
 
+    def test_download(self):
+        
+        self.assertRegexpMatches(self._warn(':file.download /etc/gne /tmp/asd') , modules.file.download.WARN_NO_SUCH_FILE)
+        self.assertRegexpMatches(self._warn(':file.download /etc/passwd /tmpsaddsaas/asd') , 'Errno')
+        self.assertRegexpMatches(self._warn(':file.download /etc/shadow /tmp/asd') , modules.file.download.WARN_NO_SUCH_FILE)
+
+        temp_path = NamedTemporaryFile(); temp_path.close(); 
+        download_path = os.path.join(self.basedir, self.filenames[0])
+        self.assertEqual(self._res(':file.download %s %s -vector file'  % (download_path, temp_path.name)), '1')
+        self.assertEqual(self._res(':file.download %s %s -vector fread'  % (download_path, temp_path.name)), '1')
+        self.assertEqual(self._res(':file.download %s %s -vector file_get_contents'  % (download_path, temp_path.name)), '1')
+        self.assertEqual(self._res(':file.download %s %s -vector base64'  % (download_path, temp_path.name)), '1')
+        self.assertEqual(self._res(':file.download %s %s -vector copy'  % (download_path, temp_path.name)), '1')
+        self.assertEqual(self._res(':file.download %s %s -vector symlink'  % (download_path, temp_path.name)), '1')
+
+    def test_read(self):
+        
+        self.assertRegexpMatches(self._warn(':file.read /etc/gne') , modules.file.download.WARN_NO_SUCH_FILE)
+        self.assertRegexpMatches(self._warn(':file.read /etc/shadow') , modules.file.download.WARN_NO_SUCH_FILE)
+
+        download_path = os.path.join(self.basedir, self.filenames[1])
+        self.assertEqual(self._outp(':file.read %s -vector file'  % (download_path)), '1')
+        self.assertEqual(self._outp(':file.read %s -vector fread'  % (download_path)), '1')
+        self.assertEqual(self._outp(':file.read %s -vector file_get_contents'  % (download_path)), '1')
+        self.assertEqual(self._outp(':file.read %s -vector base64'  % (download_path)), '1')
+        self.assertEqual(self._outp(':file.read %s -vector copy'  % (download_path)), '1')
+        self.assertEqual(self._outp(':file.read %s -vector symlink'  % (download_path)), '1')
+        
+        
+class FSUpload(SimpleTestCase):
+    
+    
+    def test_upload(self):
+        
+        filename_rand = ''.join(random.choice(ascii_lowercase) for x in range(4))
+        filepath_rand = os.path.join(self.basedir, filename_rand)
+        
+        
+        self.assertEqual(self._res(':file.upload /etc/protocols %s0'  % filepath_rand), True)
+        self.assertRegexpMatches(self._warn(':file.upload /etc/protocolsA %s1'  % filepath_rand), modules.file.upload.WARN_NO_SUCH_FILE)
+        self.assertRegexpMatches(self._warn(':file.upload /etc/protocols /notwritable' ), modules.file.upload.WARN_UPLOAD_FAIL)
+        self.assertEqual(self._res(':file.upload /bin/true %s2'  % filepath_rand), True)
+        self.assertEqual(self._res(':file.upload /bin/true %s3 -vector file_put_contents'  % filepath_rand), True)   
+        self.assertEqual(self._res(':file.upload /bin/true %s4 -vector fwrite'  % filepath_rand), True)        
+        self.assertEqual(self._res(':file.upload /bin/true %s5 -chunksize 2048'  % filepath_rand), True)       
+        self.assertEqual(self._res(':file.upload /bin/true %s6 -content MYTEXT'  % filepath_rand), True)   
+        self.assertEqual(self._outp(':file.read %s6'  % (filepath_rand)), 'MYTEXT')     
+    
+        
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
-#    suite = unittest.TestLoader().loadTestsFromTestCase(FSInteract)
-#    unittest.TextTestRunner(verbosity=2).run(suite)
 
-
-
-#            'cwd_safemode' : TG(conf,
-#                [
-#                TC([ 'cd unexistant' ], ERR_NO_SUCH_FILE),       
-#                TC([ 'cd ..' ], ERR_NO_SUCH_FILE),       
-#                ]),
-#  
-#            'ls_safemode' : TG(conf,
-#                [
-#                TC([ 'ls unexistant' ], ERR_NO_SUCH_FILE),       
-#                TC([ 'ls /' ], ERR_NO_SUCH_FILE),    
-#                TC([ 'ls /tmp/' ], ERR_NO_SUCH_FILE),    
-#
-#                ]),

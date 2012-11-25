@@ -14,7 +14,7 @@ class Enum(ModuleProbe):
     argparser = ArgumentParser(usage=__doc__)
     argparser.add_argument('pathfile', help='Enuemrate paths written in PATHFILE')
     argparser.add_argument('-printall', help='Print also paths not found', action='store_true')
-    argparser.add_argument('-pathlist', help='Enumerate paths written as "[\'/path/1\', \'/path/2\',]"', type=literal_eval, default=[])
+    argparser.add_argument('-pathlist', help='Enumerate paths written as "[\'/path/1\', \'/path/2\']"', type=literal_eval, default=[])
 
     support_vectors = VectorList([
        Vector('shell.php', 'getperms', "$f='$rpath'; if(file_exists($f)) { print('e'); if(is_readable($f)) print('r'); if(is_writable($f)) print('w'); if(is_executable($f)) print('x'); }"),

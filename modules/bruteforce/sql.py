@@ -1,5 +1,5 @@
 from core.moduleprobe import ModuleProbe
-from core.moduleexception import ProbeException
+from core.moduleexception import ProbeException, ProbeSucceed
 from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
@@ -12,6 +12,7 @@ from re import compile
 WARN_CHUNKSIZE_TOO_BIG = 'Reduce it bruteforcing remote hosts to speed up the process' 
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 WARN_NO_WORDLIST = 'Impossible to load a valid word list, use -wordfile or -wordlist'
+WARN_STARTLINE = 'Wrong start line'
 WARN_NOT_CALLABLE = 'Function not callable, use -dbms to change db management system'
 
 
@@ -77,8 +78,11 @@ break;
         # If loaded, cut it from startline
         if not wordlist:
             raise ProbeException(self.name, WARN_NO_WORDLIST)   
-        else:
-            wordlist = wordlist[self.args['startline']:]
+        if self.args['startline'] < 0 or self.args['startline'] > len(wordlist)-1:
+            raise ProbeException(self.name, WARN_STARTLINE)   
+            
+        
+        wordlist = wordlist[self.args['startline']:]
             
         # Clean it
         wordlist = filter(None, uniq(wordlist))
@@ -90,29 +94,29 @@ break;
             self.args['wordlist'] = chunks(wordlist, chunksize)
         else:
             self.args['wordlist'] = [ wordlist ]
-            
-    
-    def _probe(self):
+
         
         dbms_connect = 'mysql_connect' if self.args['dbms'] == 'mysql' else 'pg_connect'
         
         if self.support_vectors.get('check_connect').execute(self.modhandler, { 'dbms_connect' : dbms_connect }) != '1':
-            raise ProbeException(self.name,  '\'%s\' %s' % (dbms_connect, WARN_NOT_CALLABLE))
-        
+            raise ProbeException(self.name,  '\'%s\' %s' % (dbms_connect, WARN_NOT_CALLABLE))            
+    
+    def _probe(self):
+
         post_field = ''.join(choice(ascii_lowercase) for x in range(4))
         user_pwd_re = compile('\+ (.+):(.+)$')
-        
         
         for chunk in self.args['wordlist']:
             
             joined_chunk='\\n'.join(chunk)
             args_formats = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'post_field' : post_field, 'data' : joined_chunk }
-            self.mprint("From '%s' to '%s'..." % (chunk[0], chunk[-1]))
+            self.mprint("%s: from '%s' to '%s'..." % (self.args['username'], chunk[0], chunk[-1]))
             result = self.support_vectors.get(self.args['dbms']).execute(self.modhandler, args_formats)  
             if result:
                 user_pwd_matched = user_pwd_re.findall(result)
                 if user_pwd_matched and len(user_pwd_matched[0]) == 2:
                     self._result = [ user_pwd_matched[0][0], user_pwd_matched[0][1]]
+                    raise ProbeSucceed(self.name, 'Password found')
                     
                     
                 

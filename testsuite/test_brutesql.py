@@ -9,7 +9,7 @@ class BruteSQL(SimpleTestCase):
     
     def _generate_wordlist(self):
         wordlist = [''.join(random.choice(string.ascii_lowercase) for x in range(random.randint(1,100))) for x in range(random.randint(1,200)) ]
-        wordlist[random.randint(0,len(wordlist))] = conf['bruteforce_sql_pwd']
+        wordlist[random.randint(0,len(wordlist)-1)] = conf['bruteforce_sql_pwd']
         return wordlist
         
     

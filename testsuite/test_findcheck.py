@@ -60,3 +60,12 @@ class FSFindCheck(FolderFileFSTestCase):
         folder_rel_path_deepness = folder_rel_path.count('/')+1
         self.assertEqual(self._res(':find.webdir -rpath %s%s./%s' % (folder_rel_path, '/../'*folder_rel_path_deepness, folder_rel_path)), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
         
+
+    def test_suidsgid(self):
+        result = self._res(':find.suidsgid -suid -rpath /usr/bin')
+        self.assertEqual('/usr/bin/sudo' in result and not '/usr/bin/wall' in result , True)
+        result = self._res(':find.suidsgid -sgid -rpath /usr/bin')
+        self.assertEqual('/usr/bin/sudo' not in result and '/usr/bin/wall' in result , True)
+        result = self._res(':find.suidsgid -rpath /usr/bin')
+        self.assertEqual('/usr/bin/sudo' in result and '/usr/bin/wall' in result , True)
+

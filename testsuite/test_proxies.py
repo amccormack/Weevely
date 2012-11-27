@@ -26,6 +26,11 @@ class FSEnum(FolderFSTestCase):
         self.__check_urlopen(self._res(":net.phpproxy"))
         self.__check_urlopen(self._res(":net.phpproxy -find %s/.././%s/./" % (self.dirs[0], self.dirs[0])))
         
+        self.assertRegexpMatches(self._warn(":net.phpproxy -find unexistant"), modules.net.phpproxy.WARN_NOT_FOUND)
+        self.assertRegexpMatches(self._warn(":net.phpproxy -find /tmp/"), modules.net.phpproxy.WARN_NOT_WEBROOT_SUBFOLDER)
+        self.assertRegexpMatches(self._warn(":net.phpproxy -find /unexistant"), modules.net.phpproxy.WARN_NOT_FOUND)
+        
+        
         web_base_url = '%s%s' %  (conf['env_base_web_url'], self.basedir.replace(conf['env_base_web_dir'],''))
         
         self.__check_urlopen(self._res(":net.phpproxy -install %s/.././%s/./inte.php" % (self.dirs[0], self.dirs[0])),'%s/%s/inte.php' % (web_base_url, self.dirs[0]))
@@ -34,7 +39,6 @@ class FSEnum(FolderFSTestCase):
         self.assertRegexpMatches(self._warn(":net.phpproxy -install /tmp/unexistant.php"), modules.net.phpproxy.WARN_NOT_WEBROOT_SUBFOLDER)
         self.assertRegexpMatches(self._warn(":net.phpproxy -install /unexistant.php"), modules.net.phpproxy.WARN_UPLOAD_FAIL)
         
-        #TODO: check directories out of webroot also with -find
         
     @classmethod     
     def _unsetenv(cls):  

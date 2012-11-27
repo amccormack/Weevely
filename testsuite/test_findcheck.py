@@ -1,5 +1,7 @@
 from baseclasses import FolderFileFSTestCase, conf
-import os
+import os, sys
+sys.path.append(os.path.abspath('..'))
+import modules
 
 class FSFindCheck(FolderFileFSTestCase):
 
@@ -59,6 +61,10 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(self._res(':find.webdir -rpath %s' % folder_rel_path), [ folder_abs_path, '%s%s' % (conf['env_base_web_url'], folder_abs_path.replace(conf['env_base_web_dir'],'')) ])
         folder_rel_path_deepness = folder_rel_path.count('/')+1
         self.assertEqual(self._res(':find.webdir -rpath %s%s./%s' % (folder_rel_path, '/../'*folder_rel_path_deepness, folder_rel_path)), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
+
+        self.assertRegexpMatches(self._warn(':find.webdir -rpath /tmp'), modules.find.webdir.WARN_NOT_WEBROOT_SUBFOLDER)
+        self.assertRegexpMatches(self._warn(':find.webdir -rpath unexistant'), modules.find.webdir.WARN_DIR_NOT_FOUND)
+
         
 
     def test_suidsgid(self):

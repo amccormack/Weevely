@@ -23,7 +23,10 @@ class Sqlusers(Sql):
 
     def _prepare_probe(self):
         
-        self.args['username_list'] = Vector('audit.etcpasswd', 'users', "-real" ).execute(self.modhandler).keys()
+        users = Vector('audit.etcpasswd', 'users', '').execute(self.modhandler)
+        filtered_username_list = [u for u in users if 'sql' in u.lower() or 'sql' in users[u].descr.lower() or (users[u].uid == 0) or (users[u].uid > 999) or (('false' not in users[u].shell) and ('/home/' in users[u].home))  ]
+        
+        self.args['username_list'] = filtered_username_list
         Sql._prepare_probe(self)
               
     def _probe(self):

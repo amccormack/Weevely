@@ -16,6 +16,7 @@ class User:
 
         if len(linesplit) > 6:
              self.uid = int(linesplit[2])
+             self.descr = linesplit[4]
              self.home = linesplit[5]
              self.shell = linesplit[6]
 

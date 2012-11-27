@@ -59,7 +59,7 @@ class ModuleProbe:
                 
             print '[%s] %s' % (module_name, str)
         
-        self.modhandler._last_warns += str + linesep
+            self.modhandler._last_warns += str + linesep
             
 
     def _init_module(self):

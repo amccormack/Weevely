@@ -32,6 +32,7 @@ class Upload(ModuleProbeAll):
         ])
 
     support_vectors = VectorList([
+        Vector('file.rm',  "rm", "$rpath -recursive".split(' ')),
         Vector('file.check',  "check_exists", "$rpath exists".split(' ')),
         Vector('file.check', 'md5', '$rpath md5'.split(' ')),
     ])
@@ -41,31 +42,36 @@ class Upload(ModuleProbeAll):
     argparser.add_argument('rpath')
     argparser.add_argument('-chunksize', type=int, default=1024)
     argparser.add_argument('-content', help=SUPPRESS)
-    argparser.add_argument('-vector', choices = vectors.get_names())
+    argparser.add_argument('-vector', choices = vectors.get_names()),
+    argparser.add_argument('-force', action='store_true')
 
+    def _load_local_file(self):
 
+        if not self.args['content']:
+            try:
+                local_file = open(self.args['lpath'], 'r')
+            except Exception, e:
+                raise ProbeException(self.name,  '\'%s\' %s' % (self.args['lpath'], WARN_NO_SUCH_FILE))
+
+            self.args['content'] = local_file.read()
+            local_file.close()
+        
+        
+        self.args['content_md5'] = md5(self.args['content']).hexdigest()
+        self.args['content_chunks'] = self.__chunkify(self.args['content'], self.args['chunksize'])
+        self.args['post_field'] = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
+
+    def _check_remote_file(self):                
+        if self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : self.args['rpath']}):
+            if not self.args['force']:
+                raise ProbeException(self.name, '%s. Delete it first using \':file.rm %s\'' % (WARN_FILE_EXISTS, self.args['rpath']))
+            else:
+                self.support_vectors.get('rm').execute(self.modhandler, {'rpath' : self.args['rpath']})
+                
     def _prepare_probe(self):
 
-        remote_path = self.args['rpath']
-        local_path = self.args['lpath']
-        file_content = self.args['content']
-        chunksize = self.args['chunksize']
-
-        if self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : remote_path}):
-            raise ProbeException(self.name, '%s. Delete it first using \':file.rm %s\'' % (WARN_FILE_EXISTS, remote_path))
-
-        if not file_content:
-            try:
-                local_file = open(local_path, 'r')
-            except Exception, e:
-                raise ProbeException(self.name,  '\'%s\' %s' % (local_path, WARN_NO_SUCH_FILE))
-
-            file_content = local_file.read()
-            local_file.close()
-
-        self.args['content_md5'] = md5(file_content).hexdigest()
-        self.args['content_chunks'] = self.__chunkify(file_content, chunksize)
-        self.args['post_field'] = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
+        self._load_local_file()
+        self._check_remote_file()
         
     def _execute_vector(self):       
 

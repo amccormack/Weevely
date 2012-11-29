@@ -72,7 +72,7 @@ class Upload2web(Upload):
     argparser.add_argument('lpath')
     argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
     
-    argparser.add_argument('-startpath', help='Find writable web path starting from FOLDER', metavar='STARTPATH', default='.')
+    argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
     argparser.add_argument('-chunksize', type=int, default=1024)
     argparser.add_argument('-content', help=SUPPRESS)
     argparser.add_argument('-vector', choices = Upload.vectors.get_names())

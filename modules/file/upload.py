@@ -64,7 +64,7 @@ class Upload(ModuleProbeAll):
     def _check_remote_file(self):                
         if self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : self.args['rpath']}):
             if not self.args['force']:
-                raise ProbeException(self.name, '%s. Delete it first using \':file.rm %s\'' % (WARN_FILE_EXISTS, self.args['rpath']))
+                raise ProbeException(self.name, '%s. Overwrite \'%s\' using -force option.' % (WARN_FILE_EXISTS, self.args['rpath']))
             else:
                 self.support_vectors.get('rm').execute(self.modhandler, {'rpath' : self.args['rpath']})
                 

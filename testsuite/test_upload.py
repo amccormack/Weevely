@@ -58,5 +58,5 @@ class FSUpload(FolderFSTestCase):
         self.assertEqual(self._res(':file.upload2web /bin/true -vector file_put_contents -force'), ['%s/true' % self.basedir, '%s/true' % env_writable_base_url])   
         self.assertEqual(self._res(':file.upload2web /bin/true -vector fwrite -force' ), ['%s/true' % self.basedir, '%s/true' % env_writable_base_url])        
         self.assertEqual(self._res(':file.upload2web /bin/true -chunksize 2048 -force' ), ['%s/true' % self.basedir, '%s/true' % env_writable_base_url])       
-        self.assertEqual(self._res(':file.upload2web /bin/true -content MYTEXT -force'), ['%s/true' % self.basedir, '%s/true' % env_writable_base_url])   
-        self.assertEqual(self._outp(':file.read %s'  % ('%s/true' % self.basedir)), 'MYTEXT')     
+        self.assertEqual(self._res(':file.upload2web /bin/asd -content MYTEXT -force'), ['%s/asd' % self.basedir, '%s/asd' % env_writable_base_url])   
+        self.assertEqual(self._outp(':file.read %s'  % ('%s/asd' % self.basedir)), 'MYTEXT')     

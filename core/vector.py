@@ -52,7 +52,7 @@ class Vector:
 
         # Check type dict
         if not isinstance(format_list, DictType):
-            print "[!] Error, format vector type is not dict"
+            print "[!][%s] Error, format vector type is not dict" % self.name
             return
 
 

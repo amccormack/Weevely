@@ -8,7 +8,7 @@ class FSEnum(FolderFSTestCase):
     
     def __check_urlopen(self, result=None, url=None):
         if not url:
-            self.assertTrue(result)
+            self.assertEqual(len(result),2)
             self.assertTrue(result[1])
             url = result[1] 
             
@@ -39,7 +39,3 @@ class FSEnum(FolderFSTestCase):
         self.assertRegexpMatches(self._warn(":net.phpproxy -install /tmp/unexistant.php"), modules.net.phpproxy.WARN_NOT_WEBROOT_SUBFOLDER)
         self.assertRegexpMatches(self._warn(":net.phpproxy -install /unexistant.php"), modules.net.phpproxy.WARN_UPLOAD_FAIL)
         
-        
-    @classmethod     
-    def _unsetenv(cls):  
-        pass

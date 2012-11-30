@@ -113,6 +113,8 @@ class Upload2web(Upload):
     def _output_result(self):
         if self._result:
             self._result = [ self.args['rpath'], self.args['url'] ]
+        else:
+            self._result = [ None, None ]
         
         return Upload._output_result(self)
     

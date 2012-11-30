@@ -6,7 +6,7 @@ from external.crawler import Crawler
 from ast import literal_eval
 from core.prettytable import PrettyTable
 import os
-from modules.find.webdir import join_abs_paths
+from core.utils import join_abs_paths
 
 WARN_CRAWLER_EXCEPT = 'Crawler exception'
 WARN_CRAWLER_NO_URLS = "No sub URLs crawled. Check URL."

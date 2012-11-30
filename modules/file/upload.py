@@ -8,19 +8,17 @@ from core.moduleprobeall import ModuleProbeAll
 from core.moduleexception import  ModuleException, ExecutionException, ProbeException, ProbeSucceed
 from core.vector import VectorList, Vector
 from core.http.cmdrequest import CmdRequest, NoDataException
-from base64 import b64encode
 from random import choice
 from hashlib import md5
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from argparse import SUPPRESS
+from core.utils import b64_chunks
 
 WARN_FILE_EXISTS = 'File exists'
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 WARN_MD5_MISMATCH = 'MD5 hash mismatch'
 WARN_UPLOAD_FAIL = 'Upload fail, check path and permission'
 
-def b64_chunks(l, n):
-    return [b64encode(l[i:i+n]) for i in range(0, len(l), n)]
 
 class Upload(ModuleProbeAll):
     '''Upload binary/ascii file to the target filesystem'''

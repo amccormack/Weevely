@@ -3,7 +3,7 @@ from core.moduleexception import ProbeException
 from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
-from modules.find.webdir import join_abs_paths
+from core.utils import join_abs_paths
 import os
 
 

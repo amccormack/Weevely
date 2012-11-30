@@ -8,9 +8,11 @@ from core.moduleexception import  ModuleException, ExecutionException, ProbeExce
 from core.http.request import Request
 from base64 import b64decode
 from hashlib import md5
-from random import randint
+from random import randint, choice
 from core.vector import VectorList, Vector as V
 from core.savedargparse import SavedArgumentParser as ArgumentParser
+from string import ascii_lowercase
+import os
 
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 
@@ -30,7 +32,7 @@ class Download(ModuleProbeAll):
 
     support_vectors = VectorList([
         V('file.check',  "check_readable", "$rpath read".split(' ')),
-        V('find.webdir',  "find_webdir", ''),
+        V('file.upload2web', 'upload2web', '$rand -content 1'.split(' ')),
         V('file.rm', 'remove', '$rpath'),
         V('file.check', 'md5', '$rpath md5'.split(' ')),
     ])
@@ -42,7 +44,6 @@ class Download(ModuleProbeAll):
     
     def _prepare_probe(self):
         self.transfer_dir = None
-
         self.lastreadfile = ''
 
     def _prepare_vector(self):
@@ -59,25 +60,18 @@ class Download(ModuleProbeAll):
         
         if self.current_vector.name in ( 'copy', 'symlink' ):
 
-                self.modhandler.set_verbosity(3)
-                if not self.support_vectors.get('find_webdir').execute(self.modhandler):
-                    self.modhandler.set_verbosity()
-                    raise ExecutionException(self.current_vector.name,'No webdir found')
-                
-                self.modhandler.set_verbosity()
+                filename_temp = ''.join(choice(ascii_lowercase) for x in range(4)) + remote_path.split('/').pop();
+                upload_test = self.support_vectors.get('upload2web').execute(self.modhandler, { 'rand' : filename_temp})
 
-                self.transfer_url_dir = self.modhandler.load('find.webdir')._result[0]
-                self.transfer_dir = self.modhandler.load('find.webdir')._result[1]
-
-                if not self.transfer_url_dir or not self.transfer_dir:
+                if not upload_test:
                     raise ExecutionException(self.current_vector.name,'No transfer url dir found')
 
-                filename = '/' + str(randint(11, 999)) + remote_path.split('/').pop();
-                self.args_formats['downloadpath'] = self.transfer_url_dir + filename
-                self.url = self.transfer_dir + filename
-                
+                self.args_formats['downloadpath'] = upload_test[0]
+                self.args['url'] = upload_test[1]
+
+                self.support_vectors.get('remove').execute(self.modhandler, { 'path' : self.args_formats['downloadpath'] })
+
             
-                
 
     def _execute_vector(self):
         
@@ -86,7 +80,7 @@ class Download(ModuleProbeAll):
         if self.current_vector.name in ('copy', 'symlink'):
 
             if self.support_vectors.get('check_readable').execute(self.modhandler, {'rpath' : self.args_formats['downloadpath']}):
-                self._result = Request(self.url).read()
+                self._result = Request(self.args['url']).read()
                 # Force deleting. Does not check existance, because broken links returns False
             
             self.support_vectors.get('remove').execute(self.modhandler, {'rpath' : self.args_formats['downloadpath']})
@@ -119,9 +113,10 @@ class Download(ModuleProbeAll):
         if not remote_md5 == response_md5:
             
             if self.current_vector.name in ('copy', 'symlink') and not self.args_formats['downloadpath'].endswith('.html') and not self.args_formats['downloadpath'].endswith('.htm'):
-                self.mprint("Transferred with '%s', rename as downloadable type as '.html' and retry" % (self.url))
+                self.mprint("Transferred with '%s', rename as downloadable type as '.html' and retry" % (self.args['url']))
 
-            raise ExecutionException(self.current_vector.name,'MD5 hash of \'%s\' file mismatch, file corrupted' % ( local_path))
+            self.mprint('MD5 hash of \'%s\' file mismatch, file corrupt' % ( local_path))
+            raise ExecutionException(self.current_vector.name, 'file corrupt')
         
         elif not remote_md5:
             self.mprint('MD5 check failed')

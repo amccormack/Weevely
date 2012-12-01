@@ -51,22 +51,6 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
 
     
-#    def test_webdir(self):
-#        self.__class__._unsetenv()
-#        self.__class__._setenv()
-#        
-#        self.assertEqual(self._res(':find.webdir -rpath %s' % self.basedir), [ self.basedir, 'http://localhost/%s' % (self.basedir.replace(conf['env_base_web_dir'],'')) ])
-#        folder_abs_path = os.path.join(self.basedir,self.dirs[0])
-#        folder_rel_path = os.path.join(self.basedir.replace(conf['env_base_web_dir'],''),self.dirs[0])
-#        self.assertEqual(self._res(':find.webdir -rpath %s' % folder_rel_path), [ folder_abs_path, '%s%s' % (conf['env_base_web_url'], folder_abs_path.replace(conf['env_base_web_dir'],'')) ])
-#        folder_rel_path_deepness = folder_rel_path.count('/')+1
-#        self.assertEqual(self._res(':find.webdir -rpath %s%s./%s' % (folder_rel_path, '/../'*folder_rel_path_deepness, folder_rel_path)), [ folder_abs_path, 'http://localhost/%s' % folder_abs_path.replace(conf['env_base_web_dir'],'') ])
-#
-#        self.assertRegexpMatches(self._warn(':find.webdir -rpath /tmp'), modules.find.webdir.WARN_NOT_WEBROOT_SUBFOLDER)
-#        self.assertRegexpMatches(self._warn(':find.webdir -rpath unexistant'), modules.find.webdir.WARN_DIR_NOT_FOUND)
-
-        
-
     def test_suidsgid(self):
         result = self._res(':find.suidsgid -suid -rpath /usr/bin')
         self.assertEqual('/usr/bin/sudo' in result and not '/usr/bin/wall' in result , True)

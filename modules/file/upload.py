@@ -13,6 +13,7 @@ from hashlib import md5
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 from core.utils import b64_chunks
+from base64 import b64encode
 
 WARN_FILE_EXISTS = 'File exists'
 WARN_NO_SUCH_FILE = 'No such file or permission denied'

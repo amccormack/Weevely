@@ -40,7 +40,7 @@ class WebEnv:
         absolute_path =  Vector('shell.php', 'normalize', 'print(realpath("$path"));').execute(self.modhandler, { 'path' : relative_path_folder })
         
         if not absolute_path:
-            raise ProbeException(self.name, WARN_NOT_FOUND)
+            raise ProbeException(self.name, '\'%s\' %s' % (relative_path_folder, WARN_NOT_FOUND))
         
         if not absolute_path.startswith(self.base_folder_path):
             raise ProbeException(self.name, '\'%s\' %s' % (absolute_path, WARN_NOT_WEBROOT_SUBFOLDER) ) 
@@ -54,6 +54,8 @@ class WebEnv:
     def file_map(self, relative_path_file):
         
         relative_path_folder = '/'.join(relative_path_file.split('/')[:-1])
+        if not relative_path_folder: relative_path_folder = '/'
+        
         filename = relative_path_file.split('/')[-1]
         
         absolute_path_folder, url_folder = self.folder_map(relative_path_folder)

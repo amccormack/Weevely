@@ -42,6 +42,9 @@ class FSUpload(FolderFSTestCase):
         self.assertEqual(self._res(':file.upload2web /etc/protocols %s/protocols' % os.path.join(self.basedir, self.dirs[0]) ), ['%s/protocols' % os.path.join(self.basedir, self.dirs[0]), '%s/protocols' % os.path.join(env_writable_base_url, self.dirs[0])])
 
         # Out of web root
+        
+        self.assertRegexpMatches(self._warn(':file.upload2web /etc/protocols /asp' ), modules.file.upload2web.WARN_NOT_WEBROOT_SUBFOLDER)
+
         self.assertRegexpMatches(self._warn(':file.upload2web /etc/protocols /tmp/protocols' ), modules.file.upload2web.WARN_NOT_WEBROOT_SUBFOLDER)
         self.assertRegexpMatches(self._warn(':file.upload2web /etc/protocols -startpath /tmp/' ), modules.file.upload2web.WARN_NOT_WEBROOT_SUBFOLDER)
         
@@ -51,7 +54,7 @@ class FSUpload(FolderFSTestCase):
         # In webroot but not writable
         self.assertRegexpMatches(self._warn(':file.upload2web /etc/protocols ../../protocols' ), modules.file.upload.WARN_UPLOAD_FAIL)
         
-        self.assertEqual(self._res(':file.upload2web /etc/protocols -startpath ../../' ), ['%s/protocols' % conf['env_base_writable_web_dir'], '%s/protocols' % env_writable_url])
+        self.assertEqual(self._res(':file.upload2web /etc/protocols -startpath ../../ -force' ), ['%s/protocols' % conf['env_base_writable_web_dir'], '%s/protocols' % env_writable_url])
         self.__class__._env_rm('%s/protocols' % conf['env_base_writable_web_dir'])
         
         self.assertEqual(self._res(':file.upload2web /bin/true -force'), ['%s/true' % self.basedir, '%s/true' % env_writable_base_url])

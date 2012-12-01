@@ -22,13 +22,26 @@ class Phpproxy(Upload2web):
 
     def _prepare_probe(self):
 
-        try:
-            content = open(os.path.join(self.modhandler.path_modules, 'net', 'external', 'phpproxy.php'), 'r').read()
-        except Exception, e:
-            raise ProbeException(self.name,  '\'%s\' %s' % (self.args['lpath'], WARN_NO_SUCH_FILE))
+        proxy_path = os.path.join(self.modhandler.path_modules, 'net', 'external', 'phpproxy.php')
 
-        self.args['lpath'] = ''.join(choice(ascii_lowercase) for x in range(4)) + '.php'
-        self.args['content'] = content
+        if not self.args['rpath']:
+            
+            # If no rpath, set content and remote final filename as random
+            try:
+                content = open(proxy_path, 'r').read()
+            except Exception, e:
+                raise ProbeException(self.name,  '\'%s\' %s' % (self.args['lpath'], WARN_NO_SUCH_FILE))
+
+            self.args['lpath'] = ''.join(choice(ascii_lowercase) for x in range(4)) + '.php'
+            self.args['content'] = content
+            
+        else:
+            
+            # Else, set lpath as proxy filename
+            
+            self.args['lpath'] = proxy_path
+            self.args['content'] = None
+    
     
         Upload2web._prepare_probe(self)
     

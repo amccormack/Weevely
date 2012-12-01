@@ -116,7 +116,7 @@ class Upload2web(Upload):
         if self._result:
             self._result = [ self.args['rpath'], self.args['url'] ]
         else:
-            self._result = [ None, None ]
+            self._result = [ '', '' ]
         
         return Upload._output_result(self)
     

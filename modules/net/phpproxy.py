@@ -9,20 +9,24 @@ import re, os
 from random import choice
 
 class Phpproxy(Upload2web):
-    '''Upload binary/ascii file to the web root, getting the corresponding url'''
+    '''Install remote PHP proxy'''
 
 
     argparser = ArgumentParser(usage=__doc__)
     argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
     
     argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
-    argparser.add_argument('-chunksize', type=int, default=1024)
+    argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
     argparser.add_argument('-vector', choices = Upload2web.vectors.get_names(), help=SUPPRESS)
     argparser.add_argument('-force', action='store_true')
 
+
+    def _get_proxy_path(self):
+        return os.path.join(self.modhandler.path_modules, 'net', 'external', 'phpproxy.php')
+    
     def _prepare_probe(self):
 
-        proxy_path = os.path.join(self.modhandler.path_modules, 'net', 'external', 'phpproxy.php')
+        proxy_path = self._get_proxy_path()
 
         if not self.args['rpath']:
             

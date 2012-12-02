@@ -1,9 +1,10 @@
 
-import random, urllib2, urlparse, re, base64
+import urllib2, urlparse, re, base64
 from request import Request
-from random import random, choice, shuffle, randint
+from random import random, shuffle
 from string import letters, digits
 from core.pollution import pollute_with_random_str
+from core.utils import randstr
 
 default_prefixes = [ "ID", "SID", "APISID", "USRID", "SESSID", "SESS", "SSID", "USR", "PREF" ]
 shuffle(default_prefixes)
@@ -55,7 +56,7 @@ class CmdRequest(Request):
 			while len(prefixes)>3:
 				if random()>0.5:
 					break
-				rand_cookie += prefixes.pop() + '=' + ''.join([choice(letters + digits) for i in xrange(16)]) + '; '
+				rand_cookie += prefixes.pop() + '=' + randstr(16, False, letters + digits) + '; '
 
 
 			# DO NOT fuzz with %, _ (\w on regexp keep _)

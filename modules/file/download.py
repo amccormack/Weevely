@@ -8,10 +8,9 @@ from core.moduleexception import  ModuleException, ExecutionException, ProbeExce
 from core.http.request import Request
 from base64 import b64decode
 from hashlib import md5
-from random import randint, choice
 from core.vector import VectorList, Vector as V
 from core.savedargparse import SavedArgumentParser as ArgumentParser
-from string import ascii_lowercase
+from core.utils import randstr
 import os
 
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
@@ -60,7 +59,7 @@ class Download(ModuleProbeAll):
         
         if self.current_vector.name in ( 'copy', 'symlink' ):
 
-                filename_temp = ''.join(choice(ascii_lowercase) for x in range(4)) + remote_path.split('/').pop();
+                filename_temp = randstr() + remote_path.split('/').pop();
                 upload_test = self.support_vectors.get('upload2web').execute(self.modhandler, { 'rand' : filename_temp})
 
                 if not upload_test:

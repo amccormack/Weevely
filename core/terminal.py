@@ -41,7 +41,10 @@ class Terminal:
                                                              path=self.modhandler.load('shell.php').stored_args['path'], 
                                                              prompt = 'PHP>' if (self.modhandler.interpreter == 'shell.php') else '$' )
 
-            cmd = shlex.split(raw_input( prompt ).strip())
+            try:
+                cmd = shlex.split(raw_input( prompt ).strip())
+            except ValueError:
+                continue
             if not cmd:
                 continue
 

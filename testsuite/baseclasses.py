@@ -41,6 +41,8 @@ class SimpleTestCase(unittest.TestCase):
         if quiet:
             stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')  
+        else:
+            print command
             
         cls.term.run_cmd_line(shlex.split(command))
         

@@ -14,7 +14,7 @@ from ast import literal_eval
 import random, os, shlex, types
 
 
-WARN_PROXY = '[!] Proxies can break weevely requests, use proxychains'
+WARN_PROXY = 'Proxies can break weevely requests, use proxychains'
 WARN_TRAILING_SEMICOLON = 'command does not have trailing semicolon'
 WARN_NO_RESPONSE = 'No response'
 WARN_UNREACHABLE = 'URL or proxy unreachable'

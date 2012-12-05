@@ -2,7 +2,6 @@ from core.moduleprobeall import ModuleProbe
 from core.moduleexception import ModuleException, ProbeException
 from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
-from core.prettytable import PrettyTable
 import re
 
 WARN_NO_DATA = 'No data returned'

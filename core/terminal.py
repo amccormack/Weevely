@@ -10,7 +10,7 @@ from core.vector import Vector
 import os, re, shlex, readline, atexit
 
 module_trigger = ':'
-help_string = ':show'
+help_string = ':help'
 set_string = ':set'
 load_string = ':load'
 gen_string = ':generator'
@@ -68,7 +68,8 @@ class Terminal:
             ## Help call
             if command[0] == help_string:
                 if len(command) == 2:
-                    self.__tprint(self.modhandler.load(modname).argparser.format_help())
+                    help_output = '%s\nStored arguments:\n  %s\n\n' % (self.modhandler.load(command[1]).argparser.format_help(), self.modhandler.load(command[1]).get_stored_args_str())
+                    self.__tprint(help_output)
                 else:
                     pass
                     # PRINT SUMMARY

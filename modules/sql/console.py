@@ -50,9 +50,8 @@ pg_close();"""])
         
     def _query(self, query):
         
-        
-        
-        if self.stored_args['vector']:
+        # Does not re-use fallback vectors
+        if self.stored_args['vector'] and not self.stored_args['vector'].endswith('_fallback'):
             vector = self.stored_args['vector']
         else:
             vector = self.args['dbms']

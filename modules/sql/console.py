@@ -31,7 +31,8 @@ pg_close();}""" ]),
 if($result) {
 while ($content = pg_fetch_row($result)) {
 foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-pg_close();"""])                                  
+pg_close();"""])
+                                            
                                   
     ])
     
@@ -49,23 +50,29 @@ pg_close();"""])
         
     def _query(self, query):
         
+        
+        
         if self.stored_args['vector']:
             vector = self.stored_args['vector']
         else:
             vector = self.args['dbms']
         
         result = self.support_vectors.get(vector).execute(self.modhandler, { 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : query })
+        
         if not result:
+            
             vector = self.args['dbms'] + '_fallback'
             
             result = self.support_vectors.get(vector).execute(self.modhandler, { 'query' : query })
-            
-            if not result:
-                return None
-            
-            elif self.stored_args['vector'] == None and result:
+      
+            if result:
+                
                 # First fallback call. Set console
-                user = self.support_vectors.get(vector).execute(self.modhandler, { 'query' : 'SELECT USER();' })
+                
+                get_current_user = 'SELECT USER;' if self.args['dbms'] == 'postgres' else 'SELECT USER();'
+                
+                user = self.support_vectors.get(vector).execute(self.modhandler, { 'query' : get_current_user })
+                
                 if user:
                     user = user[:-1]
                     self.stored_args['prompt'] = '%s SQL> ' % user
@@ -76,24 +83,25 @@ pg_close();"""])
         elif result and self.stored_args['vector'] == None:
                 self.stored_args['prompt'] = "%s@%s SQL> " % (self.args['user'], self.args['host'])
                 self.stored_args['vector'] = vector
-                
-        return result[:-1].replace('|\n', '\n')
+        
+        if result:
+            return [ line.split('|') for line in result[:-1].replace('|\n', '\n').split('\n') ]   
+
 
         
 
     def _probe(self):
-
-
 
         self.args['dbms'] = 'pg' if self.args['dbms'] == 'postgres' else 'mysql'
 
         if not self.args['query']:
             while True:
                 self._result = None
+                self._output = ''
                 
                 query  = raw_input( self.stored_args['prompt'] ).strip()
                 self._result = self._query(query)
-    
+                
                 if self._result == None:
                     self.mprint('%s %s' % (WARN_NO_DATA, WARN_CHECK_CRED))
                 elif not self._result:
@@ -105,20 +113,7 @@ pg_close();"""])
                     
                 
         else:
-            result = self._query(self.args['query'])
-            if result:
-                self._result = [ line.split('|') for line in result.split('\n') ]
-            else:
-                raise ProbeException(self.name, '%s %s' % (WARN_NO_DATA, WARN_CHECK_CRED))
-            
-    def _output_result(self):        
-        
-        if self._result and len(self._result)>0:
-            table = PrettyTable(['']*(len(self._result[0])))
-            table.align = 'l'
-            table.header = False
-            
-            for row in self._result:
-                table.add_row([field.strip() for field in row]) 
-        
-            self._output = table.get_string()
+            self._result = self._query(self.args['query'])
+
+            if self._result == None:
+                self.mprint('%s %s' % (WARN_NO_DATA, WARN_CHECK_CRED))

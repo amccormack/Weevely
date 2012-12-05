@@ -28,8 +28,7 @@ class ModuleProbe:
         
         self._result = ''
         self._output = ''
-        
-        
+
         try:
             self._check_args(arglist)
             self._prepare_probe()
@@ -49,6 +48,7 @@ class ModuleProbe:
         else:
             self._output_result()
             
+        
         return self._result, self._output
 
     def mprint(self, str, msg_class = 3, module_name = None):
@@ -91,7 +91,25 @@ class ModuleProbe:
             self._output = ''
         # List outputs.
         elif isinstance(self._result, ListType):
-            self._output = '\n'.join(self._result)
+            
+            if len(self._result) > 0:
+                
+                columns_num = 1
+                if isinstance(self._result[0], ListType):
+                    columns_num = len(self._result[0])
+                
+                table = PrettyTable(['']*(columns_num))
+                table.align = 'l'
+                table.header = False
+                
+                for row in self._result:
+                    if isinstance(row, ListType):
+                        table.add_row(row)
+                    else:
+                        table.add_row([ row ])
+            
+                self._output = table.get_string()
+                
         # Dict outputs are display as tables
         elif isinstance(self._result, DictType) and self._result:
 

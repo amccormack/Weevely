@@ -34,6 +34,34 @@ class MySql(SimpleTestCase):
         self._res(':sql.console %s %s -query "drop database asd;" ' % ( user, pwd ))
                       
 
+    @skipIf(conf['test_only_dbms'] == 'postgres', "Skipping mysql tests")
+    def test_dump(self):
+
+        user = conf['mysql_sql_user']
+        pwd = conf['mysql_sql_pwd']
+        
+        
+        # Standard test
+        self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema' % ( user, pwd ) ), "-- Dumping data for table `COLUMNS`")
+        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema' % ( user ) ), modules.sql.dump.WARN_NO_DUMP)
+             
+        # table
+        self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
+         
+        # vectors
+        self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -vector mysqldump -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
+        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema  -vector mysqldump -table TABLES' % ( user ) ), modules.sql.dump.WARN_NO_DUMP)
+             
+        self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -vector mysqlphpdump -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
+        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema  -vector mysqlphpdump -table TABLES' % ( user ) ), modules.sql.dump.WARN_DUMP_INCOMPLETE)
+
+        # lpath
+        self.assertRegexpMatches(self._warn(':sql.dump %s %s information_schema -table TABLES -ldump /wrongpath' % ( user, pwd ) ), modules.sql.dump.WARN_DUMP_ERR_SAVING)
+
+        # host
+        self.assertRegexpMatches(self._warn(':sql.dump %s %s information_schema -table TABLES -host wronghost' % ( user, pwd ) ), modules.sql.dump.WARN_NO_DUMP)
+        
+
 class PGSql(SimpleTestCase):
     
     

@@ -30,17 +30,20 @@ class Php(ModuleProbe):
 
     mode_choices = ['Cookie', 'Referer' ]
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('cmd', help='PHP command enclosed with brackets and terminated by semi-comma', nargs='+' )
-    argparser.add_argument('-mode', help='Obfuscation mode', choices = mode_choices)
-    argparser.add_argument('-proxy', help='HTTP proxy')
-    argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
-    argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
-    argparser.add_argument('-post', help=SUPPRESS, type=literal_eval, default={})
-    argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
     def _init_module(self):
         self.stored_args = { 'mode' : None, 'path' : '' }
+
+
+    
+    def _init_args(self):
+        self.argparser.add_argument('cmd', help='PHP command enclosed with brackets and terminated by semi-comma', nargs='+' )
+        self.argparser.add_argument('-mode', help='Obfuscation mode', choices = self.mode_choices)
+        self.argparser.add_argument('-proxy', help='HTTP proxy')
+        self.argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
+        self.argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
+        self.argparser.add_argument('-post', help=SUPPRESS, type=literal_eval, default={})
+        self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
     def _check_args(self, args):
         

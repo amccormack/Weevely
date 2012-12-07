@@ -18,7 +18,6 @@ class Ifaces(ModuleProbe):
     ])
     
     
-    argparser = ArgumentParser(usage=__doc__)
     
     
     def _probe(self):

@@ -70,15 +70,17 @@ class Upload2web(Upload):
     '''Upload binary/ascii file to the web root, getting the corresponding url'''
 
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('lpath')
-    argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
-    
-    argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
-    argparser.add_argument('-chunksize', type=int, default=1024)
-    argparser.add_argument('-content', help=SUPPRESS)
-    argparser.add_argument('-vector', choices = Upload.vectors.get_names())
-    argparser.add_argument('-force', action='store_true')
+    def _init_args(self):
+        
+        
+        self.argparser.add_argument('lpath')
+        self.argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
+        
+        self.argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
+        self.argparser.add_argument('-chunksize', type=int, default=1024)
+        self.argparser.add_argument('-content', help=SUPPRESS)
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-force', action='store_true')
 
     
     def _prepare_probe(self):

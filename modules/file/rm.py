@@ -12,41 +12,44 @@ WARN_DELETE_OK = 'File deleted'
 class Rm(ModuleProbeAll):
     '''Remove remote files and folders'''
 
-    vectors = VectorList([
-        Vector('shell.php', 'php_rmdir', """
-function rmfile($dir) {
-if (is_dir("$dir")) rmdir("$dir");
-else { unlink("$dir"); }
-}
-function exists($path) {
-return (file_exists("$path") || is_link("$path"));
-}
-function rrmdir($recurs,$dir) {
-    if($recurs=="1") {
-        if (is_dir("$dir")) {
-            $objects = scandir("$dir");
-            foreach ($objects as $object) {
-            if ($object != "." && $object != "..") {
-            if (filetype($dir."/".$object) == "dir") rrmdir($recurs, $dir."/".$object); else unlink($dir."/".$object);
+
+    def _init_vectors(self):
+        self.vectors = VectorList([
+            Vector('shell.php', 'php_rmdir', """
+    function rmfile($dir) {
+    if (is_dir("$dir")) rmdir("$dir");
+    else { unlink("$dir"); }
+    }
+    function exists($path) {
+    return (file_exists("$path") || is_link("$path"));
+    }
+    function rrmdir($recurs,$dir) {
+        if($recurs=="1") {
+            if (is_dir("$dir")) {
+                $objects = scandir("$dir");
+                foreach ($objects as $object) {
+                if ($object != "." && $object != "..") {
+                if (filetype($dir."/".$object) == "dir") rrmdir($recurs, $dir."/".$object); else unlink($dir."/".$object);
+                }
+                }
+                reset($objects);
+                rmdir("$dir");
             }
-            }
-            reset($objects);
-            rmdir("$dir");
+            else rmfile("$dir");
         }
         else rmfile("$dir");
     }
-    else rmfile("$dir");
-}
-$recurs="$recursive"; $path="$rpath";
-if(exists("$path")) 
-rrmdir("$recurs", "$path");"""),
-              Vector('shell.sh', 'rm', "rm $recursive $rpath")
-    ])
+    $recurs="$recursive"; $path="$rpath";
+    if(exists("$path")) 
+    rrmdir("$recurs", "$path");"""),
+                  Vector('shell.sh', 'rm', "rm $recursive $rpath")
+        ])
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('rpath', help='Remote starting path')
-    argparser.add_argument('-recursive', help='Remove recursively', action='store_true')
-    argparser.add_argument('-vector', choices = vectors.get_names())
+    
+    def _init_args(self):
+        self.argparser.add_argument('rpath', help='Remote starting path')
+        self.argparser.add_argument('-recursive', help='Remove recursively', action='store_true')
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
 
 
     def _prepare_probe(self):

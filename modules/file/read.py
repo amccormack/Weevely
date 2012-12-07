@@ -4,13 +4,13 @@ from core.savedargparse import SavedArgumentParser as ArgumentParser
 from core.moduleprobeall import ModuleProbe
 
 class Read(Download):
-    '''Read files from target filesystem
-:file.read <remote path> 
-    '''
+    '''Read files from target filesystem'''
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('rpath')
-    argparser.add_argument('-vector', choices = Download.vectors.get_names())
+
+
+    def _init_args(self):
+        self.argparser.add_argument('rpath')
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
 
     def _verify_execution(self):
 

@@ -88,24 +88,24 @@ WARN_NO_DUMP = 'Dump failed, check credentials and dbms informations'
 
 class Dump(ModuleProbeAll):
     '''Get SQL database dump'''
+
+    def _init_vectors(self):
+        self.vectors = VectorList([
+            Vector('shell.php', 'mysqlphpdump', [ mysqlphpdump ] ),  
+            Vector('shell.sh', 'mysqldump', "mysqldump -h $host -u $user --password=$pass $db $table --single-transaction") ,
+        # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527        
+        ])
     
-    vectors = VectorList([
-        Vector('shell.php', 'mysqlphpdump', [ mysqlphpdump ] ),  
-        Vector('shell.sh', 'mysqldump', "mysqldump -h $host -u $user --password=$pass $db $table --single-transaction") ,
-    # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527        
-    ])
     
-    
-    
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('user', help='SQL username')
-    argparser.add_argument('pass', help='SQL password')
-    argparser.add_argument('db', help='Database to dump')
-    argparser.add_argument('-table', help='Table to dump')
-    argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
-    #argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
-    argparser.add_argument('-vector', choices = vectors.get_names())
-    argparser.add_argument('-ldump', help='Where to save dump')
+    def _init_args(self):
+        self.argparser.add_argument('user', help='SQL username')
+        self.argparser.add_argument('pass', help='SQL password')
+        self.argparser.add_argument('db', help='Database to dump')
+        self.argparser.add_argument('-table', help='Table to dump')
+        self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
+        #argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-ldump', help='Where to save dump')
         
     def _prepare_vector(self):
         if not self.args['table']:

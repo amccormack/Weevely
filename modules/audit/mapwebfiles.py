@@ -17,15 +17,18 @@ class Mapwebfiles(ModuleProbe):
     '''Enumerate webroot files properties '''
 
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('url', help='HTTP URL where start crawling (es. http://host/path/page.html)')
-    argparser.add_argument('baseurl', help='HTTP base url (es. http://host/path/)')
-    argparser.add_argument('rpath', help='Remote web root corresponding to crawled path (es. /var/www/path)', type=str)
-    argparser.add_argument('-deep', help='Crawl deepness', type=int, default=3)
 
-    support_vectors = VectorList([
-       Vector('file.enum', 'enum', ["asd", "-pathlist", "$pathlist"]),
-    ])
+    def _init_vectors(self):
+        self.support_vectors = VectorList([
+           Vector('file.enum', 'enum', ["asd", "-pathlist", "$pathlist"]),
+        ])
+    
+    def _init_args(self):
+        self.argparser.add_argument('url', help='HTTP URL where start crawling (es. http://host/path/page.html)')
+        self.argparser.add_argument('baseurl', help='HTTP base url (es. http://host/path/)')
+        self.argparser.add_argument('rpath', help='Remote web root corresponding to crawled path (es. /var/www/path)', type=str)
+        self.argparser.add_argument('-deep', help='Crawl deepness', type=int, default=3)
+
 
     def _prepare_probe(self):
     

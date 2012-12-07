@@ -11,17 +11,19 @@ class Userfiles(ModuleProbe):
     '''Enumerate common users restricted files'''
 
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('-auto-web', help='Enumerate common files in /home/*', action='store_true')
-    argparser.add_argument('-auto-home', help='Enumerate common files in /home/*/public_html/', action='store_true')
-    argparser.add_argument('-pathfile', help='Enumerate paths in PATHLIST in /home/*')
-    argparser.add_argument('-pathlist', help='Enumerate path written as [\'path1\', \'path2\',] in /home/*', type=literal_eval, default=[])
 
+    def _init_vectors(self):
+        self.support_vectors = VectorList([
+           Vector('file.enum', 'enum', ["asd", "-pathlist", "$pathlist"]),
+           Vector('audit.etcpasswd', 'users', ["-real"]),
+        ])
+    
+    def _init_args(self):
+        self.argparser.add_argument('-auto-web', help='Enumerate common files in /home/*', action='store_true')
+        self.argparser.add_argument('-auto-home', help='Enumerate common files in /home/*/public_html/', action='store_true')
+        self.argparser.add_argument('-pathfile', help='Enumerate paths in PATHLIST in /home/*')
+        self.argparser.add_argument('-pathlist', help='Enumerate path written as [\'path1\', \'path2\',] in /home/*', type=literal_eval, default=[])
 
-    support_vectors = VectorList([
-       Vector('file.enum', 'enum', ["asd", "-pathlist", "$pathlist"]),
-       Vector('audit.etcpasswd', 'users', ["-real"]),
-    ])
 
 
     common_files = {

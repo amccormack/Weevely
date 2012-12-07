@@ -82,19 +82,19 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 class Proxy(Phpproxy):
     '''Install and run Proxy to tunnel traffic through target'''
 
-
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
     
-    argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
-    argparser.add_argument('-force', action='store_true')
-    argparser.add_argument('-just-run', metavar='URL')
-    argparser.add_argument('-just-install', action='store_true')
-    argparser.add_argument('-lhost', default='127.0.0.1')
-    argparser.add_argument('-lport', default='8081', type=int)
-
-    argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
-    argparser.add_argument('-vector', choices = Upload2web.vectors.get_names(), help=SUPPRESS)
+    def _init_args(self):
+        self.argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
+        
+        self.argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
+        self.argparser.add_argument('-force', action='store_true')
+        self.argparser.add_argument('-just-run', metavar='URL')
+        self.argparser.add_argument('-just-install', action='store_true')
+        self.argparser.add_argument('-lhost', default='127.0.0.1')
+        self.argparser.add_argument('-lport', default='8081', type=int)
+    
+        self.argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names(), help=SUPPRESS)
 
 
     def _run_proxy_server(self, rurl, lport, lhost):

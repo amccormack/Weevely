@@ -7,20 +7,23 @@ class Check(ModuleProbe):
     '''Check remote files type, md5 and permission'''
 
 
-    vectors = VectorList([
-       Vector('shell.php', 'exists', "$f='$rpath'; if(file_exists($f) || is_readable($f) || is_writable($f) || is_file($f) || is_dir($f)) print(1); else print(0);"),
-       Vector('shell.php', "isdir" , "(is_dir('$rpath') && print(1)) || print(0);"),
-       Vector('shell.php', "md5" , "print(md5_file('$rpath'));"),
-       Vector('shell.php',  "read", "(is_readable('$rpath') && print(1)) || print(0);"),
-       Vector('shell.php', "write", "(is_writable('$rpath') && print(1))|| print(0);"),
-       Vector('shell.php',  "exec", "(is_executable('$rpath') && print(1)) || print(0);"),
-       Vector('shell.php', "isfile", "(is_file('$rpath') && print(1)) || print(0);")
-        ])
+    def _init_vectors(self):
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('rpath', help='Remote path')
-    argparser.add_argument('attr', help='Attribute to check',  choices = vectors.get_names())
+        self.vectors = VectorList([
+           Vector('shell.php', 'exists', "$f='$rpath'; if(file_exists($f) || is_readable($f) || is_writable($f) || is_file($f) || is_dir($f)) print(1); else print(0);"),
+           Vector('shell.php', "isdir" , "(is_dir('$rpath') && print(1)) || print(0);"),
+           Vector('shell.php', "md5" , "print(md5_file('$rpath'));"),
+           Vector('shell.php',  "read", "(is_readable('$rpath') && print(1)) || print(0);"),
+           Vector('shell.php', "write", "(is_writable('$rpath') && print(1))|| print(0);"),
+           Vector('shell.php',  "exec", "(is_executable('$rpath') && print(1)) || print(0);"),
+           Vector('shell.php', "isfile", "(is_file('$rpath') && print(1)) || print(0);")
+            ])
+    
+    def _init_args(self):
+        self.argparser.add_argument('rpath', help='Remote path')
+        self.argparser.add_argument('attr', help='Attribute to check',  choices = self.vectors.get_names())
 
+        
 
     def _probe(self):
         

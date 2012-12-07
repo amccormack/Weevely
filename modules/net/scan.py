@@ -15,22 +15,22 @@ WARN_INVALID_SCAN = 'Invalid scan range, check syntax'
 class Scan(ModuleProbe):
     '''Print interface addresses'''
     
-    support_vectors = VectorList([
-      Vector('net.ifaces', 'ifaces', []),
-      Vector('shell.php', 'scan', ["""$str = base64_decode($_POST["$post_field"]);
-foreach (explode(',', $str) as $s) {
-$s2 = explode(' ', $s);
-foreach( explode('|', $s2[1]) as $p) {
-if($fp = fsockopen("$s2[0]", $p, $n, $e, $timeout=1)) {print(" $s2[0]:$p"); fclose($fp);}
-}print(".");}""", "-post", "{\'$post_field\' : \'$data\' }"])
-    ])
+    def _init_vectors(self):
+        self.support_vectors = VectorList([
+          Vector('net.ifaces', 'ifaces', []),
+          Vector('shell.php', 'scan', ["""$str = base64_decode($_POST["$post_field"]);
+    foreach (explode(',', $str) as $s) {
+    $s2 = explode(' ', $s);
+    foreach( explode('|', $s2[1]) as $p) {
+    if($fp = fsockopen("$s2[0]", $p, $n, $e, $timeout=1)) {print(" $s2[0]:$p"); fclose($fp);}
+    }print(".");}""", "-post", "{\'$post_field\' : \'$data\' }"])
+        ])
     
-    
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('addr', help='Single IP, multiple: IP1,IP2,.., networks IP/MASK or firstIP-lastIP, interfaces (ethN)')
-    argparser.add_argument('port', help='Single post, multiple: PORT1,PORT2,.. or firstPORT-lastPORT')
-    argparser.add_argument('-unknown', help='Scan also unknown ports', action='store_true')
-    argparser.add_argument('-ppr', help=SUPPRESS, default=10, type=int)
+    def _init_args(self):
+        self.argparser.add_argument('addr', help='Single IP, multiple: IP1,IP2,.., networks IP/MASK or firstIP-lastIP, interfaces (ethN)')
+        self.argparser.add_argument('port', help='Single post, multiple: PORT1,PORT2,.. or firstPORT-lastPORT')
+        self.argparser.add_argument('-unknown', help='Scan also unknown ports', action='store_true')
+        self.argparser.add_argument('-ppr', help=SUPPRESS, default=10, type=int)
 
 
     def _get_service_path(self):

@@ -5,16 +5,17 @@ from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 class Suidsgid(ModuleProbe):
     '''Find files with superuser flags'''
-
-    vectors = VectorList([
-       Vector('shell.sh', "find" , "find $rpath $perm 2>/dev/null")
-    ])
+    def _init_vectors(self):
+        self.vectors = VectorList([
+           Vector('shell.sh', "find" , "find $rpath $perm 2>/dev/null")
+        ])
     
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('rpath', help='Remote starting path')
-    argparser.add_argument('-suid', help='Find only suid', action='store_true')
-    argparser.add_argument('-sgid', help='Find only sgid', action='store_true')
     
+    def _init_args(self):
+        self.argparser.add_argument('rpath', help='Remote starting path')
+        self.argparser.add_argument('-suid', help='Find only suid', action='store_true')
+        self.argparser.add_argument('-sgid', help='Find only sgid', action='store_true')
+        
     
     def _probe(self):
         

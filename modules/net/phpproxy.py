@@ -10,14 +10,13 @@ from core.utils import randstr
 class Phpproxy(Upload2web):
     '''Install remote PHP proxy'''
 
-
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
-    
-    argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
-    argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
-    argparser.add_argument('-vector', choices = Upload2web.vectors.get_names(), help=SUPPRESS)
-    argparser.add_argument('-force', action='store_true')
+    def _init_args(self):
+        self.argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
+        
+        self.argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
+        self.argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names(), help=SUPPRESS)
+        self.argparser.add_argument('-force', action='store_true')
 
 
     def _get_proxy_path(self):

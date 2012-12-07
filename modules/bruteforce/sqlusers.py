@@ -13,13 +13,14 @@ from sql import Sql
 class Sqlusers(Sql):
     """ Bruteforce all SQL users"""
     
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('-hostname', help='DBMS host or host:port', default='127.0.0.1')
-    argparser.add_argument('-wordfile', help='Local wordlist path')
-    argparser.add_argument('-startline', help='Start line of local wordlist', type=int, default=0)
-    argparser.add_argument('-chunksize', type=int, default=5000)
-    argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
-    argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
+    def _init_args(self):
+    
+        self.argparser.add_argument('-hostname', help='DBMS host or host:port', default='127.0.0.1')
+        self.argparser.add_argument('-wordfile', help='Local wordlist path')
+        self.argparser.add_argument('-startline', help='Start line of local wordlist', type=int, default=0)
+        self.argparser.add_argument('-chunksize', type=int, default=5000)
+        self.argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
+        self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
 
     def _prepare_probe(self):
         

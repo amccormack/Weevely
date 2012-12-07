@@ -11,37 +11,40 @@ WARN_FALLBACK = 'bad credentials, falling back to default ones'
 class Console(ModuleProbe):
     '''Execute SQL queries'''
     
-    support_vectors = VectorList([
-        Vector('shell.php', 'mysql', ["""if(mysql_connect("$host","$user","$pass")){
-$result = mysql_query("$query"); if($result) {
-while ($content = mysql_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-mysql_close();}""" ]),
-        Vector('shell.php', 'mysql_fallback', [ """$result = mysql_query("$query");
-if($result) {
-while ($content = mysql_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}"""]),
-        Vector('shell.php', 'pg', ["""if(pg_connect("host=$host user=$user password=$pass")){
-$result = pg_query("$query"); if($result) {
-while ($content = pg_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-pg_close();}""" ]),
-        Vector('shell.php', 'pg_fallback', [ """$result = pg_query("$query");
-if($result) {
-while ($content = pg_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-pg_close();"""])
-                                            
-                                  
-    ])
+    def _init_vectors(self):
+        
+        self.support_vectors = VectorList([
+            Vector('shell.php', 'mysql', ["""if(mysql_connect("$host","$user","$pass")){
+    $result = mysql_query("$query"); if($result) {
+    while ($content = mysql_fetch_row($result)) {
+    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+    mysql_close();}""" ]),
+            Vector('shell.php', 'mysql_fallback', [ """$result = mysql_query("$query");
+    if($result) {
+    while ($content = mysql_fetch_row($result)) {
+    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}"""]),
+            Vector('shell.php', 'pg', ["""if(pg_connect("host=$host user=$user password=$pass")){
+    $result = pg_query("$query"); if($result) {
+    while ($content = pg_fetch_row($result)) {
+    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+    pg_close();}""" ]),
+            Vector('shell.php', 'pg_fallback', [ """$result = pg_query("$query");
+    if($result) {
+    while ($content = pg_fetch_row($result)) {
+    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+    pg_close();"""])
+                                                
+                                      
+        ])
     
     
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('user', help='SQL username')
-    argparser.add_argument('pass', help='SQL password')
-    argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
-    argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
-    argparser.add_argument('-query', help='Execute single query')
+
+    def _init_args(self):
+        self.argparser.add_argument('user', help='SQL username')
+        self.argparser.add_argument('pass', help='SQL password')
+        self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
+        self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
+        self.argparser.add_argument('-query', help='Execute single query')
 
     def _init_module(self):
         self.stored_args['vector'] = None

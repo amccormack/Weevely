@@ -24,16 +24,18 @@ class Etcpasswd(ModuleProbeAll):
     """Enumerate users and /etc/passwd content"""
 
 
-    vectors = VectorList([
-        V('shell.php', 'posix_getpwuid', "for($n=0; $n<2000;$n++) { $uid = @posix_getpwuid($n); if ($uid) echo join(':',$uid).\'\n\';  }"),
-        V('shell.sh', 'cat', "cat /etc/passwd"),
-        V('file.read', 'read', "/etc/passwd")
-        ])
-
-    argparser = ArgumentParser(usage=__doc__)
-    argparser.add_argument('-real', help='Show only real users', action='store_true')
-    argparser.add_argument('-vector', choices = vectors.get_names())
-
+    def _init_vectors(self):
+        self.vectors = VectorList([
+            V('shell.php', 'posix_getpwuid', "for($n=0; $n<2000;$n++) { $uid = @posix_getpwuid($n); if ($uid) echo join(':',$uid).\'\n\';  }"),
+            V('shell.sh', 'cat', "cat /etc/passwd"),
+            V('file.read', 'read', "/etc/passwd")
+            ])
+        
+    def _init_args(self):
+        
+        self.argparser.add_argument('-real', help='Show only real users', action='store_true')
+        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        
 
     def __verify_execution(self):
 

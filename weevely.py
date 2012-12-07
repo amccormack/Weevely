@@ -21,7 +21,7 @@
 from core.terminal import Terminal, module_trigger
 from core.modulehandler import ModHandler
 from core.moduleexception import ModuleException
-from core.helper import Helper
+from argparse import ArgumentParser
 
 import sys
 
@@ -73,6 +73,7 @@ Available modules
 
 %s'''
 
+
 if __name__ == "__main__":
 
 
@@ -95,7 +96,7 @@ if __name__ == "__main__":
         password = sys.argv[2]
 
         if genname == 'generate':
-            genname = 'generate.php'
+            genname = 'generate.php' 
 
         args_list = [':%s' % genname ] + sys.argv[3:]
 

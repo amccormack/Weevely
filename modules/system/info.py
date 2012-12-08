@@ -11,9 +11,7 @@ from core.savedargparse import SavedArgumentParser as ArgumentParser
 import argparse
 
 class Info(ModuleProbe):
-    """Collect system informations
-    :system.info <info>
-    """
+    """Collect system informations"""
 
     def _set_vectors(self):
             self.support_vectors.add_vector('document_root', 'shell.php', "@print($_SERVER['DOCUMENT_ROOT']);"),

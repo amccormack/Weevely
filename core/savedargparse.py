@@ -30,6 +30,10 @@ class SavedArgumentParser(ArgumentParser):
             
         raise ModuleException('', output)
         
+#    def add_argument(self, *args, **kwargs):
+#        if '-vector' in args:
+#            kwargs['help'] = SUPPRESS
+#        return ArgumentParser.add_argument(self, *args, **kwargs)
   
     def parse_known_stored_and_new_args(self, args=None, namespace=None, stored_args_dict = {}):
        

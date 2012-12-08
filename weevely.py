@@ -18,7 +18,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
-from core.terminal import Terminal, module_trigger
+from core.terminal import Terminal, module_trigger, help_string
 from core.modulehandler import ModHandler
 from core.moduleexception import ModuleException
 from argparse import ArgumentParser
@@ -105,30 +105,16 @@ if __name__ == "__main__":
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
 
-    elif len(sys.argv)>=2 and sys.argv[1] == 'show':
-        modname = None
-        if len(sys.argv) == 3:
-            modname = sys.argv[2]
-        print ModHandler('', '').helps(modname)
 
     elif len(sys.argv) > 3:
 
         url = sys.argv[1]
         password = sys.argv[2]
 
-
-        if sys.argv[3] == ':show':
-            modname = ''
-            if len(sys.argv)>4:
-                modname = sys.argv[4]
-                
-            ModHandler(url, password).load(modname).argparser.print_help()
-
-        elif sys.argv[1].startswith('http'):
+        if sys.argv[1].startswith('http'):
 
             try:
-                terminal = Terminal (ModHandler(url, password))
-                terminal.run_cmd_line(sys.argv[3:])
+                Terminal(ModHandler(url, password)).run_cmd_line(sys.argv[3:])
 
             except ModuleException, e:
                 print '[!] [%s] %s ' % (e.module, e.error)
@@ -140,7 +126,7 @@ if __name__ == "__main__":
 
 
     else:
-
-        print general_usage % ( ModHandler().summary(only_group='generate'), ModHandler().summary(exclude_group='generate'))
+        #Terminal(ModHandler()).run_cmd_line([help_string])
+        Terminal(ModHandler())._print_sum_help(oneline=True)
 
 

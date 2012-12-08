@@ -172,6 +172,31 @@ class ModuleProbe:
                 
                 self.stored_args[key] = value
         
+    def format_help(self, help = True, stored_args=True,  name = True, descr=True, usage=True, vectors=True, padding = 0):
+        
+        help_output = ''
+
+        if help:
+            help_output += '%s\n' % self.argparser.format_help()
+        else:
+            
+            if name:
+                help_output += '[%s]' % self.name
+            
+            if descr:
+                if name: help_output += ' '
+                help_output += '%s\n' %self.argparser.description
+            
+            if usage:
+                help_output += '\n%s\n' % self.argparser.format_usage() 
+    
+        if stored_args:
+            help_output += 'stored arguments: %s' % self.get_stored_args_str()
+            
+        help_output = ' '*padding + help_output.replace('\n', '\n' + ' '*(padding*3/2)).rstrip(' ')
+            
+        return help_output
+        
                 
     def get_stored_args_str(self):
     

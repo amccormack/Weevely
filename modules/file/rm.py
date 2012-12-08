@@ -2,7 +2,6 @@
 
 from core.moduleprobeall import ModuleProbeAll
 from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
@@ -13,9 +12,8 @@ class Rm(ModuleProbeAll):
     '''Remove remote files and folders'''
 
 
-    def _init_vectors(self):
-        self.vectors = VectorList([
-            Vector('shell.php', 'php_rmdir', """
+    def _set_vectors(self):
+        self.vectors.add_vector('php_rmdir', 'shell.php', """
     function rmfile($dir) {
     if (is_dir("$dir")) rmdir("$dir");
     else { unlink("$dir"); }
@@ -41,15 +39,14 @@ class Rm(ModuleProbeAll):
     }
     $recurs="$recursive"; $path="$rpath";
     if(exists("$path")) 
-    rrmdir("$recurs", "$path");"""),
-                  Vector('shell.sh', 'rm', "rm $recursive $rpath")
-        ])
+    rrmdir("$recurs", "$path");""")
+        self.vectors.add_vector('rm', 'shell.sh', "rm $recursive $rpath")
 
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('rpath', help='Remote starting path')
         self.argparser.add_argument('-recursive', help='Remove recursively', action='store_true')
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
 
 
     def _prepare_probe(self):

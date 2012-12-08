@@ -36,7 +36,7 @@ class Php(ModuleProbe):
 
 
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('cmd', help='PHP command enclosed with brackets and terminated by semi-comma', nargs='+' )
         self.argparser.add_argument('-mode', help='Obfuscation mode', choices = self.mode_choices)
         self.argparser.add_argument('-proxy', help='HTTP proxy')

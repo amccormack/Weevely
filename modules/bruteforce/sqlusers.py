@@ -1,6 +1,5 @@
 from core.moduleprobe import ModuleProbe
 from core.moduleexception import ProbeException, ProbeSucceed
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
 from argparse import SUPPRESS
@@ -13,7 +12,7 @@ from sql import Sql
 class Sqlusers(Sql):
     """ Bruteforce all SQL users"""
     
-    def _init_args(self):
+    def _set_args(self):
     
         self.argparser.add_argument('-hostname', help='DBMS host or host:port', default='127.0.0.1')
         self.argparser.add_argument('-wordfile', help='Local wordlist path')
@@ -22,9 +21,14 @@ class Sqlusers(Sql):
         self.argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
         self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
 
+    def _set_vectors(self):
+        Sql._set_vectors(self)
+        self.support_vectors.add_vector('users', 'audit.etcpasswd',  [])
+
+
     def _prepare_probe(self):
         
-        users = Vector('audit.etcpasswd', 'users', '').execute(self.modhandler)
+        users = self.support_vectors.get('users').execute()
         filtered_username_list = [u for u in users if 'sql' in u.lower() or 'sql' in users[u].descr.lower() or (users[u].uid == 0) or (users[u].uid > 999) or (('false' not in users[u].shell) and ('/home/' in users[u].home))  ]
         
         self.args['username_list'] = filtered_username_list

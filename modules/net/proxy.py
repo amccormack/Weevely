@@ -83,7 +83,7 @@ class Proxy(Phpproxy):
     '''Install and run Proxy to tunnel traffic through target'''
 
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
         
         self.argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
@@ -94,7 +94,7 @@ class Proxy(Phpproxy):
         self.argparser.add_argument('-lport', default='8081', type=int)
     
         self.argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names(), help=SUPPRESS)
+        self.argparser.add_argument('-vector', choices = self.vectors.keys(), help=SUPPRESS)
 
 
     def _run_proxy_server(self, rurl, lport, lhost):

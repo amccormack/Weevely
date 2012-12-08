@@ -7,10 +7,9 @@ class Read(Download):
     '''Read files from target filesystem'''
 
 
-
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('rpath')
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
 
     def _verify_execution(self):
 

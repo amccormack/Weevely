@@ -1,7 +1,6 @@
 
 from core.moduleprobeall import ModuleProbe
 from core.moduleexception import ModuleException, ProbeException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork
 import re
@@ -12,12 +11,10 @@ WARN_NO_IFACES = 'No interfaces address found'
 class Ifaces(ModuleProbe):
     '''Print interface addresses'''
     
-    support_vectors = VectorList([
-      Vector('file.enum', 'enum', ["asd", "-pathlist", "$pathlist"]),
-      Vector('shell.sh', "ifconfig" , "$ifconfig_path")
-    ])
     
-    
+    def _set_vectors(self):
+        self.support_vectors.add_vector('enum',  'file.enum',  ["asd", "-pathlist", "$pathlist"])
+        self.support_vectors.add_vector(  "ifconfig" , 'shell.sh', "$ifconfig_path")
     
     
     def _probe(self):
@@ -26,11 +23,11 @@ class Ifaces(ModuleProbe):
         
         enum_pathlist = str([ x + 'ifconfig' for x in ['/sbin/', '/bin/', '/usr/bin/', '/usr/sbin/', '/usr/local/bin/', '/usr/local/sbin/'] ])
 
-        ifconfig_pathlist = self.support_vectors.get('enum').execute(self.modhandler, {'pathlist' : enum_pathlist })
+        ifconfig_pathlist = self.support_vectors.get('enum').execute({'pathlist' : enum_pathlist })
         
         for path in ifconfig_pathlist:
             if ifconfig_pathlist[path] != ['','','','']:
-                result = self.support_vectors.get('ifconfig').execute(self.modhandler, {'ifconfig_path' : path })
+                result = self.support_vectors.get('ifconfig').execute({'ifconfig_path' : path })
                 
                 if result:
                     ifaces = re.findall(r'^(\S+).*?inet addr:(\S+).*?Mask:(\S+)', result, re.S | re.M)

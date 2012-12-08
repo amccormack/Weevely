@@ -4,6 +4,7 @@ from moduleexception import ModuleException, ProbeException, ProbeSucceed, InitE
 from core.savedargparse import SavedArgumentParser as ArgumentParser, Namespace
 from types import ListType, StringTypes, DictType
 from core.prettytable import PrettyTable
+from core.vector import VectorsDict
 from os import linesep
 
 
@@ -19,19 +20,28 @@ class ModuleProbe:
         self.modhandler = modhandler
 
         self.name = '.'.join(self.__module__.split('.')[-2:])
-        
-        self.argparser = ArgumentParser(prog=':%s' % self.name, description=__doc__)
-        
+
         self._init_vectors()
         self._init_args()
+        
+        self._set_vectors()
+        self._set_args()
         
         self.__init_module_variables()
         self._init_module()
         
     def _init_vectors(self):
+        self.vectors = VectorsDict(self.modhandler)
+        self.support_vectors = VectorsDict(self.modhandler)
+
+    def _init_args(self):
+        self.argparser = ArgumentParser(prog=':%s' % self.name, description=__doc__)
+        
+        
+    def _set_vectors(self):
         pass
     
-    def _init_args(self):
+    def _set_args(self):
         pass
         
 

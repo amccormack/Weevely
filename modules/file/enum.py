@@ -1,6 +1,5 @@
 from core.moduleprobe import ModuleProbe
 from core.moduleexception import ProbeException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
 from core.prettytable import PrettyTable
@@ -10,12 +9,10 @@ import os
 class Enum(ModuleProbe):
     '''Check remote files type, md5 and permission'''
 
-    def _init_vectors(self):
-        self.support_vectors = VectorList([
-           Vector('shell.php', 'getperms', "$f='$rpath'; if(file_exists($f)) { print('e'); if(is_readable($f)) print('r'); if(is_writable($f)) print('w'); if(is_executable($f)) print('x'); }"),
-        ])
+    def _set_vectors(self):
+        self.support_vectors.add_vector('getperms','shell.php',  "$f='$rpath'; if(file_exists($f)) { print('e'); if(is_readable($f)) print('r'); if(is_writable($f)) print('w'); if(is_executable($f)) print('x'); }")
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('pathfile', help='Enuemrate paths written in PATHFILE')
         self.argparser.add_argument('-printall', help='Print also paths not found', action='store_true')
         self.argparser.add_argument('-pathlist', help='Enumerate paths written as "[\'/path/1\', \'/path/2\']"', type=literal_eval, default=[])
@@ -38,7 +35,7 @@ class Enum(ModuleProbe):
         
         for entry in self.args['pathlist']:
             self._result[entry] = ['', '', '', '']
-            perms = self.support_vectors.get('getperms').execute(self.modhandler, {'rpath' : entry})
+            perms = self.support_vectors.get('getperms').execute({'rpath' : entry})
             
             if perms:
                 if 'e' in perms: self._result[entry][0] = 'exists'

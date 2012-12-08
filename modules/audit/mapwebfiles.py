@@ -1,6 +1,5 @@
 from core.moduleprobe import ModuleProbe
 from core.moduleexception import ProbeException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from external.crawler import Crawler
 from ast import literal_eval
@@ -18,12 +17,10 @@ class Mapwebfiles(ModuleProbe):
 
 
 
-    def _init_vectors(self):
-        self.support_vectors = VectorList([
-           Vector('file.enum', 'enum', ["asd", "-pathlist", "$pathlist"]),
-        ])
+    def _set_vectors(self):
+        self.support_vectors.add_vector('enum', 'file.enum', ["asd", "-pathlist", "$pathlist"])
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('url', help='HTTP URL where start crawling (es. http://host/path/page.html)')
         self.argparser.add_argument('baseurl', help='HTTP base url (es. http://host/path/)')
         self.argparser.add_argument('rpath', help='Remote web root corresponding to crawled path (es. /var/www/path)', type=str)
@@ -65,4 +62,4 @@ class Mapwebfiles(ModuleProbe):
 
     def _probe(self):
 
-        self._result = self.support_vectors.get('enum').execute(self.modhandler, {'pathlist' : str(self.args['paths']) })
+        self._result = self.support_vectors.get('enum').execute({'pathlist' : str(self.args['paths']) })

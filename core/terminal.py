@@ -115,9 +115,9 @@ class Terminal:
         
 
     def __guess_best_interpreter(self):
-        if Vector('shell.sh', "" , ['-just-probe', 'sh']).execute(self.modhandler):
+        if Vector(self.modhandler, "shellprobe" , 'shell.sh', ['-just-probe', 'sh']).execute():
             self.modhandler.interpreter = 'shell.sh'
-        elif Vector('shell.php', "" , ['-just-probe', 'php']).execute(self.modhandler):
+        elif Vector(self.modhandler, "phpprobe" , 'shell.php', ['-just-probe', 'php']).execute():
             self.modhandler.interpreter = 'shell.php'
         else:
             raise Exception('A InitException should be raised here')
@@ -150,9 +150,9 @@ class Terminal:
     def __cwd_handler (self, cmd = None):
 
         if cmd == None or len(cmd) ==1:
-            cwd_new = Vector('system.info', '', 'basedir').execute(self.modhandler)
+            cwd_new = Vector(self.modhandler,  'basedir', 'system.info', 'basedir').execute()
         elif len(cmd) == 2:
-            cwd_new = Vector('shell.php', '', 'chdir("$path") && print(getcwd());').execute(self.modhandler, { 'path' : cmd[1] })
+            cwd_new = Vector(self.modhandler,  'getcwd', 'shell.php', 'chdir("$path") && print(getcwd());').execute({ 'path' : cmd[1] })
             if not cwd_new:
                 self.__tprint("[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1])                
             
@@ -166,10 +166,10 @@ class Terminal:
         # At terminal start, try to probe automatically best interpreter
         self.__guess_best_interpreter()
         
-        username =  Vector('system.info', "" , "whoami").execute(self.modhandler)
-        hostname =  Vector('system.info', "" , "hostname").execute(self.modhandler)
+        username =  Vector(self.modhandler, "whoami", 'system.info', "whoami").execute()
+        hostname =  Vector(self.modhandler, "hostname", 'system.info', "hostname").execute()
         
-        if Vector('system.info', "" , "safe_mode").execute(self.modhandler) == '1':
+        if Vector(self.modhandler, "safe_mode", 'system.info', "safe_mode").execute() == '1':
             self.__tprint('[!] PHP Safe mode enabled')
             
         

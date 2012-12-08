@@ -1,6 +1,6 @@
 import os,sys
 from moduleexception import ModuleException
-from vector import VectorList, Vector
+
 from helper import Helper
 
 

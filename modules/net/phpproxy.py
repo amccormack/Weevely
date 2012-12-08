@@ -1,7 +1,6 @@
 from modules.file.upload2web import Upload2web
 from modules.file.upload import WARN_NO_SUCH_FILE
 from core.moduleexception import ModuleException, ProbeException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 import re, os
@@ -10,12 +9,12 @@ from core.utils import randstr
 class Phpproxy(Upload2web):
     '''Install remote PHP proxy'''
 
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
         
         self.argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
         self.argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names(), help=SUPPRESS)
+        self.argparser.add_argument('-vector', choices = self.vectors.keys(), help=SUPPRESS)
         self.argparser.add_argument('-force', action='store_true')
 
 

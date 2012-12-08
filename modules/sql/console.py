@@ -1,6 +1,5 @@
 from core.moduleprobeall import ModuleProbe
 from core.moduleexception import ModuleException, ProbeException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 import re
 
@@ -11,35 +10,32 @@ WARN_FALLBACK = 'bad credentials, falling back to default ones'
 class Console(ModuleProbe):
     '''Execute SQL queries'''
     
-    def _init_vectors(self):
+    def _set_vectors(self):
         
-        self.support_vectors = VectorList([
-            Vector('shell.php', 'mysql', ["""if(mysql_connect("$host","$user","$pass")){
-    $result = mysql_query("$query"); if($result) {
-    while ($content = mysql_fetch_row($result)) {
-    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-    mysql_close();}""" ]),
-            Vector('shell.php', 'mysql_fallback', [ """$result = mysql_query("$query");
-    if($result) {
-    while ($content = mysql_fetch_row($result)) {
-    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}"""]),
-            Vector('shell.php', 'pg', ["""if(pg_connect("host=$host user=$user password=$pass")){
-    $result = pg_query("$query"); if($result) {
-    while ($content = pg_fetch_row($result)) {
-    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-    pg_close();}""" ]),
-            Vector('shell.php', 'pg_fallback', [ """$result = pg_query("$query");
-    if($result) {
-    while ($content = pg_fetch_row($result)) {
-    foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-    pg_close();"""])
+        self.support_vectors.add_vector('mysql', 'shell.php', ["""if(mysql_connect("$host","$user","$pass")){
+$result = mysql_query("$query"); if($result) {
+while ($content = mysql_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+mysql_close();}""" ])
+        self.support_vectors.add_vector('mysql_fallback', 'shell.php', [ """$result = mysql_query("$query");
+if($result) {
+while ($content = mysql_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}"""]),
+        self.support_vectors.add_vector('pg', 'shell.php', ["""if(pg_connect("host=$host user=$user password=$pass")){
+$result = pg_query("$query"); if($result) {
+while ($content = pg_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+pg_close();}""" ]),
+        self.support_vectors.add_vector('pg_fallback', 'shell.php', [ """$result = pg_query("$query");
+if($result) {
+while ($content = pg_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+pg_close();"""])
                                                 
-                                      
-        ])
-    
+                             
     
 
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('user', help='SQL username')
         self.argparser.add_argument('pass', help='SQL password')
         self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
@@ -58,13 +54,13 @@ class Console(ModuleProbe):
         else:
             vector = self.args['dbms']
         
-        result = self.support_vectors.get(vector).execute(self.modhandler, { 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : query })
+        result = self.support_vectors.get(vector).execute({ 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : query })
         
         if not result:
             
             vector = self.args['dbms'] + '_fallback'
             
-            result = self.support_vectors.get(vector).execute(self.modhandler, { 'query' : query })
+            result = self.support_vectors.get(vector).execute({ 'query' : query })
       
             if result:
                 
@@ -72,7 +68,7 @@ class Console(ModuleProbe):
                 
                 get_current_user = 'SELECT USER;' if self.args['dbms'] == 'postgres' else 'SELECT USER();'
                 
-                user = self.support_vectors.get(vector).execute(self.modhandler, { 'query' : get_current_user })
+                user = self.support_vectors.get(vector).execute({ 'query' : get_current_user })
                 
                 if user:
                     user = user[:-1]

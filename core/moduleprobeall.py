@@ -25,7 +25,7 @@ class ModuleProbeAll(ModuleProbe):
         pass
         
     def _execute_vector(self):
-        self._result = self.current_vector.execute(self.modhandler, self.args_formats)
+        self._result = self.current_vector.execute( self.args_formats)
     
     def _verify_execution(self):
         # If self._result is set. False is probably a good return value.
@@ -42,14 +42,14 @@ class ModuleProbeAll(ModuleProbe):
         if 'vector' in self.args and self.args['vector']:
             selected_vector = self.vectors.get(self.args['vector'])
             if selected_vector:
-                vectors = [ selected_vector ]
+                vectors = { self.args['vector'] : selected_vector }
         else:
             vectors = self.vectors
-
-
+            
+            
         try:
-            for vector in vectors:
-    
+            for vector in vectors.values():
+                
                 try:
                     self.__init_vector_variables(vector)
                     self._prepare_vector()

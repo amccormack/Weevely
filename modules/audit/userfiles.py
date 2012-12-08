@@ -1,6 +1,5 @@
 from core.moduleprobe import ModuleProbe
 from core.moduleexception import ProbeException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
 from core.utils import join_abs_paths
@@ -12,13 +11,11 @@ class Userfiles(ModuleProbe):
 
 
 
-    def _init_vectors(self):
-        self.support_vectors = VectorList([
-           Vector('file.enum', 'enum', ["asd", "-pathlist", "$pathlist"]),
-           Vector('audit.etcpasswd', 'users', ["-real"]),
-        ])
+    def _set_vectors(self):
+        self.support_vectors.add_vector('enum', 'file.enum', ["asd", "-pathlist", "$pathlist"])
+        self.support_vectors.add_vector('users', 'audit.etcpasswd', ["-real"])
     
-    def _init_args(self):
+    def _set_args(self):
         self.argparser.add_argument('-auto-web', help='Enumerate common files in /home/*', action='store_true')
         self.argparser.add_argument('-auto-home', help='Enumerate common files in /home/*/public_html/', action='store_true')
         self.argparser.add_argument('-pathfile', help='Enumerate paths in PATHLIST in /home/*')
@@ -68,7 +65,7 @@ class Userfiles(ModuleProbe):
             filelist = self.common_files['web'] + self.common_files['home']   
              
 
-        result = self.support_vectors.get('users').execute(self.modhandler)
+        result = self.support_vectors.get('users').execute()
         if not result:
             raise ProbeException(self.name, 'Cant extract system users')
         
@@ -80,7 +77,7 @@ class Userfiles(ModuleProbe):
                 
 
     def _probe(self):
-        result = self.support_vectors.get('enum').execute(self.modhandler, {'pathlist' : str(self.args['paths']) })
+        result = self.support_vectors.get('enum').execute({'pathlist' : str(self.args['paths']) })
         for user in result:
             if result[user] != ['', '', '', '']:
                 self._result[user] = result[user]

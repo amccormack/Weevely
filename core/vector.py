@@ -3,42 +3,27 @@ from string import Template
 from types import ListType, StringTypes, DictType
 import thread
 
+class VectorsDict(dict):
+    
+    def __init__(self, modhandler, *args):
+        self.modhandler = modhandler
+        dict.__init__(self, args)
 
-class VectorList(list):
-    def get_by_interpreters(self, shells):
-        vect=[]
-        for v in self:
-            if v.interpreter in shells:
-                vect.append(v)
-
-        return vect
-
+    def add_vector(self, name, interpreter, payloads):
+        self[name] = Vector(self.modhandler, name, interpreter, payloads)
+    
     def get(self, name):
-        for v in self:
-            if v.name == name:
-                return v
-
-    def get_names(self):
-
-        return [v.name for v in self]
-
-    def print_order(self, names):
-        sorted = [v for v in self for n in names if n == v.name]
-        print sorted
-
-    def __repr__(self):
-        repr = ''
-        for v in self:
-            repr += str(v)
-        return repr
+        return self[name]
 
 
 class Vector:
     
     
-    def __init__(self, interpreter, name, payloads):
-        self.interpreter = interpreter
+    def __init__(self, modhandler, name, interpreter, payloads):
+        
+        self.modhandler = modhandler
         self.name = name
+        self.interpreter = interpreter
         
         # Payloads and Formats are lists
         self.payloads = []
@@ -48,12 +33,12 @@ class Vector:
         elif payloads and isinstance (payloads, StringTypes):
             self.payloads.append(payloads)
         
-    def execute(self, modhandler, format_list = {}, return_out_res_warn = False):
+    def execute(self, format_list = {}, return_out_res_warn = False):
 
         # Check type dict
         if not isinstance(format_list, DictType):
-            print "[!][%s] Error, format vector type is not dict" % self.name
-            return
+            raise Exception("[!][%s] Error, format vector type is not dict: '%s'" % (self.name, format_list))
+
 
 
         formatted_list = []
@@ -71,7 +56,7 @@ class Vector:
             else:
                 formatted_list.append(payload)
 
-        res, out = modhandler.load(self.interpreter).run(formatted_list)
+        res, out = self.modhandler.load(self.interpreter).run(formatted_list)
         
         if return_out_res_warn:
             return out, res
@@ -79,10 +64,10 @@ class Vector:
             return res
 
 
-    def execute_background(self, modhandler, format_list = {}):
-        thread.start_new_thread(self.execute, (modhandler, format_list))
+    def execute_background(self, format_list = {}):
+        thread.start_new_thread(self.execute, (format_list,))
         
 
-    def __repr__(self):
-        return '[%s, %s, %s]' % (self.name,self.interpreter,  self.payloads)
+#    def __repr__(self):
+#        return '[%s, %s, %s]' % (self.name,self.interpreter,  self.payloads)
 

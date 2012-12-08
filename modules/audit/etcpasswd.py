@@ -1,6 +1,5 @@
 from core.moduleprobeall import ModuleProbeAll
 from core.moduleexception import ProbeException, ProbeSucceed, ExecutionException
-from core.vector import VectorList, Vector as V
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 class User:
@@ -24,17 +23,16 @@ class Etcpasswd(ModuleProbeAll):
     """Enumerate users and /etc/passwd content"""
 
 
-    def _init_vectors(self):
-        self.vectors = VectorList([
-            V('shell.php', 'posix_getpwuid', "for($n=0; $n<2000;$n++) { $uid = @posix_getpwuid($n); if ($uid) echo join(':',$uid).\'\n\';  }"),
-            V('shell.sh', 'cat', "cat /etc/passwd"),
-            V('file.read', 'read', "/etc/passwd")
-            ])
+    def _set_vectors(self):
         
-    def _init_args(self):
+        self.vectors.add_vector('posix_getpwuid', 'shell.php', "for($n=0; $n<2000;$n++) { $uid = @posix_getpwuid($n); if ($uid) echo join(':',$uid).\'\n\';  }")
+        self.vectors.add_vector('cat','shell.sh',  "cat /etc/passwd"),
+        self.vectors.add_vector('read', 'file.read',  "/etc/passwd")
+        
+    def _set_args(self):
         
         self.argparser.add_argument('-real', help='Show only real users', action='store_true')
-        self.argparser.add_argument('-vector', choices = self.vectors.get_names())
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
         
 
     def __verify_execution(self):

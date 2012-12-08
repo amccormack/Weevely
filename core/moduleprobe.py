@@ -35,7 +35,7 @@ class ModuleProbe:
         self.support_vectors = VectorsDict(self.modhandler)
 
     def _init_args(self):
-        self.argparser = ArgumentParser(prog=':%s' % self.name, description=__doc__)
+        self.argparser = ArgumentParser(prog=':%s' % self.name, description = self.__doc__)
         
         
     def _set_vectors(self):

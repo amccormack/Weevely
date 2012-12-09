@@ -24,7 +24,7 @@ def uniq(seq):
     return [ x for x in seq if x not in seen and not seen_add(x)]
 
 class Sql(ModuleProbe):
-    """ Bruteforce SQL username"""
+    """Bruteforce SQL username"""
     
 
     def _set_vectors(self):

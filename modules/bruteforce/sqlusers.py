@@ -10,7 +10,7 @@ from re import compile
 from sql import Sql
 
 class Sqlusers(Sql):
-    """ Bruteforce all SQL users"""
+    """Bruteforce all SQL users"""
     
     def _set_args(self):
     

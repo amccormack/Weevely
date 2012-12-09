@@ -44,11 +44,11 @@ banner = '''      ________                      __
 '''
 
 usage = '''
-[+] Start guided terminal session
+[+] Start ssh-like terminal session
     weevely <url> <password>
 
 [+] Run command directly from command line
-    weevely <url> <password> [ "<command> .." | :<module name> .. ]  
+    weevely <url> <password> [ "<command> .." | :<module> .. ]  
 
 [+] Generate PHP backdoor
     weevely generate <password> [ <path> ] ..
@@ -75,6 +75,7 @@ Contributors
 '''
 
 presentation = '''
-[+] Welcome to weevely terminal. Print ':help' of available modules.
-[+] Run selected one, browse filesystem and execute system commands.
+[+] Welcome to Weevely. Browse filesystem and execute system commands.
+[+] Use ':help' to list available modules and run selected one.
+
 '''

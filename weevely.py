@@ -22,56 +22,10 @@ from core.terminal import Terminal, module_trigger, help_string
 from core.modulehandler import ModHandler
 from core.moduleexception import ModuleException
 from argparse import ArgumentParser
+from core.helper import banner, credits, usage
 
 import sys
 
-#print '''      ________                      __
-#     |  |  |  |-----.----.-.--.----'  |--.--.
-#     |  |  |  |  -__| -__| |  | -__|  |  |  |
-#     |________|_____|____|___/|____|__|___  | v0.7
-#                                      |_____|
-#              Stealth tiny web shell
-#'''
-
-
-credits = '''
-Website
-                   http://epinna.github.com/Weevely/
-
-Author
-                   Emilio Pinna
-                   http://disse.cting.org
-
-Contributors
-		   Andrea Cardaci
-		   http://cyrus-and.github.com/
-                   Raffaele Forte, Backbox Linux
-                   http://www.backbox.org
-                   Simone Margaritelli
-                   http://www.evilsocket.net/
-'''
-
-general_usage = '''[+] Start telnet-like session
-    weevely <url> <password>
-
-[+] Run shell command o module
-    weevely <url> <password> [ <command> | :<module name> ]  ..
-
-[+] Generate PHP backdoor
-    weevely generate <password> [ <path> ] ..
-
-[+] Show modules help
-    weevely show [module name]
-
-[+] Show credits
-    weevely credits
-
-Available generators
-
-%s
-Available modules
-
-%s'''
 
 
 if __name__ == "__main__":
@@ -126,7 +80,6 @@ if __name__ == "__main__":
 
 
     else:
-        #Terminal(ModHandler()).run_cmd_line([help_string])
-        Terminal(ModHandler())._print_sum_help(oneline=True)
+        print banner, usage 
 
 

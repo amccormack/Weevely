@@ -188,12 +188,13 @@ class ModuleProbe:
                 help_output += '%s\n' %self.argparser.description
             
             if usage:
-                help_output += self.argparser.format_usage() 
+                help_output += '%s\n' % self.argparser.format_usage() 
     
-        if stored_args:
-            help_output += 'stored arguments: %s' % self.get_stored_args_str()
+        stored_args_help = self.get_stored_args_str()
+        if stored_args and stored_args_help:
+            help_output += 'stored arguments: %s\n' % stored_args_help
             
-        help_output = ' '*padding + help_output.replace('\n', '\n' + ' '*(padding)).rstrip(' ') + '\n'
+        help_output = ' '*padding + help_output.replace('\n', '\n' + ' '*(padding)).rstrip(' ') 
             
         return help_output
         

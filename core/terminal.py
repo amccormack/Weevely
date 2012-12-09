@@ -55,7 +55,7 @@ class Terminal(Helper):
 
     def __tprint(self, msg):
         self.modhandler._last_warns += msg + os.linesep
-        print msg,
+        if msg: print msg,
         
 
     def run_cmd_line(self, command, clear_last_output = True):

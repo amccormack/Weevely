@@ -70,7 +70,7 @@ class ModHandler:
     def load(self, module_name):
 
         if module_name not in self.modules_classes.keys():
-            raise Exception(module_name, "Module '%s' not found in path '%s'." % (module_name, self.path_modules) )  
+            raise ModuleException(module_name, "Module '%s' not found in path '%s'." % (module_name, self.path_modules) )  
         elif not module_name:
             module_name = self.interpreter
         elif not module_name in self.modules:

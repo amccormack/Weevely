@@ -21,19 +21,8 @@ class SavedArgumentParser(ArgumentParser):
         ArgumentParser.__init__(self, prog=prog, usage=usage, description=description, epilog=epilog, version=version, parents=parents, formatter_class=formatter_class, prefix_chars=prefix_chars, fromfile_prefix_chars=fromfile_prefix_chars, argument_default=argument_default, conflict_handler=conflict_handler, add_help=add_help)
         
     def error(self, message):
+        raise ModuleException('', '%s\n\n%s' % (message, self.format_help().rstrip()))
         
-        output = message + ' '
-        if self.__last_input_args:
-            output += ' '.join(self.__last_input_args) + '\n'
-        
-        output += self.format_help()[:-1]
-            
-        raise ModuleException('', output)
-        
-#    def add_argument(self, *args, **kwargs):
-#        if '-vector' in args:
-#            kwargs['help'] = SUPPRESS
-#        return ArgumentParser.add_argument(self, *args, **kwargs)
   
     def parse_known_stored_and_new_args(self, args=None, namespace=None, stored_args_dict = {}):
        

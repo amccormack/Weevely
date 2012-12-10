@@ -11,14 +11,21 @@ class Helper:
     
     def _format_grouped_helps(self, oneline=False):
         
-        table = PrettyTable(['module', 'description'])
-        table.align = 'l'
+        table_module = PrettyTable(['module', 'description'])
+        table_module.align = 'l'
+        
+        table_generator = PrettyTable(['generator', 'description'])
+        table_generator.align = 'l'
+        
+        
         for groupname in self.modhandler.modules_names_by_group.keys():
             for module in self.modhandler.modules_names_by_group[groupname]:
-                
-                table.add_row([ ':%s' % self.modhandler.load(module).name, self.modhandler.load(module).argparser.description])
+                if module.startswith('generate.'):
+                    table_generator.add_row([ ':%s' % self.modhandler.load(module).name, self.modhandler.load(module).argparser.description])
+                else:
+                    table_module.add_row([ ':%s' % self.modhandler.load(module).name, self.modhandler.load(module).argparser.description])
             
-        return '%s\n' % table.get_string() 
+        return '%s\n%s' % (table_generator.get_string(), table_module.get_string()) 
         
     def _format_helps(self, modules = [], summary_type=0):
  
@@ -55,6 +62,9 @@ usage = '''
 
 [+] Show credits
     weevely credits
+    
+[+] Show available module and backdoor generators
+    weevely help
 '''
 
 credits = '''

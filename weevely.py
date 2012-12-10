@@ -52,12 +52,13 @@ if __name__ == "__main__":
         if genname == 'generate':
             genname = 'generate.php' 
 
-        args_list = [':%s' % genname ] + sys.argv[3:]
-
         try:
-            Terminal (ModHandler(genname, password)).run_module_cmd(args_list)
+            Terminal (ModHandler('', '')).run_cmd_line([':%s' % genname ] + sys.argv[2:])
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
+
+    elif len(sys.argv) >= 2 and sys.argv[1] == 'help':
+        Terminal (ModHandler('', '')).run_cmd_line([':help' ] + sys.argv[2:])
 
 
     elif len(sys.argv) > 3:

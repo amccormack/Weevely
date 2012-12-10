@@ -1,77 +1,91 @@
-import os
+from core.prettytable import PrettyTable
+
 
 
 class Helper:
+    
+    def _format_presentation(self):
+        
+        presentation_output = banner + presentation 
+        return presentation_output
+    
+    def _format_grouped_helps(self, oneline=False):
+        
+        table_module = PrettyTable(['module', 'description'])
+        table_module.align = 'l'
+        
+        table_generator = PrettyTable(['generator', 'description'])
+        table_generator.align = 'l'
+        
+        
+        for groupname in self.modhandler.modules_names_by_group.keys():
+            for module in self.modhandler.modules_names_by_group[groupname]:
+                if module.startswith('generate.'):
+                    table_generator.add_row([ ':%s' % self.modhandler.load(module).name, self.modhandler.load(module).argparser.description])
+                else:
+                    table_module.add_row([ ':%s' % self.modhandler.load(module).name, self.modhandler.load(module).argparser.description])
+            
+        return '%s\n%s' % (table_generator.get_string(), table_module.get_string()) 
+        
+    def _format_helps(self, modules = [], summary_type=0):
+ 
+        if summary_type == 1:
+            format_tuple = (False, False, True, True, True, 0)
+        else:
+            format_tuple = ()
+                
+        help_output = ''
+        for modname in modules:
+            help_output += self.modhandler.load(modname).format_help(*format_tuple)
+        
+        return help_output
+    
+    
 
-    def __init__(self):
+banner = '''      ________                      __
+     |  |  |  |-----.----.-.--.----'  |--.--.
+     |  |  |  |  -__| -__| |  | -__|  |  |  |
+     |________|_____|____|___/|____|__|___  | v1.0
+                                      |_____|
+              Stealth tiny web shell
+'''
 
-        self.modules_names_by_group={}
-        self.ordered_groups = []
+usage = '''
+[+] Start ssh-like terminal session
+    weevely <url> <password>
 
-    def summary(self, only_group = None, exclude_group = None):
+[+] Run command directly from command line
+    weevely <url> <password> [ "<command> .." | :<module> .. ]  
 
-        output = ''
+[+] Generate PHP backdoor
+    weevely generate <password> [ <path> ] ..
 
-        for group in self.ordered_groups:
-            if (not only_group and not exclude_group) or (only_group and only_group == group) or (exclude_group and exclude_group != group):
-                output += '  [%s] %s\n' % (group, ', '.join(self.modules_names_by_group[group]))
+[+] Show credits
+    weevely credits
+    
+[+] Show available module and backdoor generators
+    weevely help
+'''
 
-        return output
+credits = '''
+Website
+                   http://epinna.github.com/Weevely/
 
-    def summary_nogroup(self):
+Author
+                   Emilio Pinna
+                   http://disse.cting.org
 
-        return ', '.join(self.modules_classes.keys())
+Contributors
+           Andrea Cardaci
+           http://cyrus-and.github.com/
+                   Raffaele Forte, Backbox Linux
+                   http://www.backbox.org
+                   Simone Margaritelli
+                   http://www.evilsocket.net/
+'''
 
+presentation = '''
+[+] Welcome to Weevely. Browse filesystem and execute system commands.
+[+] Use ':help' to list available modules and run selected one.
 
-    def help_completion(self, module, only_name = False):
-
-        matches = []
-
-        for group in self.ordered_groups:
-
-            for modname in self.modules_names_by_group[group]:
-
-                if(modname == module):
-                    return [ modname ]
-
-                # Considering module name with or without :
-                elif (modname.startswith(module[1:])) or not module:
-
-                    usage = ''
-                    if not only_name:
-                        usage = self.modules_classes[modname].params.summary()
-                    matches.append(':%s %s' % (modname, usage))
-
-        return matches
-
-
-    def helps(self, module):
-
-        output = ''
-
-        for group in self.ordered_groups:
-
-            if not module:
-                output += '[%s]' % group
-
-            for modname in self.modules_names_by_group[group]:
-
-                # Considering module name with or without :
-                if not module or (modname.startswith(module)) or (modname.startswith(module[1:])):
-
-                    descr = self.modules_classes[modname].params.module_description
-                    usage = self.modules_classes[modname].params.summary()
-                    help = ''
-                    if module:
-                       help = self.modules_classes[modname].params.help()
-
-                    passwd = ''
-                    if 'generate' in modname:
-                        passwd = '<password> '
-
-                    output += '\n    [%s] %s\n    Usage :%s %s%s\n    %s\n' % (modname, descr, modname, passwd, usage, help)
-
-        if module and not output:
-            output += '[!] Error, module \'%s\' not found' % (module)
-
-        return output
+'''

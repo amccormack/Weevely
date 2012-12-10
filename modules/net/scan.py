@@ -1,45 +1,102 @@
-'''
-Created on 20/set/2011
 
-@author: norby
-'''
-
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector as V
-from core.parameters import ParametersList, Parameter as P
-
-from external.ipaddr import IPNetwork, IPAddress, summarize_address_range
-from random import choice
+from core.moduleprobeall import ModuleProbe
+from core.moduleexception import ModuleException, ProbeException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from external.ipaddr import IPNetwork
+import re, os
+from argparse import SUPPRESS
+from core.utils import randstr
 from base64 import b64encode
-from socket import gethostbyname
 
-classname = 'Scan'
+WARN_NO_SUCH_FILE = 'No such file or permission denied'
+WARN_INVALID_SCAN = 'Invalid scan range, check syntax'
 
+class Scan(ModuleProbe):
+    '''Print interface addresses'''
+    
+    def _set_vectors(self):
+        self.support_vectors.add_vector('ifaces', 'net.ifaces', [])
+        self.support_vectors.add_vector( 'scan', 'shell.php',["""$str = base64_decode($_POST["$post_field"]);
+    foreach (explode(',', $str) as $s) {
+    $s2 = explode(' ', $s);
+    foreach( explode('|', $s2[1]) as $p) {
+    if($fp = fsockopen("$s2[0]", $p, $n, $e, $timeout=1)) {print(" $s2[0]:$p"); fclose($fp);}
+    }print(".");}""", "-post", "{\'$post_field\' : \'$data\' }"])
+    
+    
+    def _set_args(self):
+        self.argparser.add_argument('addr', help='Single IP, multiple: IP1,IP2,.., networks IP/MASK or firstIP-lastIP, interfaces (ethN)')
+        self.argparser.add_argument('port', help='Single post, multiple: PORT1,PORT2,.. or firstPORT-lastPORT')
+        self.argparser.add_argument('-unknown', help='Scan also unknown ports', action='store_true')
+        self.argparser.add_argument('-ppr', help=SUPPRESS, default=10, type=int)
+
+
+    def _get_service_path(self):
+        return os.path.join(self.modhandler.path_modules, 'net', 'external', 'nmap-services-tcp.txt')
+    
+    
+    
+    def _prepare_probe(self):
+        
+        services_path = self._get_service_path()
+        try:
+            services = open(services_path, 'r').read()
+        except Exception, e:
+            raise ProbeException(self.name,  '\'%s\' %s' % (services_path, WARN_NO_SUCH_FILE))
+
+        ifaces_all = self.support_vectors.get('ifaces').execute()
+
+        reqlist = RequestList(self.modhandler, services, ifaces_all)
+        reqlist.add(self.args['addr'], self.args['port'])
+
+        if not reqlist:
+            raise ProbeException(self.name,  WARN_INVALID_SCAN)
+        
+        if self.args['ppr'] == 10 and self.args['addr'] == '127.0.0.1':
+            self.args['ppr'] = 100
+        
+        self.args['reqs'] = reqlist
+
+    def _probe(self):
+        
+        while self.args['reqs']:
+
+            reqstringarray = ''
+
+            requests = self.args['reqs'].get_requests(self.args['ppr'])
+
+            for host, ports in requests.items():
+                portschunk = map(str, (ports))
+                reqstringarray += '%s %s,' % (host, '|'.join(portschunk))
+            
+            output = 'SCAN %s:%s-%s ' % (host, portschunk[0], portschunk[-1])
+            result = self.support_vectors.get('scan').execute({'post_field' : randstr(), 'data' : b64encode('%s' % reqstringarray[:-1])})
+            if result != '.': 
+                output += 'OPEN: ' + result.strip()[:-1]
+                self._result += result.strip()[:-1]
+            
+            print output
+            
+    def _output_result(self):
+        self._output = ''
 
 class RequestList(dict):
 
 
-    def __init__(self, modhandler, port_list_path):
+    def __init__(self, modhandler, nmap_file, ifaces):
 
         self.modhandler = modhandler
 
         self.port_list = []
-        self.ifaces = {}
+        self.ifaces = ifaces
 
         self.nmap_ports = []
         self.nmap_services = {}
 
-        if port_list_path:
-            try:
-                nmap_file = open(port_list_path, 'r')
-            except:
-                raise ModuleException(self.name, 'Error opening \'%s\' port file' % port_list_path)
-
-            for line in nmap_file.readlines():
-                name, port = line[:-1].split()
-                self.nmap_services[int(port)] = name
-                self.nmap_ports.append(int(port))
+        for line in nmap_file.splitlines():
+            name, port = line.split()
+            self.nmap_services[int(port)] = name
+            self.nmap_ports.append(int(port))
 
         dict.__init__(self)
 
@@ -133,15 +190,6 @@ class RequestList(dict):
 
     def __get_network_from_ifaces(self, iface):
 
-        if not self.ifaces:
-
-            self.modhandler.set_verbosity(6)
-            self.modhandler.load('net.ifaces').run()
-            self.modhandler.set_verbosity()
-
-            self.ifaces = self.modhandler.load('net.ifaces').ifaces
-
-
         if iface in self.ifaces.keys():
              return self.ifaces[iface]
 
@@ -190,76 +238,3 @@ class RequestList(dict):
             for net in networks:
                 for ip in net:
                     self[str(ip)] = self.port_list[:]
-
-
-
-class Scan(Module):
-
-    params = ParametersList('Scan network for open ports', [],
-                    P(arg='addr', help='IP address, multiple IPs (IP1,IP2,..), networks (IP/MASK or firstIP-lastIP) or interfaces (ethN)', required=True, pos=0),
-                    P(arg='port', help='Port or multiple ports (PORT1,PORT2,.. or firstPORT-lastPORT)', required=True, pos=1),
-                    P(arg='onlyknownports', help='Scan only known ports', default=True, type=bool),
-                    P(arg='portsperreq', help='Number of scanned ports per request.', default=10, type=int)
-                    )
-
-
-    vector_scan = """
-$str = base64_decode($_POST["%s"]);
-foreach (explode(',', $str) as $s) {
-$s2 = explode(' ', $s);
-foreach( explode('|', $s2[1]) as $p) {
-if($fp = fsockopen("$s2[0]", $p, $n, $e, $timeout=1)) {print("\nOPEN: $s2[0]:$p\n"); fclose($fp);}
-else { print("."); }
-}}
-"""
-
-    def __init__(self, modhandler, url, password):
-
-        self.rand_post_addr = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
-        self.rand_post_port = ''.join([choice('abcdefghijklmnopqrstuvwxyz') for i in xrange(4)])
-
-
-        Module.__init__(self, modhandler, url, password)
-
-
-    def run_module(self, addr, port, onlyknownports, portsperreq):
-
-        port_list_path = None
-        if onlyknownports:
-            port_list_path = self.modhandler.path_modules + '/net/external/nmap-services-tcp'
-
-        self.reqlist = RequestList(self.modhandler, port_list_path)
-        self.reqlist.add(addr, port)
-
-        if not self.reqlist:
-            raise ModuleException(self.name, 'Invalid scan range, check hosts and ports')
-
-        hostnum = len(self.reqlist)
-        portnum = len(self.reqlist.port_list)
-        reqnum = (portnum*hostnum/portsperreq)+1
-
-
-        self.mprint('[%s] Scanning %i ports of %i hosts using %i requests (%i connections per request)' % (self.name, portnum, hostnum, reqnum, portsperreq))
-        if onlyknownports:
-            known_ports_string = '[%s] Only known ports scanned.' % self.name
-
-
-        while self.reqlist:
-
-            reqstringarray = ''
-
-            requests = self.reqlist.get_requests(portsperreq)
-
-            for host, ports in requests.items():
-
-                reqstringarray += '%s %s,' % (host, '|'.join(map(str, (ports) )))
-
-            reqstringarray = '%s' % reqstringarray[:-1]
-
-            payload = self.vector_scan % (self.rand_post_addr)
-            self.modhandler.load('shell.php').set_post_data({self.rand_post_addr : b64encode(reqstringarray)})
-
-            response = self.modhandler.load('shell.php').run({0 : payload})
-            print response
-
-

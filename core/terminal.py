@@ -4,155 +4,140 @@ Created on 22/ago/2011
 @author: norby
 '''
 
-from core.module import ModuleException
-from core.enviroinment import Enviroinment
+from core.moduleexception import ModuleException
 from core.configs import Configs, dirpath, rcfilepath
-import os, re, shlex
+from core.vector import Vector
+from core.helper import Helper
+import os, re, shlex, readline, atexit
 
 module_trigger = ':'
-help_string = ':show'
+help_string = ':help'
 set_string = ':set'
 load_string = ':load'
 gen_string = ':generator'
 
-cwd_extract = re.compile( "cd\s+(.+)", re.DOTALL )
 
+class Terminal(Helper):
 
-class Terminal(Enviroinment):
-
-    def __init__( self, modhandler, one_shot = False):
+    def __init__( self, modhandler):
 
         self.modhandler = modhandler
 
-        self.url = modhandler.url
-        self.password = modhandler.password
-
-        self.one_shot = one_shot
-
         self.configs = Configs()
         self.__load_rcfile(dirpath + rcfilepath, default_rcfile=True)
-
-        if not one_shot:
-            Enviroinment.__init__(self)
-
-
+        self.__init_completion()
+        
+        
+        
     def loop(self):
 
-        while True:
+        self.__tprint(self._format_presentation())
+        username, hostname = self.__env_init()
+        self.__cwd_handler()
+        
+        while self.modhandler.interpreter:
 
-            prompt        = self._format_prompt()
+            prompt = '{user}@{host}:{path} {prompt} '.format(
+                                                             user=username, 
+                                                             host=hostname, 
+                                                             path=self.modhandler.load('shell.php').stored_args['path'], 
+                                                             prompt = 'PHP>' if (self.modhandler.interpreter == 'shell.php') else '$' )
 
-            cmd       = raw_input( prompt )
-            cmd       = cmd.strip()
-
-            if cmd:
-                if cmd[0] == module_trigger:
-                    self.run_module_cmd(shlex.split(cmd))
-                else:
-                    self.run_line_cmd(cmd)
-
-
-    def run_module_cmd(self, cmd_splitted):
-
-        output = ''
-
-        ## Help call
-        if cmd_splitted[0] == help_string:
-            modname = ''
-            if len(cmd_splitted)>1:
-                modname = cmd_splitted[1]
-            print self.modhandler.helps(modname),
-
-        ## Set call
-        elif cmd_splitted[0] == set_string:
-            if len(cmd_splitted)>2:
-                modname = cmd_splitted[1]
-                self.set(modname, cmd_splitted[2:])
-
-        ## Load call
-        elif cmd_splitted[0] == load_string:
-            if len(cmd_splitted)>=2:
-                self.__load_rcfile(cmd_splitted[1])
-
-        ## Command call
-        else:
-
-            interpreter = None
-            if cmd_splitted[0][0] == module_trigger:
-                interpreter = cmd_splitted[0][1:]
-                cmd_splitted = cmd_splitted[1:]
-
-            output =  self.run(interpreter, cmd_splitted)
-
-        if output != None:
-            print output
-
-    def run_line_cmd(self, cmd_line):
-
-        output = ''
-
-        if not self.one_shot:
-            cd  = cwd_extract.findall(cmd_line)
-            if cd and len(cd)>0:
-                self._handleDirectoryChange(cd)
-                return
-            if 'shell.sh' not in self.modhandler.loaded_shells and cmd_line.startswith('ls'):
-                ls_output = self.modhandler.load('shell.php').ls_handler(cmd_line)
-                if ls_output:
-                    print ls_output
-                return
-
-        if not self.modhandler.interpreter:
-            self.modhandler.load_interpreters()
-
-        output = self.run(self.modhandler.interpreter, [ cmd_line ])
-
-        if output != None:
-            print output
-
-
-    def set(self, module_name, module_arglist):
-
-        if module_name not in self.modhandler.modules_classes.keys():
-            print '[!] Error module with name \'%s\' not found' % (module_name)
-        else:
-           module_class = self.modhandler.modules_classes[module_name]
-
-           check, params = module_class.params.set_and_check_parameters(module_arglist, oneshot=False)
-
-           erroutput = '[%s] ' % module_name
-           if not check:
-               erroutput += 'Error setting parameters. '
-
-           print '%sValues: %s' % (erroutput, module_class.params.summary(print_all_args=True, print_value=True)),
-
-
-    def run(self, module_name, module_arglist):
-
-        if module_name not in self.modhandler.modules_classes.keys():
-            print '[!] Error module with name \'%s\' not found' % (module_name)
-        else:
             try:
-                response = self.modhandler.load(module_name).run(module_arglist)
-                if response != None:
-                    return response
-            except KeyboardInterrupt:
-                print '[!] Stopped %s execution' % module_name
-            except ModuleException, e:
-                print '[!] [%s] Error: %s' % (e.module, e.error)
+                cmd = shlex.split(raw_input( prompt ).strip())
+            except ValueError:
+                continue
+            if not cmd:
+                continue
 
+            self.run_cmd_line(cmd)
+
+
+    def __tprint(self, msg):
+        self.modhandler._last_warns += msg + os.linesep
+        if msg: print msg,
+        
+
+    def run_cmd_line(self, command, clear_last_output = True):
+
+        if clear_last_output:
+            self._last_output = ''
+            self.modhandler._last_warns = ''
+            self._last_result = None
+        
+        try:
+    
+            ## Help call
+            if command[0] == help_string:
+                if len(command) == 2:
+                    if command[1] in self.modhandler.modules_classes.keys():
+                        self.__tprint(self._format_helps([ command[1] ]))
+                    else:
+                        self.__tprint(self._format_helps([ m for m in self.modhandler.modules_classes.keys() if command[1] in m], summary_type=1))                        
+                else:
+                    self.__tprint(self._format_grouped_helps())
+                           
+            ## Set call if ":set module" or ":set module param value"
+            elif command[0] == set_string and len(command) > 1: 
+                    self.modhandler.load(command[1]).save_args(command[2:])
+                    self.__tprint(self.modhandler.load(command[1]).get_stored_args_str())
+
+            ## Load call
+            elif command[0] == load_string and len(command) == 2:
+                self.__load_rcfile(command[1])
+
+            elif command[0] == 'cd':
+                self.__cwd_handler(command)
+                
+            else:
+                    
+                ## Module call
+                if command[0][0] == module_trigger:
+                    interpreter = command[0][1:]
+                    cmd = command[1:]
+                ## Raw command call. Command is re-joined to be considered as single command
+                else:
+                    # If interpreter is not set yet, try to probe automatically best one
+                    if not self.modhandler.interpreter:
+                        self.__guess_best_interpreter()
+                    
+                    interpreter = self.modhandler.interpreter
+                    cmd = [ ' '.join(command) ] 
+                
+                res, out = self.modhandler.load(interpreter).run(cmd)
+                if out != '': self._last_output += out
+                if res != None: self._last_result = res
+                
+        except KeyboardInterrupt:
+            self.__tprint('[!] Stopped execution')
+        except ModuleException, e:
+            self.__tprint('[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep))
+        
+        if self._last_output:
+            print self._last_output
+        
+
+    def __guess_best_interpreter(self):
+        if Vector(self.modhandler, "shellprobe" , 'shell.sh', ['-just-probe', 'sh']).execute():
+            self.modhandler.interpreter = 'shell.sh'
+        elif Vector(self.modhandler, "phpprobe" , 'shell.php', ['-just-probe', 'php']).execute():
+            self.modhandler.interpreter = 'shell.php'
+        else:
+            raise Exception('A InitException should be raised here')
+        
 
     def __load_rcfile(self, path, default_rcfile=False):
 
         path = os.path.expanduser(path)
 
         if default_rcfile:
+            
             if not os.path.exists(path):
 
                 try:
                     rcfile = open(path, 'w').close()
                 except Exception, e:
-                    print "[!] Error creating '%s' rc file." % path
+                    raise ModuleException("Creation '%s' rc file failed%s" % (path, os.linesep))
                 else:
                     return []
 
@@ -161,11 +146,85 @@ class Terminal(Enviroinment):
             cmd       = cmd.strip()
 
             if cmd:
-                print '[rc] %s' % (cmd)
+                self.__tprint('[RC exec] %s%s' % (cmd, os.linesep))
 
-                if cmd[0] == module_trigger:
-                    self.run_module_cmd(shlex.split(cmd))
+                self.run_cmd_line(shlex.split(cmd), clear_last_output=False)
+
+    def __cwd_handler (self, cmd = None):
+
+        if cmd == None or len(cmd) ==1:
+            cwd_new = Vector(self.modhandler,  'basedir', 'system.info', 'basedir').execute()
+        elif len(cmd) == 2:
+            cwd_new = Vector(self.modhandler,  'getcwd', 'shell.php', 'chdir("$path") && print(getcwd());').execute({ 'path' : cmd[1] })
+            if not cwd_new:
+                self.__tprint("[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1])                
+            
+        self.modhandler.load('shell.php').stored_args['path'] = cwd_new
+        
+
+    def __env_init(self):
+        
+        # At terminal start, try to probe automatically best interpreter
+        self.__guess_best_interpreter()
+        
+        username =  Vector(self.modhandler, "whoami", 'system.info', "whoami").execute()
+        hostname =  Vector(self.modhandler, "hostname", 'system.info', "hostname").execute()
+        
+        if Vector(self.modhandler, "safe_mode", 'system.info', "safe_mode").execute() == '1':
+            self.__tprint('[!] PHP Safe mode enabled')
+            
+        
+        return username, hostname
+
+
+    def __init_completion(self):
+
+            self.matching_words =  [':%s' % m for m in self.modhandler.modules_classes.keys()] + [help_string, load_string, set_string]
+        
+            try:
+                readline.set_history_length(100)
+                readline.set_completer_delims(' \t\n;')
+                readline.parse_and_bind( 'tab: complete' )
+                readline.set_completer( self.__complete )
+                readline.read_history_file( self.configs.historyfile )
+
+            except IOError:
+                pass
+            atexit.register( readline.write_history_file, self.configs.historyfile )
+
+
+
+    def __complete(self, text, state):
+        """Generic readline completion entry point."""
+
+        try:
+            buffer = readline.get_line_buffer()
+            line = readline.get_line_buffer().split()
+
+            if ' ' in buffer:
+                return []
+
+            # show all commandspath
+            if not line:
+                all_cmnds = [c + ' ' for c in self.matching_words]
+                if len(all_cmnds) > state:
+                    return all_cmnds[state]
                 else:
-                    self.run_line_cmd(cmd)
+                    return []
 
 
+            cmd = line[0].strip()
+
+            if cmd in self.matching_words:
+                return [cmd + ' '][state]
+
+            results = [c + ' ' for c in self.matching_words if c.startswith(cmd)] + [None]
+            if len(results) == 2:
+                if results[state]:
+                    return results[state].split()[0] + ' '
+                else:
+                    return []
+            return results[state]
+
+        except Exception, e:
+            self.__tprint('[!] Completion error: %s' % e)

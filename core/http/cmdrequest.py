@@ -1,25 +1,10 @@
-# This file is part of Weevely NG.
-#
-# Copyright(c) 2011-2012 Weevely Developers
-# http://code.google.com/p/weevely/
-#
-# This file may be licensed under the terms of of the
-# GNU General Public License Version 2 (the ``GPL'').
-#
-# Software distributed under the License is distributed
-# on an ``AS IS'' basis, WITHOUT WARRANTY OF ANY KIND, either
-# express or implied. See the GPL for the specific language
-# governing rights and limitations.
-#
-# You should have received a copy of the GPL along with this
-# program. If not, go to http://www.gnu.org/licenses/gpl.html
-# or write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-import random, urllib2, urlparse, re, base64
+
+import urllib2, urlparse, re, base64
 from request import Request
-from random import random, choice, shuffle, randint
+from random import random, shuffle
 from string import letters, digits
 from core.pollution import pollute_with_random_str
+from core.utils import randstr
 
 default_prefixes = [ "ID", "SID", "APISID", "USRID", "SESSID", "SESS", "SSID", "USR", "PREF" ]
 shuffle(default_prefixes)
@@ -71,7 +56,7 @@ class CmdRequest(Request):
 			while len(prefixes)>3:
 				if random()>0.5:
 					break
-				rand_cookie += prefixes.pop() + '=' + ''.join([choice(letters + digits) for i in xrange(16)]) + '; '
+				rand_cookie += prefixes.pop() + '=' + randstr(16, False, letters + digits) + '; '
 
 
 			# DO NOT fuzz with %, _ (\w on regexp keep _)
@@ -92,14 +77,13 @@ class CmdRequest(Request):
 		response = self.read()
 #		print self.extractor_debug.findall(response)
 		data	 = self.extractor.findall(response)
+		
 		if len(data) < 1 or not data:
-			raise NoDataException( 'No data returned.' )
+			raise NoDataException()
 		else:
 			return data[0].strip()
 		
 class NoDataException(Exception):
-	def __init__(self, value):
-		self.error = value
-	def __str__(self):
-   		return repr(self.error)
+	pass
+
 

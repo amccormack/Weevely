@@ -1,79 +1,57 @@
-
-
-from core.module import Module, ModuleException
-from core.parameters import ParametersList, Parameter as P
+from core.moduleprobe import ModuleProbe
+from core.moduleexception import ProbeException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from ast import literal_eval
+from core.prettytable import PrettyTable
 import os
 
-classname = 'Enum'
 
-class Enum(Module):
-    """Enumerate paths on remote filesystem"""
+class Enum(ModuleProbe):
+    '''Check remote files type, md5 and permission'''
 
-    params = ParametersList('Enumerate remote paths specified by wordlist', None,
-                P(arg='lpath', help='Path of local wordlist', required=True, pos=0),
-                P(arg='printall', help='Print paths not found too', default=False, type=bool, pos=1))
+    def _set_vectors(self):
+        self.support_vectors.add_vector('getperms','shell.php',  "$f='$rpath'; if(file_exists($f)) { print('e'); if(is_readable($f)) print('r'); if(is_writable($f)) print('w'); if(is_executable($f)) print('x'); }")
+    
+    def _set_args(self):
+        self.argparser.add_argument('pathfile', help='Enuemrate paths written in PATHFILE')
+        self.argparser.add_argument('-printall', help='Print also paths not found', action='store_true')
+        self.argparser.add_argument('-pathlist', help='Enumerate paths written as "[\'/path/1\', \'/path/2\']"', type=literal_eval, default=[])
 
 
-    def __init__(self, modhandler, url, password):
-        self.pathdict = {}
 
-        Module.__init__(self, modhandler, url, password)
 
-    def set_list(self, list):
-        """Cleaned after use"""
-
-        for p in list:
-            self.pathdict[p] = [0,0,0,0]
-
-    def get_list(self):
-        pathdict = self.pathdict.copy()
-        self.pathdict = {}
-        return pathdict
-
-    def run_module(self, list_path, printall):
-
-        if not self.pathdict and list_path:
-
+    def _prepare_probe(self):
+        
+        self._result = {}
+        
+        if not self.args['pathlist']:
             try:
-                list=open(os.path.expanduser(list_path),'r').read().splitlines()
-                self.set_list(list)
+                self.args['pathlist']=open(os.path.expanduser(self.args['pathfile']),'r').read().splitlines()
             except:
-                raise ModuleException(self.name,  "Error opening path list \'%s\'" % list_path)
-        else:
-            list = self.pathdict.keys()
+                raise ProbeException(self.name,  "Error opening path list \'%s\'" % self.args['pathfile'])
+                
 
+    def _probe(self):
+        
+        for entry in self.args['pathlist']:
+            self._result[entry] = ['', '', '', '']
+            perms = self.support_vectors.get('getperms').execute({'rpath' : entry})
+            
+            if perms:
+                if 'e' in perms: self._result[entry][0] = 'exists'
+                if 'r' in perms: self._result[entry][1] = 'readable'
+                if 'w' in perms: self._result[entry][2] = 'writable'
+                if 'x' in perms: self._result[entry][3] = 'executable'
 
-        self.mprint('[%s] Enumerating %i paths' % (self.name, len(list)))
-
-
-        for path in list:
-
-            output = path + '' + '\t'*(3-((len(path)+1)/8))
-
-            if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'exists'}):
-                output += '\texists'
-
-                self.pathdict[path][0] = 1
-
-                if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'r'}):
-                    self.pathdict[path][1] = 1
-                    output += ', +readable'
-                if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'w'}):
-                    self.pathdict[path][2] = 1
-                    output += ', +writable'
-                if self.modhandler.load('file.check').run({'rpath' : path, 'mode' : 'x'}):
-                    self.pathdict[path][3] = 1
-                    output += ', +excutable'
-
-                self.mprint(output)
-
-            elif printall:
-                self.mprint(output)
-
-
-
-
-
-
-
-
+    def _output_result(self):
+    
+        table = PrettyTable(['']*5)
+        table.align = 'l'
+        table.header = False
+        
+        for field in self._result:
+            if self._result[field] != ['', '', '', ''] or self.args['printall']:
+                table.add_row([field] + self._result[field])
+                
+        self._output = table.get_string()
+        

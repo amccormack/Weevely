@@ -1,117 +1,73 @@
-'''
-Created on 22/ago/2011
-
-@author: norby
-'''
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector as V
-from core.parameters import ParametersList, Parameter as P
-
-classname = 'Perms'
-
-class Perms(Module):
-    '''Find files with write, read, execute permissions
-    :find.perms first|all file|dir|all w|r|x|all <path>
-    '''
-
-    vectors = VectorList([
-       V('shell.php', 'php_recursive', """@swp('%s','%s','%s','%s');
-function ckmod($df, $m) { return ($m=="any")||($m=="w"&&is_writable($df))||($m=="r"&&is_readable($df))||($m=="x"&&is_executable($df)); }
-function cktp($df, $f, $t) { return ($f!='.')&&($f!='..')&&($t=='any'||($t=='f'&&@is_file($df))||($t=='d'&&@is_dir($df))); }
-function swp($d, $type, $mod, $qty){
-$h = @opendir($d);
-while ($f = @readdir($h)) {
-$df=$d.'/'.$f;
-if(@cktp($df,$f,$type)&&@ckmod($df,$mod)) {
-print($df."\\n");
-if($qty=="first") return;
-}
-if(@cktp($df,$f,'d')){
-@swp($df, $type, $mod, $qty);
-}
-}
-@closedir($h);
-}"""),
-       V('shell.sh', "find" , "find %s %s %s %s 2>/dev/null")
-    ])
 
 
-    params = ParametersList('Find files by permissions', vectors,
-                    P(arg='qty', help='How many files display', choices=['first', 'any'], default='any', pos=0),
-                    P(arg='type', help='Type', choices=['f','d', 'any'], default='any', pos=1),
-                    P(arg='perm', help='Permission', choices=['w','r','x','any'], default='r', pos=2),
-                    P(arg='rpath', help='Remote starting path', default='.', pos=3)
-                    )
+from core.moduleprobeall import ModuleProbeAll
+from core.moduleexception import ModuleException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 
-    def __init__(self, modhandler, url, password):
-
-        Module.__init__(self, modhandler, url, password)
-
-
-    def __prepare_payload( self, vector, parameters ):
-
-        path = parameters[0]
-        qty = parameters[1]
-        type = parameters[2]
-        mod = parameters[3]
-
-        if vector.interpreter == 'shell.sh':
-            if qty == 'first':
-                qty = '-print -quit'
-            elif qty == 'any':
-                qty = ''
-
-            if type == 'any':
-                type = ''
-            elif type == 'f':
-                type = '-type f'
-            elif type == 'd':
-                type = '-type d'
-
-            if mod == 'any':
-                mod = ''
-            elif mod == 'w':
-                mod = '-writable'
-            elif mod == 'r':
-                mod = '-readable'
-            elif mod == 'x':
-                mod = '-executable'
-
-        return vector.payloads[0] % (path, type, mod, qty)
+class Perms(ModuleProbeAll):
+    '''Find files with write, read, execute permissions'''
 
 
-    def run_module(self, qty, type, mod, path):
+    def _set_vectors(self):
+        self.vectors.add_vector('php_recursive', 'shell.php', """$fdir='$rpath';$ftype='$type';$fattr='$attr';$fqty='$first';
+swp($fdir, $fdir,$ftype,$fattr,$fqty); 
+function ckprint($df,$t,$a) { if(cktp($df,$t)&&@ckattr($df,$a)) { print($df."\\n"); return True;}   }
+function ckattr($df, $a) { $w=strstr($a,"w");$r=strstr($a,"r");$x=strstr($a,"x"); return ($a=='')||(!$w||is_writable($df))&&(!$r||is_readable($df))&&(!$x||is_executable($df)); }
+function cktp($df, $t) { return ($t==''||($t=='f'&&@is_file($df))||($t=='d'&&@is_dir($df))); }
+function swp($fdir, $d, $t, $a, $q){ 
+if($d==$fdir && ckprint($d,$t,$a) && ($q!="")) return; 
+$h=@opendir($d); while ($f = @readdir($h)) {
+$df=join('/', array(trim($d, '/'), trim($f, '/')));
+if(($f!='.')&&($f!='..')&&ckprint($df,$t,$a) && ($q!="")) return;
+if(($f!='.')&&($f!='..')&&cktp($df,'d')){@swp($fdir, $df, $t, $a, $q);}
+} closedir($h); }""")
+        self.vectors.add_vector("find" , 'shell.sh', "find $rpath $type $attr $first 2>/dev/null")
+    
+    def _set_args(self):
+        self.argparser.add_argument('rpath', help='Remote starting path', default ='.', nargs='?')
+        self.argparser.add_argument('-first', help='Quit after first match', action='store_true')
+        self.argparser.add_argument('-type', help='File type',  choices = ['f','d'])
+        self.argparser.add_argument('-writable', help='Match writable files', action='store_true')
+        self.argparser.add_argument('-readable', help='Matches redable files', action='store_true')
+        self.argparser.add_argument('-executable', help='Matches executable files', action='store_true')
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
 
-        vectors = self._get_default_vector2()
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
+    def _prepare_vector(self):
+        
+        self.args_formats = { 'rpath' : self.args['rpath'] }
+        
+        if self.current_vector.name == 'find':
+            
+            # Set first
+            self.args_formats['first'] = '-print -quit' if self.args['first'] else ''
+            
+            # Set type
+            type = self.args['type'] if self.args['type'] else ''
+            if type:
+                type = '-type %s' % type
+            self.args_formats['type'] = type
+                    
+            # Set attr
+            self.args_formats['attr'] = '-writable' if self.args['writable'] else ''
+            self.args_formats['attr'] += ' -readable' if self.args['readable'] else ''
+            self.args_formats['attr'] += ' -executable' if self.args['executable'] else ''
 
-        for vector in vectors:
-
-            response = self.__execute_payload(vector, [path, qty, type, mod])
-            if response != None:
-                self.params.set_and_check_parameters({'vector' : vector.name})
-                return response
-
-        raise ModuleException(self.name,  "Files not found")
-
-
-    def __execute_payload(self, vector, parameters):
-
-        payload = self.__prepare_payload(vector, parameters)
-
-        try:
-            response = self.modhandler.load(vector.interpreter).run({ 0 : payload })
-        except ModuleException:
-            response = None
         else:
-            return response
-
-
-
-
-
-
-
+            # Vector.name = php_find
+            # Set first
+            self.args_formats['first'] = '1' if self.args['first'] else ''
+            
+            # Set type
+            self.args_formats['type']  = self.args['type'] if self.args['type'] else ''
+            
+            # Set attr
+            self.args_formats['attr'] = 'w' if self.args['writable'] else ''
+            self.args_formats['attr'] += 'r' if self.args['readable'] else ''
+            self.args_formats['attr'] += 'x' if self.args['executable'] else ''
+            
+    def _output_result(self):
+        
+        # Listify output, to advantage other modules 
+        self._output = self._result
+        self._result = self._result.split('\n')

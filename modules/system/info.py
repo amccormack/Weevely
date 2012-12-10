@@ -4,85 +4,43 @@ Created on 22/ago/2011
 @author: norby
 '''
 
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector
-from core.parameters import ParametersList, Parameter as P
+from core.moduleprobe import ModuleProbe
+from core.moduleexception import ModuleException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
 
-classname = 'Info'
+import argparse
 
-class Info(Module):
-    """Collect system informations
-    :system.info auto | whoami | hostname | basedir | document_root | client_ip
-    """
+class Info(ModuleProbe):
+    """Collect system informations"""
 
-
-    vectors = VectorList([
-        Vector('shell.sh', 'whoami', "whoami"),
-        Vector('shell.sh', 'hostname', "hostname"),
-        Vector('shell.sh', 'basedir', "pwd"),
-        Vector('shell.sh', 'uname', "uname -a"),
-        Vector('shell.sh', 'os', "uname"),
-        Vector('shell.php', 'document_root', "@print($_SERVER['DOCUMENT_ROOT']);"),
-        Vector('shell.php', 'whoami', "@print(get_current_user());"),
-        Vector('shell.php', 'hostname', "@print(gethostname());"),
-        Vector('shell.php', 'basedir', "@print(getcwd());"),
-        Vector('shell.php', 'safe_mode', "(ini_get('safe_mode') && print(1)) || print(0);"),
-        Vector('shell.php', 'script', "@print($_SERVER['SCRIPT_NAME']);"),
-        Vector('shell.php', 'uname', "@print(php_uname());"),
-        Vector('shell.php', 'os', "@print(PHP_OS);"),
-        Vector('shell.php', 'client_ip', "@print($_SERVER['REMOTE_ADDR']);"),
-        Vector('shell.php', 'max_execution_time', '@print(ini_get("max_execution_time"));'),
-        Vector('shell.php', 'php_self', '@print($_SERVER["PHP_SELF"]);'),
-        Vector('shell.php', 'document_root', '@print($_SERVER["DOCUMENT_ROOT"]);')
-        ])
+    def _set_vectors(self):
+            self.support_vectors.add_vector('document_root', 'shell.php', "@print($_SERVER['DOCUMENT_ROOT']);"),
+            self.support_vectors.add_vector('whoami', 'shell.php', "@print(get_current_user());"),
+            self.support_vectors.add_vector('hostname', 'shell.php', "@print(gethostname());"),
+            self.support_vectors.add_vector('basedir', 'shell.php', "@print(getcwd());"),
+            self.support_vectors.add_vector('safe_mode', 'shell.php', "(ini_get('safe_mode') && print(1)) || print(0);"),
+            self.support_vectors.add_vector('script', 'shell.php', "@print($_SERVER['SCRIPT_NAME']);"),
+            self.support_vectors.add_vector('uname', 'shell.php', "@print(php_uname());"),
+            self.support_vectors.add_vector('os', 'shell.php', "@print(PHP_OS);"),
+            self.support_vectors.add_vector('client_ip', 'shell.php', "@print($_SERVER['REMOTE_ADDR']);"),
+            self.support_vectors.add_vector('max_execution_time', 'shell.php', '@print(ini_get("max_execution_time"));'),
+            self.support_vectors.add_vector('php_self', 'shell.php', '@print($_SERVER["PHP_SELF"]);'),
+            self.support_vectors.add_vector('dir_sep' , 'shell.php',  '@print(DIRECTORY_SEPARATOR);')
+    
+    def _set_args(self):
+        self.argparser.add_argument('info', help='Information',  choices = self.support_vectors.keys() + ['all'], default='all', nargs='?')
 
 
+    def _probe(self):
+        
+        if self.args['info'] != 'all':
+            self._result = self.support_vectors.get(self.args['info']).execute()
+        else:
+            
+            self._result = {}
 
-    params = ParametersList('Collect system informations',
-                            [],
-                P(arg='info', help='', choices = vectors.get_names_list(), default='auto', pos=0 )
-                )
-
-    def __init__( self, modhandler , url, password):
-
-
-        Module.__init__(self, modhandler, url, password)
-
-
-    def run_module( self, info):
-
-        infos = []
-
-        vectors = self._get_default_vector2()
-
-
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
-
-        for vector in vectors:
-            if (vector.name not in infos) and (info == 'auto' or info == vector.name):
-
-                response = self.__execute_payload(vector, [info])
-                if response:
-                    infos.append(vector.name)
-
-                    if info != 'auto':
-                        return response
-                    else:
-                        tabs = '\t'*(3-((len(vector.name)+1)/8))
-                        self.mprint('%s:%s%s' % (vector.name, tabs, response))
-
-
-        if info != 'auto':
-            raise ModuleException("system.info",  "Information '%s' not supported." % (info))
-
-
-
-    def __execute_payload(self, vector, parameters):
-        return self.modhandler.load(vector.interpreter).run({ 0 : vector.payloads[0]})
-
-
-
-
-
-
+            for vect in self.support_vectors.values():
+                self._result[vect.name] = vect.execute()
+                
+                    
+        

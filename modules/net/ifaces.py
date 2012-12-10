@@ -1,64 +1,48 @@
-'''
-Created on 20/set/2011
 
-@author: norby
-'''
-
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector as V
-from core.parameters import ParametersList, Parameter as P
-import re
+from core.moduleprobeall import ModuleProbe
+from core.moduleexception import ModuleException, ProbeException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork
+import re
 
+WARN_NO_OUTPUT = 'No execution output'
+WARN_NO_IFACES = 'No interfaces address found'
 
-classname = 'Ifaces'
+class Ifaces(ModuleProbe):
+    '''Print interface addresses'''
+    
+    
+    def _set_vectors(self):
+        self.support_vectors.add_vector('enum',  'file.enum',  ["asd", "-pathlist", "$pathlist"])
+        self.support_vectors.add_vector(  "ifconfig" , 'shell.sh', "$ifconfig_path")
+    
+    
+    def _probe(self):
+        
+        self._result = {}
+        
+        enum_pathlist = str([ x + 'ifconfig' for x in ['/sbin/', '/bin/', '/usr/bin/', '/usr/sbin/', '/usr/local/bin/', '/usr/local/sbin/'] ])
 
-class Ifaces(Module):
+        ifconfig_pathlist = self.support_vectors.get('enum').execute({'pathlist' : enum_pathlist })
+        
+        for path in ifconfig_pathlist:
+            if ifconfig_pathlist[path] != ['','','','']:
+                result = self.support_vectors.get('ifconfig').execute({'ifconfig_path' : path })
+                
+                if result:
+                    ifaces = re.findall(r'^(\S+).*?inet addr:(\S+).*?Mask:(\S+)', result, re.S | re.M)
 
-    params = ParametersList('Print network interfaces IP/mask', [])
-
-    def __init__(self, modhandler, url, password):
-        self.ifaces = {}
-
-        Module.__init__(self, modhandler, url, password)
-
-    def __find_ifconfig_path(self):
-
-        ifconfig_paths = [ x + 'ifconfig' for x in ['/sbin/', '/bin/', '/usr/bin/', '/usr/sbin/', '/usr/local/bin', '/usr/local/sbin'] ]
-
-        self.modhandler.load('file.enum').set_list(ifconfig_paths)
-        self.modhandler.set_verbosity(6)
-        self.modhandler.load('file.enum').run({ 'lpath' : 'fake' })
-        self.modhandler.set_verbosity()
-
-        ifconfig_dict_paths = self.modhandler.load('file.enum').get_list()
-        for p in ifconfig_dict_paths:
-            if ifconfig_dict_paths[p][0]:
-                return p
-
-
-    def run_module(self):
-
-
-        ifconfig = self.__find_ifconfig_path()
-
-        try:
-            response = self.modhandler.load('shell.sh').run({ 0 : ifconfig})
-        except ModuleException:
-            response = None
-
-        if response:
-            ifaces = re.findall(r'^(\S+).*?inet addr:(\S+).*?Mask:(\S+)', response, re.S | re.M)
-
-            if ifaces:
-
-                for i in ifaces:
-                    ipnet = IPNetwork('%s/%s' % (i[1], i[2]))
-                    self.ifaces[i[0]] = ipnet
-                    self.mprint('%s: %s' % (i[0], ipnet))
-
-        else:
-            raise ModuleException(self.name,  "No interfaces infos found")
-
-
+                    if ifaces:
+                        
+                        for iface in ifaces:
+                            ipnet = IPNetwork('%s/%s' % (iface[1], iface[2]))
+                            self._result[iface[0]] = ipnet
+                else:
+                    raise ProbeException(self.name, '\'%s\' %s' % (path, WARN_NO_OUTPUT))      
+                
+                
+    def _verify_probe(self):
+        if not self._result:
+            raise ProbeException(self.name, WARN_NO_IFACES)    
+                
+                     

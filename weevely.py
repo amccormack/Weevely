@@ -18,67 +18,21 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
-from core.terminal import Terminal, module_trigger
-from core.modules_handler import ModHandler
-from core.module import ModuleException
-from core.helper import Helper
+from core.terminal import Terminal, module_trigger, help_string
+from core.modulehandler import ModHandler
+from core.moduleexception import ModuleException
+from argparse import ArgumentParser
+from core.helper import banner, credits, usage
 
 import sys
 
-print '''      ________                      __
-     |  |  |  |-----.----.-.--.----'  |--.--.
-     |  |  |  |  -__| -__| |  | -__|  |  |  |
-     |________|_____|____|___/|____|__|___  | v0.7
-                                      |_____|
-              Stealth tiny web shell
-'''
 
-
-credits = '''
-Website
-                   http://epinna.github.com/Weevely/
-
-Author
-                   Emilio Pinna
-                   http://disse.cting.org
-
-Contributors
-		   Andrea Cardaci
-		   http://cyrus-and.github.com/
-                   Raffaele Forte, Backbox Linux
-                   http://www.backbox.org
-                   Simone Margaritelli
-                   http://www.evilsocket.net/
-'''
-
-general_usage = '''[+] Start telnet-like session
-    weevely <url> <password>
-
-[+] Run shell command o module
-    weevely <url> <password> [ <command> | :<module name> ]  ..
-
-[+] Generate PHP backdoor
-    weevely generate <password> [ <path> ] ..
-
-[+] Show modules help
-    weevely show [module name]
-
-[+] Show credits
-    weevely credits
-
-Available generators
-
-%s
-Available modules
-
-%s'''
 
 if __name__ == "__main__":
 
 
     if  len(sys.argv) == 3 and sys.argv[1].startswith('http'):
 
-        print "[+] Starting terminal, shell probe may take a while"
 
         url = sys.argv[1]
         password = sys.argv[2]
@@ -86,7 +40,7 @@ if __name__ == "__main__":
         try:
             Terminal ( ModHandler( url, password ) ).loop()
         except ModuleException, e:
-            print e
+            print '[!] [%s] %s ' % (e.module, e.error)
         except (KeyboardInterrupt, EOFError):
             print '\n[!] Exiting. Bye ^^'
 
@@ -96,45 +50,29 @@ if __name__ == "__main__":
         password = sys.argv[2]
 
         if genname == 'generate':
-            genname = 'generate.php'
-
-        args_list = [':%s' % genname ] + sys.argv[3:]
+            genname = 'generate.php' 
 
         try:
-            Terminal (ModHandler(genname, password), True).run_module_cmd(args_list)
+            Terminal (ModHandler('', '')).run_cmd_line([':%s' % genname ] + sys.argv[2:])
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
 
-    elif len(sys.argv)>=2 and sys.argv[1] == 'show':
-        modname = None
-        if len(sys.argv) == 3:
-            modname = sys.argv[2]
-        print ModHandler('', '').helps(modname)
+    elif len(sys.argv) >= 2 and sys.argv[1] == 'help':
+        Terminal (ModHandler('', '')).run_cmd_line([':help' ] + sys.argv[2:])
+
 
     elif len(sys.argv) > 3:
 
         url = sys.argv[1]
         password = sys.argv[2]
 
-
-        if sys.argv[3] == ':show':
-            modname = ''
-            if len(sys.argv)>4:
-                modname = sys.argv[4]
-            print ModHandler(url, password).helps(modname)
-
-        elif sys.argv[1].startswith('http') or sys.argv[3] == ':set':
+        if sys.argv[1].startswith('http'):
 
             try:
-                terminal = Terminal (ModHandler(url, password), True)
-
-                if sys.argv[3][0] == module_trigger:
-                    terminal.run_module_cmd(sys.argv[3:])
-                else:
-                    terminal.run_line_cmd(' '.join(sys.argv[3:]))
+                Terminal(ModHandler(url, password)).run_cmd_line(sys.argv[3:])
 
             except ModuleException, e:
-                print e
+                print '[!] [%s] %s ' % (e.module, e.error)
             except KeyboardInterrupt:
                 print '\n[!] Exiting. Bye ^^'
 
@@ -143,7 +81,6 @@ if __name__ == "__main__":
 
 
     else:
-
-        print general_usage % ( ModHandler().summary(only_group='generate'), ModHandler().summary(exclude_group='generate'))
+        print banner, usage 
 
 

@@ -1,105 +1,82 @@
-'''
-Created on 22/ago/2011
-
-@author: norby
-'''
-
-from core.module import Module, ModuleException
-from core.vector import VectorList, Vector
-from core.parameters import ParametersList, Parameter as P
-
-classname = 'Rm'
-
-class Rm(Module):
 
 
-    vectors = VectorList([
-        Vector('shell.php', 'php_rmdir', """
-function rmfile($dir) {
-if (is_dir("$dir")) rmdir("$dir");
-else { unlink("$dir"); }
-}
-function exists($path) {
-return (file_exists("$path") || is_link("$path"));
-}
-function rrmdir($recurs,$dir) {
-    if($recurs=="1") {
-        if (is_dir("$dir")) {
-            $objects = scandir("$dir");
-            foreach ($objects as $object) {
-            if ($object != "." && $object != "..") {
-            if (filetype($dir."/".$object) == "dir") rrmdir($recurs, $dir."/".$object); else unlink($dir."/".$object);
+from core.moduleprobeall import ModuleProbeAll
+from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+
+WARN_NO_SUCH_FILE = 'No such file or permission denied'
+WARN_DELETE_FAIL = 'Cannot remove, check permission or recursion'
+WARN_DELETE_OK = 'File deleted'
+
+class Rm(ModuleProbeAll):
+    '''Remove remote files and folders'''
+
+
+    def _set_vectors(self):
+        self.vectors.add_vector('php_rmdir', 'shell.php', """
+    function rmfile($dir) {
+    if (is_dir("$dir")) rmdir("$dir");
+    else { unlink("$dir"); }
+    }
+    function exists($path) {
+    return (file_exists("$path") || is_link("$path"));
+    }
+    function rrmdir($recurs,$dir) {
+        if($recurs=="1") {
+            if (is_dir("$dir")) {
+                $objects = scandir("$dir");
+                foreach ($objects as $object) {
+                if ($object != "." && $object != "..") {
+                if (filetype($dir."/".$object) == "dir") rrmdir($recurs, $dir."/".$object); else unlink($dir."/".$object);
+                }
+                }
+                reset($objects);
+                rmdir("$dir");
             }
-            }
-            reset($objects);
-            rmdir("$dir");
+            else rmfile("$dir");
         }
         else rmfile("$dir");
     }
-    else rmfile("$dir");
-}
-$recurs="%s"; $path="%s";
-if(exists("$path")) {
-rrmdir("$recurs", "$path");
-if(!exists("$path"))
-    echo("OK");
-}"""),
-              Vector('shell.sh', 'rm', "rm %s %s && echo OK")
-        ])
+    $recurs="$recursive"; $path="$rpath";
+    if(exists("$path")) 
+    rrmdir("$recurs", "$path");""")
+        self.vectors.add_vector('rm', 'shell.sh', "rm $recursive $rpath")
+
+    
+    def _set_args(self):
+        self.argparser.add_argument('rpath', help='Remote starting path')
+        self.argparser.add_argument('-recursive', help='Remove recursively', action='store_true')
+        self.argparser.add_argument('-vector', choices = self.vectors.keys())
 
 
-
-    params = ParametersList('Remove remote file and directory', vectors,
-                P(arg='rpath', help='Remote path', required=True, pos=0),
-                P(arg='recursive', help='Recursion', default=False, type=bool, pos=1),
-                )
-
-    def __init__(self, modhandler, url, password):
-
-        Module.__init__(self, modhandler, url, password)
-
-    def run_module(self, rpath, recursive):
-
-        vectors = self._get_default_vector2()
-        if not vectors:
-            vectors  = self.vectors.get_vectors_by_interpreters(self.modhandler.loaded_shells)
-
-        for vector in vectors:
-
-            response = self.__execute_payload(vector, [rpath, recursive])
-            if 'OK' in response:
-                self.params.set_and_check_parameters({'vector' : vector.name})
-                return True
-
-        recursive_output = ''
-        if not recursive:
-            recursive_output = ' and use \'recursive\' with unempty folders'
-        raise ModuleException(self.name,  "Delete fail, check existance and permissions%s." % (recursive_output))
+    def _prepare_probe(self):
+        
+        self._result = False
+        self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
+        if not self.modhandler.load('file.check')._result:
+            raise ProbeException(self.name, WARN_NO_SUCH_FILE)        
 
 
-    def __execute_payload(self, vector, parameters):
-
-        payload = self.__prepare_payload(vector, parameters)
-
-        try:
-            response = self.modhandler.load(vector.interpreter).run({0 : payload})
-        except ModuleException:
-            response = None
+    def _prepare_vector(self):
+        
+        self.args_formats = { 'rpath' : self.args['rpath'] }
+        
+        if self.current_vector.name == 'rm':
+            self.args_formats['recursive'] = '-rf' if self.args['recursive'] else ''
         else:
-            return response
-
-    def __prepare_payload(self, vector, parameters):
-
-        rpath = parameters[0]
-        recursive = parameters[1]
-
-
-        if vector.interpreter == 'shell.sh' and recursive:
-            recursive = '-rf'
-        elif vector.interpreter == 'shell.php' and recursive:
-            recursive = '1'
-        else:
-            recursive = ''
-
-        return vector.payloads[0] % (recursive, rpath)
-
+            self.args_formats['recursive'] = '1' if self.args['recursive'] else ''
+            
+            
+    def _verify_execution(self):
+        self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
+        result = self.modhandler.load('file.check')._result
+        
+        if result == False:
+            self._result = True
+            raise ProbeSucceed(self.name, WARN_DELETE_OK)
+        
+    def _verify_probe(self):
+        raise ProbeException(self.name, WARN_DELETE_FAIL)
+    
+    def _output_result(self):
+        self._output = ''

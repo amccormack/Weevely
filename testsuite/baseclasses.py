@@ -134,6 +134,17 @@ class SimpleTestCase(unittest.TestCase):
         cls._run_cmd(cmd)
 
 
+    @classmethod  
+    def _env_cp(cls, absfrompath, reltopath, currentuser=False):
+        
+        abstopath = os.path.join(cls.basedir, reltopath)
+        if not currentuser:
+            cmd = Template(conf['env_cp_command']).safe_substitute(frompath=absfrompath, topath=abstopath)
+        else:
+            cmd = Template(conf['env_cp_command_currentuser']).safe_substitute(frompath=absfrompath, topath=abstopath)
+            
+        cls._run_cmd(cmd)
+
 
 class FolderFSTestCase(SimpleTestCase):
 

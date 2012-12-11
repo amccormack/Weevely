@@ -49,10 +49,9 @@ class WebEnv:
     
     def file_map(self, relative_path_file):
         
-        relative_path_folder = '/'.join(relative_path_file.split('/')[:-1])
-        if not relative_path_folder: relative_path_folder = '/'
+        relative_path_folder, filename = os.path.split(relative_path_file)
+        if not relative_path_folder: relative_path_folder = './'
         
-        filename = relative_path_file.split('/')[-1]
         
         absolute_path_folder, url_folder = self.folder_map(relative_path_folder)
     
@@ -110,9 +109,7 @@ class Upload2web(Upload):
                 raise ProbeException(self.name, WARN_WRITABLE_DIR_NOT_FOUND)
                 
             writable_folder, writable_folder_url = webenv.folder_map(writable_subdirs[0])
-            print writable_folder, writable_folder_url, writable_subdirs[0]
-                
-                
+            
             self.args['rpath'] = os.path.join(writable_folder, filename)
             
             self.args['url'] = os.path.join(writable_folder_url, filename)        

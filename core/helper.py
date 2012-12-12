@@ -25,7 +25,7 @@ class Helper:
                 else:
                     table_module.add_row([ ':%s' % self.modhandler.load(module).name, self.modhandler.load(module).argparser.description])
             
-        return '%s\n%s' % (table_generator.get_string(), table_module.get_string()) 
+        return '%s\n%s\n' % (table_generator.get_string(), table_module.get_string())
         
     def _format_helps(self, modules = [], summary_type=0):
  

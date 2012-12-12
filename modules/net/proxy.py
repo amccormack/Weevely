@@ -146,7 +146,7 @@ class Proxy(Phpproxy):
         
         self._output = """Proxy daemon spawned, set \'http://%s:%i\' as HTTP proxy to start browsing anonymously through target.
 Run ":net.proxy -just-run '%s'" to respawn local proxy daemon without reinstalling remote agent.
-When not needed anymore, remove%sremote agent.""" % (self.args['lhost'], self.args['lport'], self.args['url'], rpath)
+When not needed anymore, remove %sremote agent.""" % (self.args['lhost'], self.args['lport'], self.args['url'], rpath)
 
         
         

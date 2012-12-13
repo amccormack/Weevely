@@ -20,6 +20,7 @@ class Edit(ModuleProbe):
         self.support_vectors.add_vector('download', 'file.download', [ "$rpath", "$lpath" ])
         self.support_vectors.add_vector('upload', 'file.upload', [ "$lpath", "$rpath", "-force" ])
         self.support_vectors.add_vector('md5', 'file.check', [ "$rpath", "md5" ])
+        self.support_vectors.add_vector('exists', 'file.check', [ "$rpath", "exists" ])
 
 
     def _set_args(self):
@@ -34,24 +35,33 @@ class Edit(ModuleProbe):
         lpath = path.join(mkdtemp(),rfilename)
         lpath_orig = lpath + '.orig'
         
-        if not self.support_vectors.get('download').execute({ 'rpath' : self.args['rpath'], 'lpath' : lpath }):
-            raise ProbeException(self.name, '%s \'%s\'' % (WARN_DOWNLOAD_FAILED, self.args['rpath']))
+        rpath_existant = self.support_vectors.get('exists').execute({ 'rpath' : self.args['rpath'] })
+        
+        if rpath_existant:
+            if not self.support_vectors.get('download').execute({ 'rpath' : self.args['rpath'], 'lpath' : lpath }):
+                raise ProbeException(self.name, '%s \'%s\'' % (WARN_DOWNLOAD_FAILED, self.args['rpath']))
+                
+            try:
+                copy(lpath, lpath_orig)
+            except Exception, e:
+                raise ProbeException(self.name, '\'%s\' %s %s' % (lpath_orig, WARN_BACKUP_FAILED, str(e)))
             
-        try:
-            copy(lpath, lpath_orig)
-        except Exception, e:
-            raise ProbeException(self.name, '\'%s\' %s %s' % (lpath_orig, WARN_BACKUP_FAILED, str(e)))
-        
-        call("%s %s" % (self.args['editor'], lpath), shell=True)
-        
-        md5_lpath_orig = md5sum(lpath_orig)
-        if md5sum(lpath) == md5_lpath_orig:
-            raise ProbeSucceed(self.name, "File unmodified, no upload needed")
-        
+            call("%s %s" % (self.args['editor'], lpath), shell=True)
+            
+            md5_lpath_orig = md5sum(lpath_orig)
+            if md5sum(lpath) == md5_lpath_orig:
+                raise ProbeSucceed(self.name, "File unmodified, no upload needed")
+            
+        else:
+            call("%s %s" % (self.args['editor'], lpath), shell=True)
+            
+            
         if not self.support_vectors.get('upload').execute({ 'rpath' : self.args['rpath'], 'lpath' : lpath }):
             
             recover_msg = ''
-            if self.support_vectors.get('md5').execute({ 'rpath' : self.args['rpath'] }) != md5_lpath_orig:
-                recover_msg += 'Remote file is different from original one, recover immediatly backup copy situated in \'%s\'' % lpath_orig
+            
+            if rpath_existant:
+                if self.support_vectors.get('md5').execute({ 'rpath' : self.args['rpath'] }) != md5_lpath_orig:
+                    recover_msg += 'Remote file is different from original one, recover immediatly backup copy situated in \'%s\'' % lpath_orig
             
             raise ProbeException(self.name, '%s \'%s\' %s' % (WARN_UPLOAD_FAILED, self.args['rpath'], recover_msg))

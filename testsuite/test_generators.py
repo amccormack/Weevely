@@ -11,7 +11,7 @@ import core.backdoor
 from commands import getstatusoutput
 from unittest import skipIf
 
-class FSUpload(SimpleTestCase):
+class Generators(SimpleTestCase):
     
     def __test_new_bd(self, relpathfrom, phpbdname, phpbd_pwd):
  
@@ -49,7 +49,7 @@ class FSUpload(SimpleTestCase):
         self.__test_new_bd(temp_file.name, '%s.php' % randstr(5), phpbd_pwd)
         
         
-    @skipIf(not conf['remote_allowoverride'], "Skipping for missing AllowOverride")
+    @skipIf(not conf['remote_allowoverride'] or "off" in conf['remote_allowoverride'].lower(), "Skipping for missing AllowOverride")
     def test_htaccess(self):
         
         phpbd_pwd = randstr(4)
@@ -70,7 +70,7 @@ class FSUpload(SimpleTestCase):
         self.__test_new_bd(temp_file.name, '.htaccess', phpbd_pwd)
         
 
-    @skipIf(not conf['remote_allowoverride'], "Skipping for missing AllowOverride")
+    @skipIf(not conf['remote_allowoverride'] or "off" in conf['remote_allowoverride'].lower(), "Skipping for missing AllowOverride")
     def test_img(self):
         
         phpbd_pwd = randstr(4)

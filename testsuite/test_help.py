@@ -8,7 +8,7 @@ class FSEnum(SimpleTestCase):
     def test_help(self):
         help_output = self._warn(":help" )
         self.assertRegexpMatches(help_output, '|[\s]module[\s]+|[\s]description[\s]+|[\n]{%i}' % (len(self.term.modhandler.modules_classes)+2))       
-        self.assertNotRegexpMatches(help_output, '\n'*3)       
+        self.assertNotRegexpMatches(help_output, '\n'*4)       
         
         help_shell_output = self._warn(":help shell" )
         self.assertRegexpMatches(help_shell_output, '\[shell\.sh\] System shell[\s\S]+usage:[\s\S]+\[shell\.php\] PHP shell[\s\S]+usage:[\s\S]+')

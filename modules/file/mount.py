@@ -12,6 +12,7 @@ from platform import machine
 
 WARN_ERR_RUN_HTTPFS = 'HTTPfs binary not found. Install it from \'https://github.com/cyrus-and/httpfs\'.'
 WARN_ERR_GEN_PHP = 'HTTPfs PHP generation failed'
+WARN_HTTPFS_MOUNTPOINT = 'Remote mountpoint not found'
 WARN_HTTPFS_OUTP = 'HTTPfs output debug'
 WARN_HTTPFS_RUN = 'HTTPfs run failed'
 WARN_FUSE_UMOUNT = 'Fusermount umount failed'
@@ -43,6 +44,10 @@ class Mount(Upload2web):
         self.argparser.add_argument('-chunksize', type=int, default=1024, help=SUPPRESS)
         self.argparser.add_argument('-vector', choices = self.vectors.keys(), help=SUPPRESS)
         
+    def _set_vectors(self):
+        Upload2web._set_vectors(self)
+        
+        self.support_vectors.add_vector("exists", 'file.check', "$rpath exists".split(' '))
         
     def _prepare_probe(self):
 
@@ -62,6 +67,10 @@ class Mount(Upload2web):
 
 
     def _probe(self):
+        
+        
+        if not self.support_vectors.get('exists').execute({ 'rpath' : self.args['remote_mount'] }):
+            raise ProbeException(self.name, '%s \'%s\'' % (WARN_HTTPFS_MOUNTPOINT, self.args['remote_mount']))             
         
         self.args['remote_mount'] = self.support_vectors.get('normalize').execute({ 'path' : self.args['remote_mount'] })
     

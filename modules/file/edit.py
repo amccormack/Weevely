@@ -10,7 +10,7 @@ from core.utils import md5sum
 
 WARN_DOWNLOAD_FAILED = 'Edit failed, check path and reading permission of'
 WARN_BACKUP_FAILED = 'Backup version copy failed'
-WARN_UPLOAD_FAILED = 'Edit failed, check writing permission of'
+WARN_UPLOAD_FAILED = 'Edit failed, check path and writing permission of'
 WARN_EDIT_FAILED = 'Edit failed, temporary file not found'
 
 class Edit(ModuleProbe):

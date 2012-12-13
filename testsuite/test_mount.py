@@ -23,30 +23,30 @@ class Mount(FolderFSTestCase):
         self._outp('cd %s' % self.basedir)
         
         res = self._res(':file.mount')
-        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1].startswith('/tmp/tmp') and res[2] == '.' )
+        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1].startswith('/tmp/tmp') and res[2] == self.basedir)
         
         res = self._res(':file.mount -remote-mount /tmp/')
-        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1].startswith('/tmp/tmp') and res[2] == '/tmp/')
+        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1].startswith('/tmp/tmp') and res[2] == '/tmp')
 
         res = self._res(':file.mount -local-mount %s' % temp_dir)
-        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1] == temp_dir and res[2] == '.')
+        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1] == temp_dir and res[2] == self.basedir)
 
         self.assertTrue(self._res(':file.mount -umount-all'))
 
         res = self._res(':file.mount -local-mount %s -rpath %s' % (temp_dir, temp_filename))
-        self.assertTrue(res and res[0] == os.path.join(env_writable_baseurl, temp_filename) and res[1] == temp_dir and res[2] == '.')
+        self.assertTrue(res and res[0] == os.path.join(env_writable_baseurl, temp_filename) and res[1] == temp_dir and res[2] == self.basedir)
         
         res = self._res(':file.mount -rpath %s -force' % (temp_filename))
-        self.assertTrue(res and res[0] == os.path.join(env_writable_baseurl, temp_filename) and res[1].startswith('/tmp/tmp') and res[2] == '.')
+        self.assertTrue(res and res[0] == os.path.join(env_writable_baseurl, temp_filename) and res[1].startswith('/tmp/tmp') and res[2] == self.basedir)
         
         res = self._res(':file.mount -startpath %s' % (self.dirs[0]))
-        self.assertTrue(res and res[0].startswith(os.path.join(env_writable_baseurl,self.dirs[0])) and res[0].endswith('.php') and res[1].startswith('/tmp/tmp') and res[2] == '.')
+        self.assertTrue(res and res[0].startswith(os.path.join(env_writable_baseurl,self.dirs[0])) and res[0].endswith('.php') and res[1].startswith('/tmp/tmp') and res[2] == self.basedir)
 
         res = self._res(':file.mount -just-mount %s ' % os.path.join(env_writable_baseurl, temp_filename))
-        self.assertTrue(res and res[0] == os.path.join(env_writable_baseurl, temp_filename) and res[1].startswith('/tmp/tmp') and res[2] == '.')
+        self.assertTrue(res and res[0] == os.path.join(env_writable_baseurl, temp_filename) and res[1].startswith('/tmp/tmp') and res[2] == self.basedir)
         
         res = self._res(':file.mount -just-install')
-        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1] == None and res[2] == '.' )
+        self.assertTrue(res and res[0].startswith(env_writable_baseurl) and res[0].endswith('.php') and res[1] == None and res[2] == self.basedir)
 
 
         self.assertTrue(self._res(':file.mount -umount-all'))
@@ -63,7 +63,9 @@ class Mount(FolderFSTestCase):
         
         self._outp('cd %s' % self.basedir)
 
-        self.assertRegexpMatches(self._warn(':file.mount -remote-mount /nonexistant/'),modules.file.mount.WARN_HTTPFS_OUTP)
+        self.assertRegexpMatches(self._warn(':file.mount -remote-mount /nonexistant/'),modules.file.mount.WARN_HTTPFS_MOUNTPOINT)
+        self.assertRegexpMatches(self._warn(':file.mount -remote-mount /etc/protocols'),modules.file.mount.WARN_HTTPFS_OUTP)
+
 
         self.assertRegexpMatches(self._warn(':file.mount -local-mount /nonexistant/'),modules.file.mount.WARN_HTTPFS_OUTP)
 

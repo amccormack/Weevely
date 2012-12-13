@@ -63,6 +63,9 @@ class Mount(Upload2web):
 
     def _probe(self):
         
+        self.args['remote_mount'] = self.support_vectors.get('normalize').execute({ 'path' : self.args['remote_mount'] })
+    
+        
         if self.args['umount_all']:
             # Umount all httpfs partitions
             self.__umount_all()
@@ -76,7 +79,7 @@ class Mount(Upload2web):
                 pass
                 
         if not self.args['just_install']:
-    
+            
             if not self.args['local_mount']:
                 self.args['local_mount'] = mkdtemp()
                 
@@ -108,10 +111,9 @@ class Mount(Upload2web):
         # Verify Install
         if not self.args['umount_all'] and not self.args['just_mount'] and not self.args['just_install']:
             
-            remoteuri = self.support_vectors.get('normalize').execute({ 'path' : self.args['remote_mount'] })
             urlparsed = urlparse(self.modhandler.url)
             if urlparsed.hostname:
-                remoteuri = '%s:%s' % (urlparsed.hostname, remoteuri)
+                remoteuri = '%s:%s' % (urlparsed.hostname, self.args['remote_mount'])
     
             rpath = ' '
             if self.args['rpath']:

@@ -70,6 +70,7 @@ class Terminal(Helper):
             ## Help call
             if command[0] == help_string:
                 if len(command) == 2:
+                    command[1] = command[1].lstrip(':')
                     if command[1] in self.modhandler.modules_classes.keys():
                         self.__tprint(self._format_helps([ command[1] ]))
                     else:

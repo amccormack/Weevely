@@ -11,6 +11,7 @@ from core.utils import md5sum
 WARN_DOWNLOAD_FAILED = 'Edit failed, check path and reading permission of'
 WARN_BACKUP_FAILED = 'Backup version copy failed'
 WARN_UPLOAD_FAILED = 'Edit failed, check writing permission of'
+WARN_EDIT_FAILED = 'Edit failed, temporary file not found'
 
 class Edit(ModuleProbe):
     '''Edit remote file'''
@@ -29,6 +30,8 @@ class Edit(ModuleProbe):
         
 
     def _probe(self):
+        
+        self._result = False
         
         rpathfolder, rfilename = path.split(self.args['rpath'])
         
@@ -50,11 +53,15 @@ class Edit(ModuleProbe):
             
             md5_lpath_orig = md5sum(lpath_orig)
             if md5sum(lpath) == md5_lpath_orig:
+                self._result = True
                 raise ProbeSucceed(self.name, "File unmodified, no upload needed")
             
         else:
             call("%s %s" % (self.args['editor'], lpath), shell=True)
             
+        if not path.exists(lpath):
+            raise ProbeException(self.name, '%s \'%s\'' % (WARN_EDIT_FAILED, lpath))
+
             
         if not self.support_vectors.get('upload').execute({ 'rpath' : self.args['rpath'], 'lpath' : lpath }):
             
@@ -63,5 +70,11 @@ class Edit(ModuleProbe):
             if rpath_existant:
                 if self.support_vectors.get('md5').execute({ 'rpath' : self.args['rpath'] }) != md5_lpath_orig:
                     recover_msg += 'Remote file is different from original one, recover immediatly backup copy situated in \'%s\'' % lpath_orig
-            
+        
             raise ProbeException(self.name, '%s \'%s\' %s' % (WARN_UPLOAD_FAILED, self.args['rpath'], recover_msg))
+
+        
+        self._result = True
+        
+    def _output_result(self):
+        pass

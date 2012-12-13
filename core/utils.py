@@ -2,6 +2,7 @@ from re import compile, IGNORECASE
 from base64 import b64encode
 from string import ascii_lowercase
 from random import randint, choice
+import hashlib
 
 url_validator = compile(
         r'^(?:http|ftp)s?://' # http:// or https://
@@ -26,4 +27,10 @@ def randstr(n = 4, fixed = True, charset = None):
         charset = ascii_lowercase
         
     return ''.join(choice(charset) for x in range(n))
-    
+ 
+def md5sum(filename):
+   md5 = hashlib.md5()
+   with open(filename,'rb') as f: 
+       for chunk in iter(lambda: f.read(128*md5.block_size), b''): 
+            md5.update(chunk)
+   return md5.hexdigest()   

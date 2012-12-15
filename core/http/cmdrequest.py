@@ -65,7 +65,7 @@ class CmdRequest(Request):
 				
 			rand_cookie += prefixes.pop() + '=' + payload[:third] + '; '
 			rand_cookie += prefixes.pop() + '=' + payload[third:thirds] + '; '
-			rand_cookie += prefixes.pop() + '=' + payload[thirds:] + ' '
+			rand_cookie += prefixes.pop() + '=' + payload[thirds:] 
 			
 			self['Cookie'] = rand_cookie
 		

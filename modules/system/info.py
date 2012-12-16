@@ -13,7 +13,8 @@ import argparse
 
 from re import compile
 
-re_distroline = compile('([^=:\n"]+(?:[0-9]\.?)*[^=:\n"\\\\]+)')
+re_lsb_release = compile('Description:[ \t]+(.+)')
+re_etc_lsb_release = compile('(?:DISTRIB_DESCRIPTION|PRETTY_NAME)="(.+)"')
 
 class Info(ModuleProbe):
     """Collect system informations"""
@@ -35,8 +36,7 @@ class Info(ModuleProbe):
     
             self.release_support_vectors = VectorsDict(self.modhandler)
             self.release_support_vectors.add_vector('lsb_release' , 'shell.sh',  'lsb_release -d')
-            self.release_support_vectors.add_vector('find_rel' , 'find.name',  'release /etc/ -no-recursion'.split(' '))
-            self.release_support_vectors.add_vector('find_issue' , 'find.name',  'issue /etc/ -no-recursion'.split(' '))
+            self.release_support_vectors.add_vector('read' , 'file.read',  '$rpath')
     
     def _set_args(self):
         additional_args = ['all', 'release']
@@ -46,25 +46,22 @@ class Info(ModuleProbe):
 
     def __guess_release(self):
         
-        lsb_release_output = self.release_support_vectors.get('lsb_release').execute().strip()
+        lsb_release_output = self.release_support_vectors.get('lsb_release').execute()
         if lsb_release_output: 
-            rel = re_distroline.findall(lsb_release_output)
-            if rel: return max(rel, key=len)
+            rel = re_lsb_release.findall(lsb_release_output)
+            if rel: return rel[0]
             
-        release_files = self.release_support_vectors.get('find_rel').execute()
-        for path in release_files:
-            with open(path) as f:
-                data = f.read()
-                rel = re_distroline.findall(data)
-                if rel: return max(rel, key=len)
-            
-        issue_files = self.release_support_vectors.get('find_issue').execute()
-        for path in issue_files:
-            with open(path) as f:
-                data = f.read()
-                rel = re_distroline.findall(data)
-                if rel: return max(rel, key=len) 
-        
+        for rpath in ('/etc/lsb-release', '/etc/os-release',):
+            etc_lsb_release_content =  self.release_support_vectors.get('read').execute({'rpath' : rpath})
+            if etc_lsb_release_content:
+                rel = re_etc_lsb_release.findall(etc_lsb_release_content)
+                if rel: return rel[0]
+
+        for rpath in ('/etc/issue.net', '/etc/issue',):
+            etc_issue_content =  self.release_support_vectors.get('read').execute({'rpath' : rpath}).strip()
+            if etc_issue_content:
+                return etc_issue_content
+
         return ''
 
     def _probe(self):

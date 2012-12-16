@@ -13,7 +13,7 @@ import argparse
 
 from re import compile
 
-re_distroline = compile('([^=:\n"]+(?:[0-9]\.?)+[^=:\n"\\\\]+)')
+re_distroline = compile('([^=:\n"]+(?:[0-9]\.?)*[^=:\n"\\\\]+)')
 
 class Info(ModuleProbe):
     """Collect system informations"""

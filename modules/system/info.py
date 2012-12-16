@@ -49,21 +49,21 @@ class Info(ModuleProbe):
         lsb_release_output = self.release_support_vectors.get('lsb_release').execute().strip()
         if lsb_release_output: 
             rel = re_distroline.findall(lsb_release_output)
-            return max(rel, key=len)
+            if rel: return max(rel, key=len)
             
         release_files = self.release_support_vectors.get('find_rel').execute()
         for path in release_files:
             with open(path) as f:
                 data = f.read()
                 rel = re_distroline.findall(data)
-                return max(rel, key=len)
+                if rel: return max(rel, key=len)
             
         issue_files = self.release_support_vectors.get('find_issue').execute()
         for path in issue_files:
             with open(path) as f:
                 data = f.read()
                 rel = re_distroline.findall(data)
-                return max(rel, key=len) 
+                if rel: return max(rel, key=len) 
         
         return ''
 

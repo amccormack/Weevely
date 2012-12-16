@@ -10,13 +10,13 @@ class Name(ModuleProbeAll):
 
 
     def _set_vectors(self):
-        self.vectors.add_vector('php_recursive', 'shell.php', """@swp('$rpath','$mode','$string');
+        self.vectors.add_vector('php_recursive', 'shell.php', """swp('$rpath','$mode','$string',$recursion);
 function ckdir($df, $f) { return ($f!='.')&&($f!='..')&&@is_dir($df); }
 function match($f, $s, $m) { return preg_match(str_replace("%%STRING%%",$s,$m),$f); }
-function swp($d, $m, $s){ $h = @opendir($d);
-while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,$m)) print($df."\n"); if(@ckdir($df,$f)) @swp($df, $m, $s); }
+function swp($d, $m, $s,$r){ $h = @opendir($d);
+while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,$m)) print($df."\n"); if(@ckdir($df,$f)&&$r) @swp($df, $m, $s, $r); }
 @closedir($h); }""")
-        self.vectors.add_vector("find" , 'shell.sh', "find $rpath $mode \"$string\" 2>/dev/null")
+        self.vectors.add_vector("find" , 'shell.sh', "find $rpath $recursion $mode \"$string\" 2>/dev/null")
     
     def _set_args(self):
         self.argparser.add_argument('string', help='String to match')
@@ -24,6 +24,7 @@ while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,
         self.argparser.add_argument('-equal', help='Match if name is exactly equal (default: match if contains)', action='store_true', default=False)
         self.argparser.add_argument('-case', help='Case sensitive match (default: insenstive)', action='store_true', default=False)
         self.argparser.add_argument('-vector', choices = self.vectors.keys())
+        self.argparser.add_argument('-no-recursion', help='Do not descend into subfolders', action='store_true', default=False)
 
 
     def _prepare_vector(self):
@@ -41,6 +42,11 @@ while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,
                 self.args_formats['mode'] = '-iname'
             else:
                 self.args_formats['mode'] = '-name'
+                
+            if self.args['no_recursion']:
+                self.args_formats['recursion'] = '-maxdepth 1'
+            else:
+                self.args_formats['recursion'] = ''
 
         elif self.current_vector.name == 'php_recursive':
             
@@ -53,6 +59,13 @@ while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,
                 
             if not self.args['case']:
                 self.args_formats['mode'] += 'i'
+                
+            
+            if self.args['no_recursion']:
+                self.args_formats['recursion'] = 'False'
+            else:
+                self.args_formats['recursion'] = 'True'
+                
 
             
     def _output_result(self):

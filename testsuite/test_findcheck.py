@@ -85,6 +85,14 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.name ile-1.txt -equal')), [''])   
         self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2 -equal')), [''])   
         self.assertEqual(sorted(self._res(':find.name 2.txt -rpath /asdsad -equal')), [''])  
-        
-        
+
+        self.assertEqual(sorted(self._res(':find.name FILE- w1 -no-recursion')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name file- w1 -case -no-recursion')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name W[0-9] -no-recursion')),  ['./w1'])   
+        self.assertEqual(sorted(self._res(':find.name w[0-9] -case -no-recursion')), ['./w1'])       
+
+        self.assertEqual(sorted(self._res(':find.name FILE- w1 -no-recursion -vector find')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name file- w1 -case -no-recursion  -vector find')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name W[0-9] -no-recursion  -vector find')),  ['./w1'])   
+        self.assertEqual(sorted(self._res(':find.name w[0-9] -case -no-recursion  -vector find')), ['./w1'])           
         

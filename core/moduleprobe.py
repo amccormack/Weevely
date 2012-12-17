@@ -72,15 +72,19 @@ class ModuleProbe:
         
         return self._result, self._output
 
-    def mprint(self, str, msg_class = 3, module_name = None):
+    def mprint(self, msg, msg_class = 3, module_name = None):
         
         if not self.modhandler.verbosity or msg_class <= self.modhandler.verbosity[-1]:
-            if not module_name:
-                module_name = self.name
+            if module_name == None:
+                module_str = '[%s] ' % self.name
+            elif module_name == '':
+                module_str = ''
+            else:
+                module_str = '[%s] ' % module_name
                 
-            print '[%s] %s' % (module_name, str)
+            print module_str + str(msg)
         
-            self.modhandler._last_warns += str + linesep
+            self.modhandler._last_warns += msg + linesep
             
 
     def _init_module(self):

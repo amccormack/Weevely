@@ -72,4 +72,4 @@ while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,
         
         # Listify output, to advantage other modules 
         self._output = self._result
-        self._result = self._result.split('\n')
+        self._result = self._result.split('\n') if self._result else []

@@ -51,11 +51,11 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
 
 
-        self.assertEqual(sorted(self._outp(':find.perms -no-recursion').split('\n')), sorted_files_and_folders[:2])
-        self.assertEqual(sorted(self._outp(':find.perms -vector find -no-recursion').split('\n')), sorted_files_and_folders[:2])
-        self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -no-recursion').split('\n')), sorted_files_and_folders[:2])
-        self.assertEqual(sorted(self._outp(':find.perms -vector find -type f -no-recursion').split('\n')), [''])
-        self.assertEqual(sorted(self._outp(':find.perms -vector find -type d -no-recursion').split('\n')), sorted_folders[:2])
+        self.assertEqual(sorted(self._res(':find.perms -no-recursion')), sorted_files_and_folders[:2])
+        self.assertEqual(sorted(self._res(':find.perms -vector find -no-recursion')), sorted_files_and_folders[:2])
+        self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -no-recursion')), sorted_files_and_folders[:2])
+        self.assertEqual(sorted(self._res(':find.perms -vector find -type f -no-recursion')), [])
+        self.assertEqual(sorted(self._res(':find.perms -vector find -type d -no-recursion')), sorted_folders[:2])
 
 
     
@@ -88,11 +88,11 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.name file-1.txt -equal -vector find')), ['./w1/file-1.txt'])   
         self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2 -vector find')), ['./w1/w2/file-2.txt'])   
         
-        self.assertEqual(sorted(self._res(':find.name fIle- -case')), [''])
-        self.assertEqual(sorted(self._res(':find.name W[0-9] -case')), [''])
-        self.assertEqual(sorted(self._res(':find.name ile-1.txt -equal')), [''])   
-        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2 -equal')), [''])   
-        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath /asdsad -equal')), [''])  
+        self.assertEqual(sorted(self._res(':find.name fIle- -case')), [])
+        self.assertEqual(sorted(self._res(':find.name W[0-9] -case')), [])
+        self.assertEqual(sorted(self._res(':find.name ile-1.txt -equal')), [])   
+        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2 -equal')), [])   
+        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath /asdsad -equal')), [])  
 
         self.assertEqual(sorted(self._res(':find.name FILE- w1 -no-recursion')), ['w1/file-1.txt'])
         self.assertEqual(sorted(self._res(':find.name file- w1 -case -no-recursion')), ['w1/file-1.txt'])

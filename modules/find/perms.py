@@ -79,4 +79,4 @@ if(($f!='.')&&($f!='..')&&cktp($df,'d')&&$r){@swp($fdir, $df, $t, $a, $q,$r);}
         
         # Listify output, to advantage other modules 
         self._output = self._result
-        self._result = self._result.split('\n')
+        self._result = self._result.split('\n') if self._result else []

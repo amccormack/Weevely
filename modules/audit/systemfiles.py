@@ -14,6 +14,7 @@ class Systemfiles(ModuleProbe):
         self.support_vectors.add_vector('findnorecurs', 'find.perms', ["$path", "$mode", "-no-recursion"])
         self.support_vectors.add_vector('findfiles', 'find.perms', ["$path", "$mode", "-no-recursion", "$recurs", "-type", "f"])
         self.support_vectors.add_vector('users', 'audit.etcpasswd', ["-real"])
+        self.support_vectors.add_vector('check', 'file.check', ["$path", "$attr"])
     
     def _set_args(self):
         self.argparser.add_argument('-etc-writable', action='store_false', default=True)
@@ -21,6 +22,7 @@ class Systemfiles(ModuleProbe):
         self.argparser.add_argument('-homes', action='store_false', default=True)
         self.argparser.add_argument('-logs', action='store_false', default=True)
         self.argparser.add_argument('-binaries', action='store_false', default=True)
+        self.argparser.add_argument('-root', action='store_false', default=True)
 
     def __etc_writable(self):
         result = self.support_vectors.get('find').execute({'path' : '/etc/', 'mode' : '-writable' })   
@@ -44,22 +46,20 @@ class Systemfiles(ModuleProbe):
         dict_result = {}
         
         result = self.support_vectors.get('findnorecurs').execute({'path' : '/home/', 'mode' : '-writable'})  
-        self.mprint('Writable folders in \'/home/\' ..')
+        result += ['/root'] if self.support_vectors.get('check').execute({'path' : '/root', 'attr' : 'write' }) else []
+        self.mprint('Writable folders in \'/home/*\', \'/root/\' ..')
         if result: 
             self.mprint('\n'.join(result), module_name='')  
             dict_result.update({'home_writable': result })
             
-        result = self.support_vectors.get('findnorecurs').execute({'path' : '/home/', 'mode' : '-executable' })   
-        self.mprint('Browsable folders in \'/home/\' ..')
+        result = self.support_vectors.get('findnorecurs').execute({'path' : '/home/', 'mode' : '-executable' })  
+        result += ['/root'] if self.support_vectors.get('check').execute({'path' : '/root', 'attr' : 'exec' }) else [] 
+        self.mprint('Browsable folders \'/home/*\', \'/root/\' ..')
         if result: 
             self.mprint('\n'.join(result), module_name='')  
             dict_result.update({'home_executable': result })
+
         
-        result = self.support_vectors.get('findnorecurs').execute({'path' : '/', 'mode' : '-writable' })   
-        self.mprint('Writable folders in \'/\' ..')
-        if result: 
-            self.mprint('\n'.join(result), module_name='')  
-            dict_result.update({'root_executable': result })
         
         return dict_result
         
@@ -86,6 +86,16 @@ class Systemfiles(ModuleProbe):
                 dict_result.update({ '%s_writable' % path : result })
                 
         return dict_result
+        
+    def __root(self):
+        
+        result = self.support_vectors.get('findnorecurs').execute({'path' : '/', 'mode' : '-writable' })  
+        self.mprint('Writable folders in \'/\' ..')
+        if result: 
+            self.mprint('\n'.join(result), module_name='')  
+            return { 'root_writable' : result }
+        else:
+            return {}
             
     def _probe(self):
         
@@ -105,7 +115,9 @@ class Systemfiles(ModuleProbe):
             
         if self.args['binaries']:
             self._result.update(self.__bins())              
-               
+
+        if self.args['root']:
+            self._result.update(self.__root())                        
    
     def _output_result(self):
        pass

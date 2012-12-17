@@ -61,11 +61,11 @@ class FSFindCheck(FolderFileFSTestCase):
     
     def test_suidsgid(self):
         result = self._res(':find.suidsgid -suid -rpath /usr/bin')
-        self.assertEqual('/usr/bin/sudo' in result and not '/usr/bin/wall' in result , True)
+        self.assertTrue('/usr/bin/sudo' in result and not '/usr/bin/wall' in result)
         result = self._res(':find.suidsgid -sgid -rpath /usr/bin')
-        self.assertEqual('/usr/bin/sudo' not in result and '/usr/bin/wall' in result , True)
+        self.assertTrue('/usr/bin/sudo' not in result and '/usr/bin/wall' in result)
         result = self._res(':find.suidsgid -rpath /usr/bin')
-        self.assertEqual('/usr/bin/sudo' in result and '/usr/bin/wall' in result , True)
+        self.assertTrue('/usr/bin/sudo' in result and '/usr/bin/wall' in result)
 
 
     def test_name(self):

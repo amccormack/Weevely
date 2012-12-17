@@ -23,7 +23,10 @@ class Suidsgid(ModuleProbe):
         else:
             self.args['perm'] = '-perm -04000 -o -perm -02000'
             
-        result = self.support_vectors.get('find').execute(self.args)
-        if result:
-            self._result = result
-            
+        self._result = self.support_vectors.get('find').execute(self.args)
+        
+    def _output_result(self):
+        
+        # Listify output, to advantage other modules 
+        self._output = self._result
+        self._result = self._result.split('\n') if self._result else []

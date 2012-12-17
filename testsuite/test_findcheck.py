@@ -50,6 +50,14 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertNotRegexpMatches(self._outp(':find.perms %s -vector php_recursive -writable' % self.dirs[3]), self.filenames[3])
         self.assertRegexpMatches(self._outp(':find.perms %s -vector php_recursive -readable' % self.dirs[3]), self.filenames[3])
 
+
+        self.assertEqual(sorted(self._outp(':find.perms -no-recursion').split('\n')), sorted_files_and_folders[:2])
+        self.assertEqual(sorted(self._outp(':find.perms -vector find -no-recursion').split('\n')), sorted_files_and_folders[:2])
+        self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -no-recursion').split('\n')), sorted_files_and_folders[:2])
+        self.assertEqual(sorted(self._outp(':find.perms -vector find -type f -no-recursion').split('\n')), [''])
+        self.assertEqual(sorted(self._outp(':find.perms -vector find -type d -no-recursion').split('\n')), sorted_folders[:2])
+
+
     
     def test_suidsgid(self):
         result = self._res(':find.suidsgid -suid -rpath /usr/bin')
@@ -95,4 +103,5 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.name file- w1 -case -no-recursion  -vector find')), ['w1/file-1.txt'])
         self.assertEqual(sorted(self._res(':find.name W[0-9] -no-recursion  -vector find')),  ['./w1'])   
         self.assertEqual(sorted(self._res(':find.name w[0-9] -case -no-recursion  -vector find')), ['./w1'])           
+        
         

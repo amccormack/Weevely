@@ -67,12 +67,10 @@ class FSFindCheck(FolderFileFSTestCase):
         sorted_files_and_folders = sorted(sorted_files + sorted_folders)
 
         self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)
-        self.assertEqual(sorted(self._res(':find.perms -vector php_recursive ')), sorted(self._res(':find.perms -vector find')))
+        self.assertEqual(sorted(self._res(':find.perms -vector php_recursive')), sorted(self._res(':find.perms -vector find')))
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -writable')), sorted(self._res(':find.perms -vector find -writable')))
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -readable')), sorted(self._res(':find.perms -vector find -readable')))
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -executable')), sorted(self._res(':find.perms -vector find -executable')))
-
-        print sorted(self._res(':find.perms /var/log/ -vector php_recursive '))[:10], sorted(self._res(':find.perms /var/log/ -vector find'))[:10]
 
         self.assertEqual(sorted(self._res(':find.perms /var/log/ -vector php_recursive ')), sorted(self._res(':find.perms /var/log/ -vector find')))
         self.assertEqual(sorted(self._res(':find.perms /var/log/ -vector php_recursive -writable')), sorted(self._res(':find.perms /var/log/ -vector find -writable')))

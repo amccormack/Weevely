@@ -17,8 +17,8 @@ function ckattr($df, $a) { $w=strstr($a,"w");$r=strstr($a,"r");$x=strstr($a,"x")
 function cktp($df, $t) { return ($t==''||($t=='f'&&@is_file($df))||($t=='d'&&@is_dir($df))); }
 function swp($fdir, $d, $t, $a, $q,$r){ 
 if($d==$fdir && ckprint($d,$t,$a) && ($q!="")) return; 
-$h=@opendir($d); while ($f = @readdir($h)) {
-$df=join('/', array(trim($d, '/'), trim($f, '/')));
+$h=@opendir($d); while ($f = @readdir($h)) { if(substr($fdir,0,1)=='/') { $df='/'; } else { $df=''; }
+$df.=join('/', array(trim($d, '/'), trim($f, '/')));
 if(($f!='.')&&($f!='..')&&ckprint($df,$t,$a) && ($q!="")) return;
 if(($f!='.')&&($f!='..')&&cktp($df,'d')&&$r){@swp($fdir, $df, $t, $a, $q,$r);}
 } closedir($h); }""")

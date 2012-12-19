@@ -1,4 +1,4 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
@@ -6,7 +6,7 @@ from core.utils import join_abs_paths
 import os
 
 
-class Userfiles(ModuleProbe):
+class Userfiles(Module):
     '''Enumerate common users restricted files'''
 
 

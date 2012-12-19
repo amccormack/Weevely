@@ -1,4 +1,4 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ProbeException, ProbeSucceed
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval

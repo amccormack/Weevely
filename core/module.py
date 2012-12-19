@@ -8,7 +8,7 @@ from core.vector import VectorsDict
 from os import linesep
 
 
-class ModuleProbe:
+class Module:
     '''Generic class Module to inherit'''
 
     # self.args: variables related to current execution

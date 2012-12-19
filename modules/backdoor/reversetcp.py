@@ -1,4 +1,4 @@
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from urlparse import urlparse
@@ -85,7 +85,7 @@ class TcpServer:
                 
         
 
-class Reversetcp(ModuleProbeAll):
+class Reversetcp(ModuleGuess):
     '''Send reverse TCP shell'''
 
     def _set_vectors(self):

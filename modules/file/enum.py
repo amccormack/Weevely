@@ -1,4 +1,4 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
@@ -6,7 +6,7 @@ from core.prettytable import PrettyTable
 import os
 
 
-class Enum(ModuleProbe):
+class Enum(Module):
     '''Check remote files type, md5 and permission'''
 
     def _set_vectors(self):

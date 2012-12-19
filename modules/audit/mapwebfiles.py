@@ -1,4 +1,4 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from external.crawler import Crawler
@@ -12,7 +12,7 @@ WARN_CRAWLER_NO_URLS = "No sub URLs crawled. Check URL."
 WARN_NOT_URL = 'Not a valid URL'
 
 
-class Mapwebfiles(ModuleProbe):
+class Mapwebfiles(Module):
     '''Enumerate webroot files properties '''
 
 

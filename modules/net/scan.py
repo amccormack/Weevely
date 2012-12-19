@@ -1,5 +1,5 @@
 
-from core.moduleprobeall import ModuleProbe
+from core.moduleguess import Module
 from core.moduleexception import ModuleException, ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork
@@ -11,7 +11,7 @@ from base64 import b64encode
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 WARN_INVALID_SCAN = 'Invalid scan range, check syntax'
 
-class Scan(ModuleProbe):
+class Scan(Module):
     '''Print interface addresses'''
     
     def _set_vectors(self):

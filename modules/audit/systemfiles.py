@@ -1,4 +1,4 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
@@ -7,7 +7,7 @@ from re import compile
 import os
 
 
-class Systemfiles(ModuleProbe):
+class Systemfiles(Module):
     '''Enumerate system files permissions'''
 
     def _set_vectors(self):

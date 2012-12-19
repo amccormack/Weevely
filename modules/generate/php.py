@@ -4,14 +4,14 @@ Created on 22/ago/2011
 @author: norby
 '''
 
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ModuleException
 from core.backdoor import Backdoor
 
 
 WARN_WRITING_DATA = 'Writing data'
 
-class Php(ModuleProbe):
+class Php(Module):
     """Generate obfuscated PHP backdoor"""
 
     def _set_args(self):

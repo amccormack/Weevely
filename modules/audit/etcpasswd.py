@@ -1,4 +1,4 @@
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import ProbeException, ProbeSucceed, ExecutionException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
@@ -19,7 +19,7 @@ class User:
              self.home = linesplit[5]
              self.shell = linesplit[6]
 
-class Etcpasswd(ModuleProbeAll):
+class Etcpasswd(ModuleGuess):
     """Enumerate users and /etc/passwd content"""
 
 

@@ -1,4 +1,4 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ProbeException, ProbeSucceed
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
@@ -13,7 +13,7 @@ WARN_BACKUP_FAILED = 'Backup version copy failed'
 WARN_UPLOAD_FAILED = 'Edit failed, check path and writing permission of'
 WARN_EDIT_FAILED = 'Edit failed, temporary file not found'
 
-class Edit(ModuleProbe):
+class Edit(Module):
     '''Edit remote file'''
 
 

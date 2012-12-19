@@ -3,7 +3,7 @@ Created on 23/set/2011
 
 @author: norby
 '''
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from modules.file.upload import Upload
 from core.moduleexception import  ModuleException, ExecutionException, ProbeException, ProbeSucceed
 from core.http.cmdrequest import CmdRequest, NoDataException

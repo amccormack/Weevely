@@ -4,7 +4,7 @@ Created on 22/ago/2011
 @author: norby
 '''
 
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ModuleException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from core.vector import VectorsDict
@@ -16,7 +16,7 @@ from re import compile
 re_lsb_release = compile('Description:[ \t]+(.+)')
 re_etc_lsb_release = compile('(?:DISTRIB_DESCRIPTION|PRETTY_NAME)="(.+)"')
 
-class Info(ModuleProbe):
+class Info(Module):
     """Collect system informations"""
 
     def _set_vectors(self):

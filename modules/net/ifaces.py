@@ -1,5 +1,5 @@
 
-from core.moduleprobeall import ModuleProbe
+from core.moduleguess import Module
 from core.moduleexception import ModuleException, ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork
@@ -8,7 +8,7 @@ import re
 WARN_NO_OUTPUT = 'No execution output'
 WARN_NO_IFACES = 'No interfaces address found'
 
-class Ifaces(ModuleProbe):
+class Ifaces(Module):
     '''Print interface addresses'''
     
     

@@ -1,11 +1,11 @@
 
 
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException, ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 
-class Name(ModuleProbeAll):
+class Name(ModuleGuess):
     '''Find files with matching name'''
 
 

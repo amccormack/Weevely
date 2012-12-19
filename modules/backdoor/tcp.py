@@ -1,4 +1,4 @@
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from urlparse import urlparse
@@ -7,7 +7,7 @@ from telnetlib import Telnet
 from time import sleep
         
 
-class Tcp(ModuleProbeAll):
+class Tcp(ModuleGuess):
     '''Open a shell on TCP port'''
 
 

@@ -1,8 +1,8 @@
-from core.moduleprobeall import ModuleProbe
+from core.moduleguess import Module
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 
-class Suidsgid(ModuleProbe):
+class Suidsgid(Module):
     '''Find files with superuser flags'''
     def _set_vectors(self):
         self.support_vectors.add_vector( "find" , 'shell.sh', "find $rpath $perm 2>/dev/null")

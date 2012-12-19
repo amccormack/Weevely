@@ -3,7 +3,7 @@ Created on 24/ago/2011
 
 @author: norby
 '''
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import  ModuleException, ExecutionException, ProbeException, ProbeSucceed
 from core.http.request import Request
 from base64 import b64decode
@@ -14,7 +14,7 @@ import os
 
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 
-class Download(ModuleProbeAll):
+class Download(ModuleGuess):
     '''Download binary/ascii files from target filesystem'''
 
     def _set_vectors(self):

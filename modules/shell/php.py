@@ -4,7 +4,7 @@ Created on 22/ago/2011
 @author: norby
 '''
 
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
 from core.http.cmdrequest import CmdRequest, NoDataException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
@@ -25,7 +25,7 @@ MSG_PHP_INTERPRETER_SUCCEED = 'PHP and Shell interpreters load succeed'
 WARN_LS_FAIL = 'listing failed, no such file or directory or permission denied'
 WARN_LS_ARGS = 'Error, PHP shell \'ls\' replacement supports only one <path> argument'
 
-class Php(ModuleProbe):
+class Php(Module):
     '''PHP shell'''
 
     mode_choices = ['Cookie', 'Referer' ]
@@ -47,7 +47,7 @@ class Php(ModuleProbe):
 
     def _check_args(self, args):
         
-        ModuleProbe._check_args(self,args)
+        Module._check_args(self,args)
         
         # Set proxy 
         if self.args['proxy']:

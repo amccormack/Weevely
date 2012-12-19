@@ -1,4 +1,4 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ProbeException, ProbeSucceed
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from ast import literal_eval
@@ -23,7 +23,7 @@ def uniq(seq):
     seen_add = seen.add
     return [ x for x in seq if x not in seen and not seen_add(x)]
 
-class Sql(ModuleProbe):
+class Sql(Module):
     """Bruteforce SQL username"""
     
 

@@ -1,4 +1,4 @@
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import ProbeException, ProbeSucceed
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 
@@ -85,7 +85,7 @@ WARN_DUMP_SAVED = 'Dump file saved'
 WARN_DUMP_INCOMPLETE = 'Dump seems incorrect, saving anyway for debug purposes'
 WARN_NO_DUMP = 'Dump failed, check credentials and dbms informations'
 
-class Dump(ModuleProbeAll):
+class Dump(ModuleGuess):
     '''Get SQL database dump'''
 
     def _set_vectors(self):

@@ -1,7 +1,7 @@
-from core.moduleprobe import ModuleProbe
+from core.module import Module
 from core.moduleexception import ModuleException, ProbeException, ExecutionException, ProbeSucceed
 
-class ModuleProbeAll(ModuleProbe):
+class ModuleGuess(Module):
 
 
     # self.args: variables related to current execution
@@ -12,7 +12,7 @@ class ModuleProbeAll(ModuleProbe):
     # self.current_vector effective current vector object
 
     def _init_module(self):
-        ModuleProbe._init_module(self)
+        Module._init_module(self)
         self.current_vector = None
         
         

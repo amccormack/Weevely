@@ -1,7 +1,7 @@
 from modules.file.download import Download
 from tempfile import NamedTemporaryFile
 from core.savedargparse import SavedArgumentParser as ArgumentParser
-from core.moduleprobeall import ModuleProbe
+from core.moduleguess import Module
 
 class Read(Download):
     '''Read files from target filesystem'''
@@ -21,4 +21,4 @@ class Read(Download):
         return Download._verify_execution(self)
     
     def _output_result(self):
-        return ModuleProbe._output_result(self)
+        return Module._output_result(self)

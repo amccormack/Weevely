@@ -1,4 +1,4 @@
-from core.moduleprobeall import ModuleProbe
+from core.moduleguess import Module
 from core.moduleexception import ModuleException, ProbeException
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 import re
@@ -7,7 +7,7 @@ WARN_NO_DATA = 'No data returned'
 WARN_CHECK_CRED = 'check credentials and dbms availability'
 WARN_FALLBACK = 'bad credentials, falling back to default ones'
 
-class Console(ModuleProbe):
+class Console(Module):
     '''Execute SQL queries'''
     
     def _set_vectors(self):

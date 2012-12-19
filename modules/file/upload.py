@@ -4,7 +4,7 @@ Created on 23/set/2011
 @author: norby
 '''
 
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.moduleexception import  ModuleException, ExecutionException, ProbeException, ProbeSucceed
 from core.http.cmdrequest import CmdRequest, NoDataException
 from random import choice
@@ -20,7 +20,7 @@ WARN_MD5_MISMATCH = 'MD5 hash mismatch'
 WARN_UPLOAD_FAIL = 'Upload fail, check path and permission'
 
 
-class Upload(ModuleProbeAll):
+class Upload(ModuleGuess):
     '''Upload binary/ascii file to the target filesystem'''
 
     def _set_vectors(self):

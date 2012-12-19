@@ -4,7 +4,7 @@ Created on 22/ago/2011
 @author: norby
 '''
 from core.moduleexception import ModuleException, ProbeException, ExecutionException, ProbeSucceed
-from core.moduleprobeall import ModuleProbeAll
+from core.moduleguess import ModuleGuess
 from core.savedargparse import SavedArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 import random
@@ -12,7 +12,7 @@ import random
 MSG_SH_INTERPRETER_SUCCEED = 'Shell interpreter load succeed'
 WARN_SH_INTERPRETER_FAIL = 'Shell interpreters load failed'
 
-class Sh(ModuleProbeAll):
+class Sh(ModuleGuess):
     '''System shell'''
 
     def _set_vectors(self):

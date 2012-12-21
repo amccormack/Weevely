@@ -33,7 +33,7 @@ class Tcp(ModuleGuess):
         sleep(1)
         
     
-    def _verify_execution(self):
+    def _verify_vector_execution(self):
         
         if not self.args['no_connect']:
             

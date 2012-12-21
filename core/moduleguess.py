@@ -27,7 +27,7 @@ class ModuleGuess(Module):
     def _execute_vector(self):
         self._result = self.current_vector.execute( self.args_formats)
     
-    def _verify_execution(self):
+    def _verify_vector_execution(self):
         # If self._result is set. False is probably a good return value.
         if self._result or self._result == False:
             raise ProbeSucceed(self.name,'Command succeeded')
@@ -54,7 +54,7 @@ class ModuleGuess(Module):
                     self.__init_vector_variables(vector)
                     self._prepare_vector()
                     self._execute_vector()
-                    self._verify_execution()
+                    self._verify_vector_execution()
                     
                 except ExecutionException:
                     pass

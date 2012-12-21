@@ -35,7 +35,7 @@ class Etcpasswd(ModuleGuess):
         self.argparser.add_argument('-vector', choices = self.vectors.keys())
         
 
-    def __verify_execution(self):
+    def __verify_vector_execution(self):
 
 
         pwdfile = ''

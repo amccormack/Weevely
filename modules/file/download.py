@@ -88,7 +88,7 @@ class Download(ModuleGuess):
                 raise ExecutionException(self.current_vector.name,"Error, unexpected file content")
 
 
-    def _verify_execution(self):
+    def _verify_vector_execution(self):
 
         remote_path = self.args['rpath']
         local_path = self.args['lpath']

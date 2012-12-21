@@ -109,7 +109,7 @@ class Dump(ModuleGuess):
             self.args['table'] = ''
         self.args_formats = self.args.copy()
         
-    def _verify_execution(self):
+    def _verify_vector_execution(self):
         if self._result and '-- Dumping data for table' in self._result:
             raise ProbeSucceed(self.name,'Dumped')
             

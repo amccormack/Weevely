@@ -67,7 +67,7 @@ class Rm(ModuleGuess):
             self.args_formats['recursive'] = '1' if self.args['recursive'] else ''
             
             
-    def _verify_execution(self):
+    def _verify_vector_execution(self):
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
         result = self.modhandler.load('file.check')._result
         

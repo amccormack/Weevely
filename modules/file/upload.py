@@ -80,7 +80,7 @@ class Upload(ModuleGuess):
             
             i+=1
 
-    def _verify_execution(self):
+    def _verify_vector_execution(self):
     
         if self.support_vectors.get('check_exists').execute({'rpath' : self.args['rpath']}):
             if self.support_vectors.get('md5').execute({'rpath' : self.args['rpath']}) == self.args['content_md5']:

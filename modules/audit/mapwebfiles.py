@@ -13,8 +13,7 @@ WARN_NOT_URL = 'Not a valid URL'
 
 
 class Mapwebfiles(Module):
-    '''Enumerate webroot files properties '''
-
+    '''Crawl and enumerate web folders files permissions'''
 
 
     def _set_vectors(self):
@@ -24,7 +23,7 @@ class Mapwebfiles(Module):
         self.argparser.add_argument('url', help='HTTP URL where start crawling (es. http://host/path/page.html)')
         self.argparser.add_argument('baseurl', help='HTTP base url (es. http://host/path/)')
         self.argparser.add_argument('rpath', help='Remote web root corresponding to crawled path (es. /var/www/path)', type=str)
-        self.argparser.add_argument('-deep', help='Crawl deepness', type=int, default=3)
+        self.argparser.add_argument('-depth', help='Crawl depth', type=int, default=3)
 
 
     def _prepare(self):
@@ -41,7 +40,7 @@ class Mapwebfiles(Module):
         urls = []
     
         try:
-            crawler = Crawler(url, self.args['deep'], '', '')
+            crawler = Crawler(url, self.args['depth'], '', '')
             crawler.crawl()
         except Exception, e:
             raise ProbeException(self.name, "%s: %s" % (ERR_CRAWLER_EXCEPT, str(e)))

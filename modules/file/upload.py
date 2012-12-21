@@ -21,7 +21,7 @@ WARN_UPLOAD_FAIL = 'Upload fail, check path and permission'
 
 
 class Upload(ModuleGuess):
-    '''Upload binary/ascii file to the target filesystem'''
+    '''Upload binary/ascii file into target filesystem'''
 
     def _set_vectors(self):
         self.vectors.add_vector('file_put_contents', 'shell.php', [ "file_put_contents('$rpath', base64_decode($_POST['$post_field']), FILE_APPEND);", "-post", "{\'$post_field\' : \'$data\' }" ])

@@ -7,7 +7,7 @@ import os
 
 
 class Enum(Module):
-    '''Check remote files type, md5 and permission'''
+    '''Enumerate remote paths'''
 
     def _set_vectors(self):
         self.support_vectors.add_vector('getperms','shell.php',  "$f='$rpath'; if(file_exists($f)) { print('e'); if(is_readable($f)) print('r'); if(is_writable($f)) print('w'); if(is_executable($f)) print('x'); }")

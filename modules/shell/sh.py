@@ -13,7 +13,7 @@ MSG_SH_INTERPRETER_SUCCEED = 'Shell interpreter load succeed'
 WARN_SH_INTERPRETER_FAIL = 'Shell interpreters load failed'
 
 class Sh(ModuleGuess):
-    '''System shell'''
+    '''Execute system shell command'''
 
     def _set_vectors(self):
         self.vectors.add_vector("system", 'shell.php', "system('$cmd$stderr');")

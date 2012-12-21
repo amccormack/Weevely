@@ -8,7 +8,7 @@ WARN_CHECK_CRED = 'check credentials and dbms availability'
 WARN_FALLBACK = 'bad credentials, falling back to default ones'
 
 class Console(Module):
-    '''Execute SQL queries'''
+    '''Run SQL console and single queries'''
     
     def _set_vectors(self):
         

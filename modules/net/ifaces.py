@@ -9,7 +9,7 @@ WARN_NO_OUTPUT = 'No execution output'
 WARN_NO_IFACES = 'No interfaces address found'
 
 class Ifaces(Module):
-    '''Print interface addresses'''
+    '''Print interfaces addresses'''
     
     
     def _set_vectors(self):

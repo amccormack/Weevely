@@ -4,7 +4,7 @@ from core.savedargparse import SavedArgumentParser as ArgumentParser
 from core.moduleguess import Module
 
 class Read(Download):
-    '''Read files from target filesystem'''
+    '''Read remote file'''
 
 
     def _set_args(self):

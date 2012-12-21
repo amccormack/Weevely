@@ -26,7 +26,7 @@ WARN_LS_FAIL = 'listing failed, no such file or directory or permission denied'
 WARN_LS_ARGS = 'Error, PHP shell \'ls\' replacement supports only one <path> argument'
 
 class Php(Module):
-    '''PHP shell'''
+    '''Execute PHP statement'''
 
     mode_choices = ['Cookie', 'Referer' ]
 

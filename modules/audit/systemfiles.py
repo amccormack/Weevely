@@ -8,7 +8,7 @@ import os
 
 
 class Systemfiles(Module):
-    '''Enumerate system files permissions'''
+    '''Find wrong system files permissions'''
 
     def _set_vectors(self):
         self.support_vectors.add_vector('find', 'find.perms', ["$path", "$mode"])

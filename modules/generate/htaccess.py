@@ -17,7 +17,7 @@ AddType application/x-httpd-php .htaccess
 '''
 
 class Htaccess(Phpgenerator):
-    """Generate backdoored .htaccess."""
+    """Generate backdoored .htaccess"""
 
     def _set_args(self):
         self.argparser.add_argument('pass', help='Password')

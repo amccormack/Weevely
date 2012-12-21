@@ -27,7 +27,7 @@ class Mapwebfiles(Module):
         self.argparser.add_argument('-deep', help='Crawl deepness', type=int, default=3)
 
 
-    def _prepare_probe(self):
+    def _prepare(self):
     
         if not url_validator.match(self.args['url']):
             raise ProbeException(self.name, '\'%s\': %s' % (self.args['url'], WARN_NOT_URL) )

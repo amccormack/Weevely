@@ -57,7 +57,7 @@ class Php(Module):
             self.args['proxy'] = {}        
         
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         # Slacky backdoor validation. 
         # Avoid probing (and storing) if mode is specified by user

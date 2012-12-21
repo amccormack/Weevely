@@ -49,7 +49,7 @@ class Rm(ModuleGuess):
         self.argparser.add_argument('-vector', choices = self.vectors.keys())
 
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         self._result = False
         self.modhandler.load('file.check').run([ self.args['rpath'], 'exists' ])
@@ -75,7 +75,7 @@ class Rm(ModuleGuess):
             self._result = True
             raise ProbeSucceed(self.name, WARN_DELETE_OK)
         
-    def _verify_probe(self):
+    def _verify(self):
         raise ProbeException(self.name, WARN_DELETE_FAIL)
     
     def _output_result(self):

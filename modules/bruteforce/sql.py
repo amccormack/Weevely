@@ -58,7 +58,7 @@ class Sql(Module):
 
         
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         
         # Check chunk size

@@ -52,9 +52,9 @@ class Module:
 
         try:
             self._check_args(arglist)
-            self._prepare_probe()
+            self._prepare()
             self._probe()
-            self._verify_probe()
+            self._verify()
         except ProbeException, e:
             self.mprint('[!] Error: %s' % (e.error), 2, e.module) 
         except ProbeSucceed, e:
@@ -99,10 +99,10 @@ class Module:
         self.args = vars(parsed_namespace)
         
 
-    def _prepare_probe(self):
+    def _prepare(self):
         pass
     
-    def _verify_probe(self):
+    def _verify(self):
         pass    
 
     def _probe(self):

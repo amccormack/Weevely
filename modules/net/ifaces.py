@@ -41,7 +41,7 @@ class Ifaces(Module):
                     raise ProbeException(self.name, '\'%s\' %s' % (path, WARN_NO_OUTPUT))      
                 
                 
-    def _verify_probe(self):
+    def _verify(self):
         if not self._result:
             raise ProbeException(self.name, WARN_NO_IFACES)    
                 

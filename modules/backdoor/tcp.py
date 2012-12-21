@@ -25,7 +25,7 @@ class Tcp(ModuleGuess):
         self.argparser.add_argument('-vector', choices = self.vectors.keys())
         self.argparser.add_argument('-no-connect', help='Skip autoconnect', action='store_true')
 
-    def _prepare_probe(self):
+    def _prepare(self):
         self._result = ''
         
     def _execute_vector(self):

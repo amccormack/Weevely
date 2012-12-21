@@ -53,7 +53,7 @@ class Img(Module):
         if status == 0 and 'TEST OK' in output: return True
         return False
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         if not path.isfile(self.args['img']):
             raise ModuleException(self.name, "'%s' %s" % (self.args['img'], WARN_IMG_NOT_FOUND))

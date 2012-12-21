@@ -36,7 +36,7 @@ class Download(ModuleGuess):
         self.argparser.add_argument('lpath')
         self.argparser.add_argument('-vector', choices = self.vectors.keys())
         
-    def _prepare_probe(self):
+    def _prepare(self):
         self.transfer_dir = None
         self.lastreadfile = ''
 

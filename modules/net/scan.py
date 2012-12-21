@@ -36,7 +36,7 @@ class Scan(Module):
     
     
     
-    def _prepare_probe(self):
+    def _prepare(self):
         
         services_path = self._get_service_path()
         try:

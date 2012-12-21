@@ -21,7 +21,7 @@ class Phpproxy(Upload2web):
     def _get_proxy_path(self):
         return os.path.join(self.modhandler.path_modules, 'net', 'external', 'phpproxy.php')
     
-    def _prepare_probe(self):
+    def _prepare(self):
 
         proxy_path = self._get_proxy_path()
 
@@ -44,7 +44,7 @@ class Phpproxy(Upload2web):
             self.args['content'] = None
     
     
-        Upload2web._prepare_probe(self)
+        Upload2web._prepare(self)
     
     
     def _output_result(self):

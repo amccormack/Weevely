@@ -49,7 +49,7 @@ class Mount(Upload2web):
         
         self.support_vectors.add_vector("exists", 'file.check', "$rpath exists".split(' '))
         
-    def _prepare_probe(self):
+    def _prepare(self):
 
         self.__check_httpfs()
     
@@ -58,7 +58,7 @@ class Mount(Upload2web):
             
             self.__generate_httpfs()
                         
-            Upload2web._prepare_probe(self)
+            Upload2web._prepare(self)
 
         # If just mount, set remote url
         elif self.args['just_mount']:
@@ -103,10 +103,10 @@ class Mount(Upload2web):
                 raise ProbeException(self.name,'%s\nCOMMAND:\n$ %s\nOUTPUT:\n> %s\n%s' % (WARN_HTTPFS_RUN, cmd, output.replace('\n', '\n> '), WARN_HTTPFS_CHECK))
                     
 
-    def _verify_probe(self):
+    def _verify(self):
         # Verify Install
         if not self.args['umount_all'] and not self.args['just_mount']:
-            Upload2web._verify_probe(self)
+            Upload2web._verify(self)
               
     def _output_result(self):
 

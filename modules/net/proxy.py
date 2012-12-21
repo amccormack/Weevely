@@ -108,10 +108,10 @@ class Proxy(Phpproxy):
     def _get_proxy_path(self):
         return os.path.join(self.modhandler.path_modules, 'net', 'external', 'proxy.php')
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         if not self.args['just_run']:
-            Phpproxy._prepare_probe(self)
+            Phpproxy._prepare(self)
         else:
             if not url_validator.match(self.args['just_run']):
                 raise ProbeException(self.name, '\'%s\': %s' % (self.args['just_run'], WARN_NOT_URL) )
@@ -129,9 +129,9 @@ class Proxy(Phpproxy):
         if not self.args['just_install']:
             start_new_thread(self._run_proxy_server, (self.args['url'], self.args['lport'], self.args['lhost']))
 
-    def _verify_probe(self):
+    def _verify(self):
         if not self.args['just_run']:
-            Phpproxy._verify_probe(self)   
+            Phpproxy._verify(self)   
         else:
             # With just_run, suppose good result to correctly print output
             self._result = True

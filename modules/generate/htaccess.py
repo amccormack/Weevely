@@ -23,7 +23,7 @@ class Htaccess(Phpgenerator):
         self.argparser.add_argument('pass', help='Password')
         self.argparser.add_argument('lpath', help='Path of generated backdoor', default= '.htaccess', nargs='?')
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         self.args['encoded_backdoor'] = htaccess_template % Backdoor(self.args['pass']).backdoor.replace('\n', ' ')
 

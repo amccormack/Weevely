@@ -26,13 +26,13 @@ class Sqlusers(Sql):
         self.support_vectors.add_vector('users', 'audit.etcpasswd',  [])
 
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         users = self.support_vectors.get('users').execute()
         filtered_username_list = [u for u in users if 'sql' in u.lower() or 'sql' in users[u].descr.lower() or (users[u].uid == 0) or (users[u].uid > 999) or (('false' not in users[u].shell) and ('/home/' in users[u].home))  ]
         
         self.args['username_list'] = filtered_username_list
-        Sql._prepare_probe(self)
+        Sql._prepare(self)
               
     def _probe(self):
         

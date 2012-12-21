@@ -46,7 +46,7 @@ class Userfiles(Module):
 
                     }
 
-    def _prepare_probe(self):
+    def _prepare(self):
         
         self._result = {}
         

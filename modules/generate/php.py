@@ -18,7 +18,7 @@ class Php(Module):
         self.argparser.add_argument('pass', help='Password')
         self.argparser.add_argument('lpath', help='Path of generated backdoor', default= 'weevely.php', nargs='?')
 
-    def _prepare_probe(self):
+    def _prepare(self):
         self.args['encoded_backdoor'] = Backdoor(self.args['pass']).backdoor
 
     def _probe(self):

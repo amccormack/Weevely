@@ -63,7 +63,7 @@ class Upload(ModuleGuess):
             else:
                 self.support_vectors.get('rm').execute({'rpath' : self.args['rpath']})
                 
-    def _prepare_probe(self):
+    def _prepare(self):
 
         self._load_local_file()
         self._check_remote_file()
@@ -89,7 +89,7 @@ class Upload(ModuleGuess):
             else:
                 self.mprint('\'%s\' %s' % (self.args['rpath'], WARN_MD5_MISMATCH))
 
-    def _verify_probe(self):
+    def _verify(self):
         if not self.support_vectors.get('check_exists').execute({'rpath' : self.args['rpath']}):
             raise ProbeException(self.name, '\'%s\' %s' % (self.args['rpath'], WARN_UPLOAD_FAIL))
 

@@ -85,7 +85,7 @@ class Upload2web(Upload):
         self.support_vectors.add_vector('normalize', 'shell.php', 'print(realpath("$path"));')
 
     
-    def _prepare_probe(self):
+    def _prepare(self):
 
         Upload._load_local_file(self)
         

@@ -131,6 +131,6 @@ class Systemfiles(Module):
                 self._result.update(funct())
                          
        
-    def _output_result(self):
+    def _stringify_result(self):
        pass
                         

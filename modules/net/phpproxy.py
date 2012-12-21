@@ -47,9 +47,9 @@ class Phpproxy(Upload2web):
         Upload2web._prepare(self)
     
     
-    def _output_result(self):
+    def _stringify_result(self):
 
-        Upload2web._output_result(self)
+        Upload2web._stringify_result(self)
 
         sess_filename = os.path.join(*(self.args['rpath'].split('/')[:-1] + [ 'sess_*']))
         

@@ -43,7 +43,7 @@ class Enum(Module):
                 if 'w' in perms: self._result[entry][2] = 'writable'
                 if 'x' in perms: self._result[entry][3] = 'executable'
 
-    def _output_result(self):
+    def _stringify_result(self):
     
         table = PrettyTable(['']*5)
         table.align = 'l'

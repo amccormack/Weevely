@@ -119,7 +119,7 @@ class Download(ModuleGuess):
     
     
     
-    def _output_result(self):
+    def _stringify_result(self):
         # Not convert self._result to self._output (no output prints)
         self._output = ''
     

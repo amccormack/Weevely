@@ -78,5 +78,5 @@ class Rm(ModuleGuess):
     def _verify(self):
         raise ProbeException(self.name, WARN_DELETE_FAIL)
     
-    def _output_result(self):
+    def _stringify_result(self):
         self._output = ''

@@ -32,7 +32,7 @@ class Php(Module):
         
         self._result =  self.args['lpath']
         
-    def _output_result(self):
+    def _stringify_result(self):
         pass
             
                     

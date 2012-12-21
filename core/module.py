@@ -58,7 +58,7 @@ class Module:
         except ProbeException, e:
             self.mprint('[!] Error: %s' % (e.error), 2, e.module) 
         except ProbeSucceed, e:
-            self._output_result()
+            self._stringify_result()
         except InitException, e:
             raise
         except ModuleException, e:
@@ -67,7 +67,7 @@ class Module:
                 module = e.module
             self.mprint('[!] Error: %s' % (e.error), 2, module) 
         else:
-            self._output_result()
+            self._stringify_result()
             
         
         return self._result, self._output
@@ -108,7 +108,7 @@ class Module:
     def _probe(self):
         pass
 
-    def _output_result(self):
+    def _stringify_result(self):
         
         
         # Empty outputs. False is probably a good output value 

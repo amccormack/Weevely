@@ -113,7 +113,7 @@ class Dump(ModuleGuess):
         if self._result and '-- Dumping data for table' in self._result:
             raise ProbeSucceed(self.name,'Dumped')
             
-    def _output_result(self):
+    def _stringify_result(self):
         
         if self._result: 
             if not '-- Dumping data for table' in self._result:

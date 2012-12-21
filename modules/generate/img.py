@@ -93,5 +93,5 @@ class Img(Module):
                     
         self._result =  [ path_img2, path_htaccess ]
         
-    def _output_result(self):
+    def _stringify_result(self):
         pass      

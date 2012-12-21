@@ -25,7 +25,7 @@ class Suidsgid(Module):
             
         self._result = self.support_vectors.get('find').execute(self.args)
         
-    def _output_result(self):
+    def _stringify_result(self):
         
         # Listify output, to advantage other modules 
         self._output = self._result

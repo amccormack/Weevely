@@ -119,11 +119,11 @@ class Upload2web(Upload):
         Upload._check_remote_file(self)                
         
     
-    def _output_result(self):
+    def _stringify_result(self):
         if self._result:
             self._result = [ self.args['rpath'], self.args['url'] ]
         else:
             self._result = [ '', '' ]
         
-        return Upload._output_result(self)
+        return Upload._stringify_result(self)
     

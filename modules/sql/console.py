@@ -104,7 +104,7 @@ pg_close();"""])
                 elif not self._result:
                     self.mprint(WARN_NO_DATA)
                 else:
-                    self._output_result()
+                    self._stringify_result()
                     
                 print self._output
                     

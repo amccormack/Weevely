@@ -76,5 +76,5 @@ class Edit(Module):
         
         self._result = True
         
-    def _output_result(self):
+    def _stringify_result(self):
         pass

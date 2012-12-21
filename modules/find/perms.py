@@ -75,7 +75,7 @@ if(($f!='.')&&($f!='..')&&cktp($df,'d')&&$r){@swp($fdir, $df, $t, $a, $q,$r);}
             self.args_formats['recursion'] = not self.args['no_recursion']
             
             
-    def _output_result(self):
+    def _stringify_result(self):
         
         # Listify output, to advantage other modules 
         self._output = self._result

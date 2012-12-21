@@ -68,7 +68,7 @@ while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,
                 
 
             
-    def _output_result(self):
+    def _stringify_result(self):
         
         # Listify output, to advantage other modules 
         self._output = self._result

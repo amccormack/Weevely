@@ -108,7 +108,7 @@ class Mount(Upload2web):
         if not self.args['umount_all'] and not self.args['just_mount']:
             Upload2web._verify(self)
               
-    def _output_result(self):
+    def _stringify_result(self):
 
 
         self._result = [

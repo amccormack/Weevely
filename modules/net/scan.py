@@ -77,7 +77,7 @@ class Scan(Module):
             
             print output
             
-    def _output_result(self):
+    def _stringify_result(self):
         self._output = ''
 
 class RequestList(dict):

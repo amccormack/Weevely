@@ -136,9 +136,9 @@ class Proxy(Phpproxy):
             # With just_run, suppose good result to correctly print output
             self._result = True
     
-    def _output_result(self):
+    def _stringify_result(self):
     
-        Phpproxy._output_result(self)
+        Phpproxy._stringify_result(self)
         
         rpath = ' '
         if self.args['rpath']:

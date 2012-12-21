@@ -48,7 +48,7 @@ class Etcpasswd(ModuleGuess):
             raise ExecutionException(self.name, 'Enumeration execution failed')
             
 
-    def _output_result(self):
+    def _stringify_result(self):
         
         filter_real_users = self.args['real']
         response_splitted = self._result.split('\n')

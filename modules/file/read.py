@@ -20,5 +20,5 @@ class Read(Download):
         
         return Download._verify_execution(self)
     
-    def _output_result(self):
-        return Module._output_result(self)
+    def _stringify_result(self):
+        return Module._stringify_result(self)

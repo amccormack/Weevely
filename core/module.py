@@ -215,6 +215,6 @@ class Module:
                 stored_args_str += '\n'
             i+=1
             
-        return stored_args_str + '\n'
+        return stored_args_str
         
     

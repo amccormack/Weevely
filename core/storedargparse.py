@@ -36,41 +36,39 @@ class StoredArgumentParser(ArgumentParser):
         if namespace is None:
             namespace = Namespace()
 
-        # add any action defaults that aren't present
-        for action in self._actions:
-            if action.dest is not SUPPRESS:
-                    
-                    replacement_value = None
-                    # Check if there is a stored value and is not None
-                    if action.dest in stored_args_dict and stored_args_dict[action.dest] != None:
-                        # If optional type, get single value, else list (stealed from _get_values)
-                        if action.nargs in [None, argparse.OPTIONAL]:
-                            replacement_value = self._get_value(action, stored_args_dict[action.dest])
-                        # If positional, add it also to args to avoid 'too few arguments' exception on _parse_known_args
-                        else:
-                            replacement_value = self._get_value(action, [ stored_args_dict[action.dest] ])
-                            args.append(stored_args_dict[action.dest])
-                            
-                    # Else, check if default is present
-                    elif action.default is not SUPPRESS:
-                        if isinstance(action.default, basestring):
-                            replacement_value = self._get_value(action, action.default)
-                        else:
-                            replacement_value = action.default
-                        
-                    else:
-                        replacement_value = None
-                    
-                    setattr(namespace, action.dest, replacement_value)
-
-        # add any parser defaults that aren't present
-        for dest in self._defaults:
-            if not hasattr(namespace, dest):
-                setattr(namespace, dest, self._defaults[dest])
-
-        # parse the arguments and exit if there are any errors
         try:
+            # add any action defaults that aren't present
+            for action in self._actions:
+                if action.dest is not SUPPRESS:
+                        
+                        replacement_value = None
+                        # Check if there is a stored value and is not None
+                        if action.dest in stored_args_dict and stored_args_dict[action.dest] != None:
+                            # If positional, add it also to args to avoid 'too few arguments' exception on _parse_known_args
+                            if action.nargs not in [None, argparse.OPTIONAL]:
+                                args.append(stored_args_dict[action.dest])
+                            replacement_value = self._get_values(action, [ stored_args_dict[action.dest] ])
+                                
+                        # Else, check if default is present
+                        elif action.default is not SUPPRESS:
+                            if isinstance(action.default, basestring):
+                                replacement_value = self._get_values(action, [ action.default ])
+                            else:
+                                replacement_value = action.default
+                            
+                        else:
+                            replacement_value = None
+                        
+                        setattr(namespace, action.dest, replacement_value)
+    
+            # add any parser defaults that aren't present
+            for dest in self._defaults:
+                if not hasattr(namespace, dest):
+                    setattr(namespace, dest, self._defaults[dest])
+    
+            # parse the arguments and exit if there are any errors
             namespace, args = self._parse_known_args(args, namespace)
+            
             if hasattr(namespace, _UNRECOGNIZED_ARGS_ATTR):
                 args.extend(getattr(namespace, _UNRECOGNIZED_ARGS_ATTR))
                 delattr(namespace, _UNRECOGNIZED_ARGS_ATTR)

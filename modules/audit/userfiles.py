@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ProbeException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 from ast import literal_eval
 from core.utils import join_abs_paths
 import os

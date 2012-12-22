@@ -1,5 +1,5 @@
 from core.moduleguess import Module
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 
 
 class Suidsgid(Module):

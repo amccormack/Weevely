@@ -1,6 +1,6 @@
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ProbeException, ProbeSucceed
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 
 mysqlphpdump = """
 function dmp ($tableQ)

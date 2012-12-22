@@ -1,7 +1,7 @@
 
 
 from moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
-from core.savedargparse import SavedArgumentParser as ArgumentParser, Namespace
+from core.storedargparse import StoredArgumentParser as ArgumentParser, Namespace
 from types import ListType, StringTypes, DictType
 from core.prettytable import PrettyTable
 from core.vector import VectorsDict

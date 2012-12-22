@@ -1,7 +1,7 @@
 
 from core.moduleguess import Module
 from core.moduleexception import ModuleException, ProbeException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork
 import re, os
 from argparse import SUPPRESS

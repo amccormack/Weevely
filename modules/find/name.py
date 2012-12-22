@@ -2,7 +2,7 @@
 
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException, ProbeException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 
 
 class Name(ModuleGuess):

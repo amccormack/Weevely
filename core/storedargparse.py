@@ -3,7 +3,7 @@ from argparse import SUPPRESS, Namespace, ArgumentError, _UNRECOGNIZED_ARGS_ATTR
 from core.moduleexception import ModuleException
 
 
-class SavedArgumentParser(ArgumentParser):
+class StoredArgumentParser(ArgumentParser):
     
     def __init__(self, 
         prog=None, 

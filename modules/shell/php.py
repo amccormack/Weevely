@@ -7,7 +7,7 @@ Created on 22/ago/2011
 from core.module import Module
 from core.moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
 from core.http.cmdrequest import CmdRequest, NoDataException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 from ast import literal_eval
 

@@ -1,6 +1,6 @@
 from core.moduleguess import Module
 from core.moduleexception import ModuleException, ProbeException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 import re
 
 WARN_NO_DATA = 'No data returned'

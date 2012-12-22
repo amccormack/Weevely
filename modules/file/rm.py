@@ -2,7 +2,7 @@
 
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 WARN_DELETE_FAIL = 'Cannot remove, check permission or recursion'

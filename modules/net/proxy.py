@@ -1,7 +1,7 @@
 from modules.file.upload2web import Upload2web
 from modules.net.phpproxy import Phpproxy
 from core.moduleexception import ProbeSucceed, ProbeException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 import re, os
 from random import choice

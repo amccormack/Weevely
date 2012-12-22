@@ -7,7 +7,7 @@ from core.module import Module
 from modules.file.upload import Upload
 from core.moduleexception import  ModuleException, ExecutionException, ProbeException, ProbeSucceed
 from core.http.cmdrequest import CmdRequest, NoDataException
-from core.savedargparse import SavedArgumentParser as ArgumentParser
+from core.storedargparse import StoredArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 import os
 from random import choice

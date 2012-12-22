@@ -208,7 +208,7 @@ class Module:
         stored_args_str = ''
         i = 1
         for argument in [ action.dest for action in self.argparser._actions if action.dest != 'help' ]:
-            value = self.stored_args[argument] if argument in self.stored_args else ''
+            value = self.stored_args[argument] if (argument in self.stored_args and self.stored_args[argument] != None) else ''
             stored_args_str += '%s=\'%s\' ' % (argument, value)
             
             if i%4 == 0:

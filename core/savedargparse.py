@@ -46,8 +46,10 @@ class SavedArgumentParser(ArgumentParser):
                         # If optional type, get single value, else list (stealed from _get_values)
                         if action.nargs in [None, argparse.OPTIONAL]:
                             replacement_value = self._get_value(action, stored_args_dict[action.dest])
+                        # If positional, add it also to args to avoid 'too few arguments' exception on _parse_known_args
                         else:
                             replacement_value = self._get_value(action, [ stored_args_dict[action.dest] ])
+                            args.append(stored_args_dict[action.dest])
                             
                     # Else, check if default is present
                     elif action.default is not SUPPRESS:

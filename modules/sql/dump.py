@@ -1,6 +1,8 @@
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ProbeException, ProbeSucceed
 from core.storedargparse import StoredArgumentParser as ArgumentParser
+from tempfile import mkdtemp
+from os import path
 
 mysqlphpdump = """
 function dmp ($tableQ)
@@ -102,7 +104,7 @@ class Dump(ModuleGuess):
         self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
         #argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
         self.argparser.add_argument('-vector', choices = self.vectors.keys())
-        self.argparser.add_argument('-ldump', help='Where to save dump')
+        self.argparser.add_argument('-ldump', help='Local path to save dump (default: temporary folder)')
         
     def _prepare_vector(self):
         if not self.args['table']:
@@ -120,7 +122,8 @@ class Dump(ModuleGuess):
                 self.mprint(WARN_DUMP_INCOMPLETE)
             
             if not self.args['ldump']:
-                self.args['ldump'] = '%s:%s@%s-%s.txt' % (self.args['user'], self.args['pass'], self.args['host'], self.args['db'])
+                temporary_folder = mkdtemp(prefix='weev_')
+                self.args['ldump'] = path.join(temporary_folder, '%s:%s@%s-%s.txt' % (self.args['user'], self.args['pass'], self.args['host'], self.args['db']))
                 
             try:
                 lfile = open(self.args['ldump'],'w').write(self._result)

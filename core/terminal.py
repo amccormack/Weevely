@@ -80,8 +80,8 @@ class Terminal(Helper):
                            
             ## Set call if ":set module" or ":set module param value"
             elif command[0] == set_string and len(command) > 1: 
-                    self.modhandler.load(command[1]).save_args(command[2:])
-                    self.__tprint(self.modhandler.load(command[1]).get_stored_args_str())
+                    self.modhandler.load(command[1]).store_args(command[2:])
+                    self.__tprint(self.modhandler.load(command[1]).format_stored_args())
 
             ## Load call
             elif command[0] == load_string and len(command) == 2:

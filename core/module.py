@@ -164,7 +164,7 @@ class Module:
             self._output = str(self._result)
         
         
-    def save_args(self, args):
+    def store_args(self, args):
 
         for argument in args:
             if '=' in argument:
@@ -194,21 +194,27 @@ class Module:
             if usage:
                 help_output += '%s\n' % self.argparser.format_usage() 
     
-        stored_args_help = self.get_stored_args_str()
+        stored_args_help = self.format_stored_args()
         if stored_args and stored_args_help:
-            help_output += 'stored arguments: %s\n' % stored_args_help
+            help_output += 'stored arguments: %s\n' % stored_args_help.replace('\n', '\n' + ' '*(18))
             
         help_output = ' '*padding + help_output.replace('\n', '\n' + ' '*(padding)).rstrip(' ') 
             
         return help_output
         
                 
-    def get_stored_args_str(self):
+    def format_stored_args(self):
     
         stored_args_str = ''
+        i = 1
         for argument in [ action.dest for action in self.argparser._actions if action.dest != 'help' ]:
             value = self.stored_args[argument] if argument in self.stored_args else ''
             stored_args_str += '%s=\'%s\' ' % (argument, value)
-        return stored_args_str
+            
+            if i%4 == 0:
+                stored_args_str += '\n'
+            i+=1
+            
+        return stored_args_str + '\n'
         
     

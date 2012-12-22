@@ -30,17 +30,15 @@ class StoredArgumentParser(ArgumentParser):
         if args is None:
             args = _sys.argv[1:]
 
-        self.__last_input_args = args
-
         # replacement_value Namespace built from parser defaults
         if namespace is None:
             namespace = Namespace()
 
         try:
-            # add any action defaults that aren't present
+            # add any action defaults, skip if -arg is in args
             for action in self._actions:
-                if action.dest is not SUPPRESS:
-                        
+                if action.dest is not SUPPRESS and (self.prefix_chars + action.dest) not in args:
+
                         replacement_value = None
                         # Check if there is a stored value and is not None
                         if action.dest in stored_args_dict and stored_args_dict[action.dest] != None:

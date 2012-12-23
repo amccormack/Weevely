@@ -15,7 +15,7 @@ class Configs:
         except Exception, e:
             self._tprint( "[!] Error opening '%s' file." % rcpath)
         else:
-            return [c for c in rcfile.read().split('\n') if c and c[0] != '#']
+            return [c.strip() for c in rcfile.read().split('\n') if c.strip() and c[0] != '#']
 
         return []
 

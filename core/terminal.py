@@ -129,14 +129,11 @@ class Terminal(Helper, Configs):
 
         path = os.path.expanduser(path)
 
-        if default_rcfile:
-            
-            if not os.path.exists(path):
-
+        if default_rcfile and not os.path.exists(path):
                 try:
                     rcfile = open(path, 'w').close()
                 except Exception, e:
-                    raise ModuleException("Creation '%s' rc file failed%s" % (path, os.linesep))
+                    raise ModuleException("Creation '%s' rc file failed" % (path))
                 else:
                     return []
 
@@ -145,18 +142,16 @@ class Terminal(Helper, Configs):
         last_result = []
         
         for cmd in self._read_rc(path):
-            cmd = cmd.strip()
-            if cmd:
-                self._tprint('[LOAD] %s%s' % (cmd, os.linesep))
-                self.run_cmd_line(shlex.split(cmd))
-                
-                last_output += self._last_output 
-                last_warns += self.modhandler._last_warns 
-                last_result.append(self._last_result)
+            self._tprint('[LOAD] %s%s' % (cmd, os.linesep))
+            self.run_cmd_line(shlex.split(cmd))
+            
+            last_output += self._last_output 
+            last_warns += self.modhandler._last_warns 
+            last_result.append(self._last_result)
         
-        self._last_output = last_output
-        self.modhandler._last_warns = last_warns
-        self._last_result = last_result
+        if last_output: self._last_output = last_output
+        if last_warns: self.modhandler._last_warns = last_warns
+        if last_result: self._last_result = last_result
         
 
     def __cwd_handler (self, cmd = None):

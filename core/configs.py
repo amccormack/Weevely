@@ -13,7 +13,7 @@ class Configs:
         try:
             rcfile = open(rcpath, 'r')
         except Exception, e:
-            print "[!] Error opening '%s' file." % rcpath
+            self._tprint( "[!] Error opening '%s' file." % rcpath)
         else:
             return [c for c in rcfile.read().split('\n') if c and c[0] != '#']
 
@@ -79,4 +79,4 @@ class Configs:
             return results[state]
 
         except Exception, e:
-            self.__tprint('[!] Completion error: %s' % e)
+            self._tprint('[!] Completion error: %s' % e)

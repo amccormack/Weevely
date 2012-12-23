@@ -28,7 +28,7 @@ class Terminal(Helper, Configs):
         
     def loop(self):
 
-        self.__tprint(self._format_presentation())
+        self._tprint(self._format_presentation())
         username, hostname = self.__env_init()
         self.__cwd_handler()
         
@@ -50,7 +50,7 @@ class Terminal(Helper, Configs):
             self.run_cmd_line(cmd)
 
 
-    def __tprint(self, msg):
+    def _tprint(self, msg):
         self.modhandler._last_warns += msg + os.linesep
         if msg: print msg,
         
@@ -68,16 +68,16 @@ class Terminal(Helper, Configs):
                 if len(command) == 2:
                     command[1] = command[1].lstrip(':')
                     if command[1] in self.modhandler.modules_classes.keys():
-                        self.__tprint(self._format_helps([ command[1] ]))
+                        self._tprint(self._format_helps([ command[1] ]))
                     else:
-                        self.__tprint(self._format_helps([ m for m in self.modhandler.modules_classes.keys() if command[1] in m], summary_type=1))                        
+                        self._tprint(self._format_helps([ m for m in self.modhandler.modules_classes.keys() if command[1] in m], summary_type=1))                        
                 else:
-                    self.__tprint(self._format_grouped_helps())
+                    self._tprint(self._format_grouped_helps())
                            
             ## Set call if ":set module" or ":set module param value"
             elif command[0] == set_string and len(command) > 1: 
                     self.modhandler.load(command[1]).store_args(command[2:])
-                    self.__tprint(self.modhandler.load(command[1]).format_stored_args() + '\n')
+                    self._tprint(self.modhandler.load(command[1]).format_stored_args() + '\n')
 
             ## Load call
             elif command[0] == load_string and len(command) == 2:
@@ -108,9 +108,9 @@ class Terminal(Helper, Configs):
                 if res != None: self._last_result = res
                 
         except KeyboardInterrupt:
-            self.__tprint('[!] Stopped execution')
+            self._tprint('[!] Stopped execution')
         except ModuleException, e:
-            self.__tprint('[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep))
+            self._tprint('[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep))
         
         if self._last_output:
             print self._last_output
@@ -147,7 +147,7 @@ class Terminal(Helper, Configs):
         for cmd in self._read_rc(path):
             cmd = cmd.strip()
             if cmd:
-                self.__tprint('[LOAD] %s%s' % (cmd, os.linesep))
+                self._tprint('[LOAD] %s%s' % (cmd, os.linesep))
                 self.run_cmd_line(shlex.split(cmd))
                 
                 last_output += self._last_output 
@@ -166,7 +166,7 @@ class Terminal(Helper, Configs):
         elif len(cmd) == 2:
             cwd_new = Vector(self.modhandler,  'getcwd', 'shell.php', 'chdir("$path") && print(getcwd());').execute({ 'path' : cmd[1] })
             if not cwd_new:
-                self.__tprint("[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1])                
+                self._tprint("[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1])                
             
         self.modhandler.load('shell.php').stored_args['path'] = cwd_new
         
@@ -180,7 +180,7 @@ class Terminal(Helper, Configs):
         hostname =  Vector(self.modhandler, "hostname", 'system.info', "hostname").execute()
         
         if Vector(self.modhandler, "safe_mode", 'system.info', "safe_mode").execute() == '1':
-            self.__tprint('[!] PHP Safe mode enabled')
+            self._tprint('[!] PHP Safe mode enabled')
             
         
         return username, hostname

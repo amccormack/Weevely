@@ -8,7 +8,7 @@ from core.moduleexception import ModuleException
 from core.configs import Configs, dirpath, rcfilepath
 from core.vector import Vector
 from core.helper import Helper
-import os, re, shlex, readline, atexit
+import os, re, shlex
 
 module_trigger = ':'
 help_string = ':help'
@@ -17,17 +17,14 @@ load_string = ':load'
 gen_string = ':generator'
 
 
-class Terminal(Helper):
+class Terminal(Helper, Configs):
 
     def __init__( self, modhandler):
 
         self.modhandler = modhandler
 
-        self.configs = Configs()
         self.__load_rcfile(dirpath + rcfilepath, default_rcfile=True)
-        self.__init_completion()
-        
-        
+        self._init_completion()
         
     def loop(self):
 
@@ -58,12 +55,11 @@ class Terminal(Helper):
         if msg: print msg,
         
 
-    def run_cmd_line(self, command, clear_last_output = True):
+    def run_cmd_line(self, command):
 
-        if clear_last_output:
-            self._last_output = ''
-            self.modhandler._last_warns = ''
-            self._last_result = None
+        self._last_output = ''
+        self.modhandler._last_warns = ''
+        self._last_result = None
         
         try:
     
@@ -85,7 +81,9 @@ class Terminal(Helper):
 
             ## Load call
             elif command[0] == load_string and len(command) == 2:
+                # Recursively call run_cmd_line() and return to avoid to reprint last output
                 self.__load_rcfile(command[1])
+                return
 
             elif command[0] == 'cd':
                 self.__cwd_handler(command)
@@ -142,14 +140,24 @@ class Terminal(Helper):
                 else:
                     return []
 
-        for cmd in self.configs.read_rc(path):
-
-            cmd       = cmd.strip()
-
+        last_output = ''
+        last_warns = ''
+        last_result = []
+        
+        for cmd in self._read_rc(path):
+            cmd = cmd.strip()
             if cmd:
-                self.__tprint('[RC exec] %s%s' % (cmd, os.linesep))
-
-                self.run_cmd_line(shlex.split(cmd), clear_last_output=False)
+                self.__tprint('[LOAD] %s%s' % (cmd, os.linesep))
+                self.run_cmd_line(shlex.split(cmd))
+                
+                last_output += self._last_output 
+                last_warns += self.modhandler._last_warns 
+                last_result.append(self._last_result)
+        
+        self._last_output = last_output
+        self.modhandler._last_warns = last_warns
+        self._last_result = last_result
+        
 
     def __cwd_handler (self, cmd = None):
 
@@ -176,56 +184,3 @@ class Terminal(Helper):
             
         
         return username, hostname
-
-
-    def __init_completion(self):
-
-            self.matching_words =  [':%s' % m for m in self.modhandler.modules_classes.keys()] + [help_string, load_string, set_string]
-        
-            try:
-                readline.set_history_length(100)
-                readline.set_completer_delims(' \t\n;')
-                readline.parse_and_bind( 'tab: complete' )
-                readline.set_completer( self.__complete )
-                readline.read_history_file( self.configs.historyfile )
-
-            except IOError:
-                pass
-            atexit.register( readline.write_history_file, self.configs.historyfile )
-
-
-
-    def __complete(self, text, state):
-        """Generic readline completion entry point."""
-
-        try:
-            buffer = readline.get_line_buffer()
-            line = readline.get_line_buffer().split()
-
-            if ' ' in buffer:
-                return []
-
-            # show all commandspath
-            if not line:
-                all_cmnds = [c + ' ' for c in self.matching_words]
-                if len(all_cmnds) > state:
-                    return all_cmnds[state]
-                else:
-                    return []
-
-
-            cmd = line[0].strip()
-
-            if cmd in self.matching_words:
-                return [cmd + ' '][state]
-
-            results = [c + ' ' for c in self.matching_words if c.startswith(cmd)] + [None]
-            if len(results) == 2:
-                if results[state]:
-                    return results[state].split()[0] + ' '
-                else:
-                    return []
-            return results[state]
-
-        except Exception, e:
-            self.__tprint('[!] Completion error: %s' % e)

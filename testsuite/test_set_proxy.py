@@ -4,6 +4,9 @@ from os import path, remove
 from commands import getstatusoutput
 from baseclasses import conf
 import PythonProxy
+import os, sys
+sys.path.append(os.path.abspath('..'))
+import core.http.request
 
 rc_file = """
 :set shell.php proxy=http://localhost:%i
@@ -30,7 +33,7 @@ class SetProxy(ProxyTestCase):
         command = '%s %s %s %s' % (conf['cmd'], conf['url'], conf['pwd'], 'echo')
         self.assertEqual(PythonProxy.proxy_counts,0)
         status, output = getstatusoutput(command)
-        self.assertRegexpMatches(output, '\nWEEVELY\n')  
+        self.assertRegexpMatches(output, '\nWEEVELY')  
         self.assertGreater(PythonProxy.proxy_counts,0)
         
         # Verify that final socket is never contacted without proxy 
@@ -44,8 +47,10 @@ class SetProxy(ProxyTestCase):
         self.assertGreater(PythonProxy.dummy_counts,0)
         
         # Count that Client never connect to final dummy endpoint without passing through proxy
-        self.assertEqual(PythonProxy.proxy_counts, PythonProxy.dummy_counts)
+        self.assertGreaterEqual(PythonProxy.proxy_counts, PythonProxy.dummy_counts)
             
         
+        self.assertRegexpMatches(self._warn(':set shell.php proxy=wrong://localhost:%i' % self.__class__.proxyport), 'proxy=\'wrong://localhost:%i\'' % self.__class__.proxyport)
+        self.assertRegexpMatches(self._warn(':shell.php echo(1+1);'), core.http.request.WARN_UNCORRECT_PROXY)
         
         

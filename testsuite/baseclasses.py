@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-import sys, os
+import sys, os, socket, unittest, shlex, random, pexpect
 sys.path.append(os.path.abspath('..'))
 import core.terminal
 from core.modulehandler import ModHandler
 from ConfigParser import ConfigParser
-import unittest, shlex, random, pexpect
 from string import ascii_lowercase, Template
 from tempfile import NamedTemporaryFile
-
+from PythonProxy import start_server, start_dummy_tcp_server  
+from thread import start_new_thread    
+from shutil import move
+from time import sleep
 
 confpath = 'conf.ini'
 
@@ -189,3 +191,39 @@ class FolderFileFSTestCase(FolderFSTestCase):
         # Restore modes
         cls._env_chmod(cls.basedir, recursion=True)
 
+class RcTestCase(SimpleTestCase):
+    
+    @classmethod
+    def _setenv(cls):
+        
+        SimpleTestCase._setenv.im_func(cls)
+
+        cls.rcpath = os.path.expanduser('~/.weevely/weevely.rc')
+        cls.rcbackuppath = '%s_backup' % cls.rcpath
+
+        move(cls.rcpath, cls.rcbackuppath)
+
+
+    @classmethod
+    def _unsetenv(cls):
+        SimpleTestCase._unsetenv.im_func(cls)    
+        move(cls.rcbackuppath, cls.rcpath)
+
+    
+class ProxyTestCase(RcTestCase):
+    
+    @classmethod
+    def _setenv(cls):
+        RcTestCase._setenv.im_func(cls)
+
+        cls.proxyport = random.randint(50000,65000)
+        start_new_thread(start_server, ('localhost', cls.proxyport))
+        cls.dummyserverport = cls.proxyport+1
+        start_new_thread(start_dummy_tcp_server, ('localhost', cls.dummyserverport))
+
+
+    @classmethod
+    def _unsetenv(cls):
+        RcTestCase._unsetenv.im_func(cls)    
+  
+            

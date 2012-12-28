@@ -125,7 +125,7 @@ class Php(Module):
         except IOError, e:
             raise ProbeException(self.name, '%s. %s' % (e.strerror, WARN_UNREACHABLE))
         except Exception, e:
-            raise ProbeException(self.name, '%s. %s' % (e.strerror, WARN_CONN_ERR))
+            raise ProbeException(self.name, '%s. %s' % (str(e), WARN_CONN_ERR))
     
         if 'error' in response and 'eval()\'d code' in response:
             raise ProbeException(self.name, '\'%s\' %s' % (cmd, WARN_INVALID_RESPONSE))

@@ -123,10 +123,13 @@ class Terminal(Helper, Configs):
 
     def __guess_best_interpreter(self):
         if Vector(self.modhandler, "shellprobe" , 'shell.sh', ['-just-probe', 'sh']).execute():
+            # First, probe shell.sh
             self.modhandler.interpreter = 'shell.sh'
         elif Vector(self.modhandler, "phpprobe" , 'shell.php', ['-just-probe', 'php']).execute():
+            # If other checks fails, probe explicitely php shell. Useful when shell is started directly with :shell.php call
             self.modhandler.interpreter = 'shell.php'
         else:
+            # Else declare init failed
             raise ModuleException('terminal','Interpreter guess failed')
         
 

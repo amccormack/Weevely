@@ -47,19 +47,17 @@ class Php(Module):
 
 
     def _prepare(self):
-        
+                
         # Slacky backdoor validation. 
         # Avoid probing (and storing) if mode is specified by user
         
-        if not self.args['mode']:
+        if not self.args['mode'] or self.args['just_probe']:
             if not self.stored_args['mode'] or self.args['just_probe']:
                 self.__slacky_probe()
                 
             self.args['mode'] = self.stored_args['mode']
         
         
-        
-
         # Check if is raw command is not 'ls' 
         if self.args['cmd'][0][:2] != 'ls':
                 
@@ -106,7 +104,6 @@ class Php(Module):
 
         self.mprint( "Request: %s" % (cmd), msg_class)
 
-
         try:
             response = request.execute()
         except NoDataException, e:
@@ -114,7 +111,6 @@ class Php(Module):
         except IOError, e:
             raise ProbeException(self.name, '%s. %s' % (e.strerror, WARN_UNREACHABLE))
         except Exception, e:
-            raise
             raise ProbeException(self.name, '%s. %s' % (str(e), WARN_CONN_ERR))
     
         if 'error' in response and 'eval()\'d code' in response:
@@ -140,7 +136,7 @@ class Php(Module):
                 
                 self.stored_args['mode'] = currentmode
                 
-                # Set as best interpreter
+                #Set as best interpreter
                 #self.modhandler.interpreter = self.name
                 
                 if self.args['just_probe']:

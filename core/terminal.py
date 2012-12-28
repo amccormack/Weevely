@@ -29,7 +29,12 @@ class Terminal(Helper, Configs):
     def loop(self):
 
         self._tprint(self._format_presentation())
-        username, hostname = self.__env_init()
+        
+        try:
+            username, hostname = self.__env_init()
+        except ModuleException, e:
+            return
+        
         self.__cwd_handler()
         
         while self.modhandler.interpreter:
@@ -122,7 +127,7 @@ class Terminal(Helper, Configs):
         elif Vector(self.modhandler, "phpprobe" , 'shell.php', ['-just-probe', 'php']).execute():
             self.modhandler.interpreter = 'shell.php'
         else:
-            raise Exception('A InitException should be raised here')
+            raise ModuleException('terminal','Interpreter guess failed')
         
 
     def __load_rcfile(self, path, default_rcfile=False):

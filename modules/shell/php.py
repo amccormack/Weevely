@@ -39,23 +39,12 @@ class Php(Module):
     def _set_args(self):
         self.argparser.add_argument('cmd', help='PHP command enclosed with brackets and terminated by semi-comma', nargs='+' )
         self.argparser.add_argument('-mode', help='Obfuscation mode', choices = self.mode_choices)
-        self.argparser.add_argument('-proxy', help='HTTP proxy')
+        self.argparser.add_argument('-proxy', help='HTTP proxy. Support \'http://\', \'socks5://\', \'socks4://\'')
         self.argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
         self.argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
         self.argparser.add_argument('-post', help=SUPPRESS, type=literal_eval, default={})
         self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
-    def _check_args(self, args):
-        
-        Module._check_args(self,args)
-        
-        # Set proxy 
-        if self.args['proxy']:
-            self.mprint(WARN_PROXY)
-            self.args['proxy'] = { 'http' : self.args['proxy'] }
-        else:
-            self.args['proxy'] = {}        
-        
 
     def _prepare(self):
         
@@ -125,6 +114,7 @@ class Php(Module):
         except IOError, e:
             raise ProbeException(self.name, '%s. %s' % (e.strerror, WARN_UNREACHABLE))
         except Exception, e:
+            raise
             raise ProbeException(self.name, '%s. %s' % (str(e), WARN_CONN_ERR))
     
         if 'error' in response and 'eval()\'d code' in response:

@@ -4,8 +4,22 @@ Created on 03/ott/2011
 @author: emilio
 '''
 
-import urllib
+import urllib2, socks
 from random import choice
+from socksipyhandler import SocksiPyHandler
+from re import compile, IGNORECASE
+from urllib import urlencode
+from core.moduleexception import ModuleException
+
+WARN_UNCORRECT_PROXY = 'Incorrect proxy format, set it as \'http|https|socks5|sock4://host:port\''
+
+url_dissector = compile(
+    r'^(https?|socks4|socks5)://' # http:// or https://
+    r'((?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
+    r'localhost|' #localhost...
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+    r':(\d+)?' # optional port
+    r'(?:/?|[/?]\S+)$', IGNORECASE)
 
 agents = (
     "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6",
@@ -22,28 +36,41 @@ agents = (
     "Mozilla/5.0 (Linux; U; Android 2.2; fr-fr; Desire_A8181 Build/FRF91)",
 )
 
-class URLOpener(urllib.FancyURLopener):
-
-    version = choice(agents)
-
-    def http_error_206(self, url, fp, errcode, errmsg, headers, data=None):
-        pass
-
-
 class Request:
 
-    def __init__(self, url, proxy={}):
+    def __init__(self, url, proxy=''):
         self.url = url
         self.data = {}
+        
+        proxydata = self.__parse_proxy(proxy)
+        
+        if proxydata:
+            self.opener = urllib2.build_opener(SocksiPyHandler(*proxydata))
+        else:
+            self.opener = urllib2.build_opener()
+            
+       
+    def __parse_proxy(self, proxyurl):
 
-        self.opener = URLOpener(proxies = proxy)
-
+        if proxyurl:
+            
+            url_dissected = url_dissector.findall(proxyurl)
+            if url_dissected and len(url_dissected[0]) == 3:
+                protocol, host, port = url_dissected[0]
+                if protocol == 'socks5': return (socks.PROXY_TYPE_SOCKS5, host, int(port))
+                if protocol == 'socks4': return (socks.PROXY_TYPE_SOCKS4, host, int(port))
+                if protocol.startswith('http'): return (socks.PROXY_TYPE_HTTP, host, int(port))
+                
+            raise ModuleException('request',WARN_UNCORRECT_PROXY)
+                    
+        return []
+            
     def __setitem__(self, key, value):
-        self.opener.addheader(key, value)
+        self.opener.addheaders.append((key, value))
 
     def read(self, bytes= -1):
         if self.data:
-            handle = self.opener.open(self.url, data=urllib.urlencode(self.data))
+            handle = self.opener.open(self.url, data=urlencode(self.data))
         else:
             handle = self.opener.open(self.url)
 

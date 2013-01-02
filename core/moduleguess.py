@@ -1,67 +1,39 @@
-from core.module import Module
+from core.moduleguessbase import ModuleGuessBase
 from core.moduleexception import ModuleException, ProbeException, ExecutionException, ProbeSucceed
 
-class ModuleGuess(Module):
+class ModuleGuess(ModuleGuessBase):
 
 
-    # self.args: variables related to current execution
-    # self.args['vector'] user input vector name
-    # self.stored_args: variables related to entire module life 
-    # self.stored_args['vector'] saved vector name
+    def _set_vectors(self):
+        """Inherit this method to add vectors in self.vectors and self.support_vectors lists, easily
+        callable in _probe() function. This method is called by module constructor. 
+        Example of vector declaration:
+        
+        > self.support_vectors.add_vector(name='vector_name', interpreter='module_name', payloads = [ 'module_param1', '$module_param2', .. ])
+        
+        Template fields like '$rpath' are replaced at vector execution.
+        
+        """
+        
+        pass
     
-    # self.current_vector effective current vector object
-
-    def _init_module(self):
-        Module._init_module(self)
-        self.current_vector = None
+    def _set_args(self):
+        """Inherit this method to set self.argparser arguments. Set new arguments following
+        official python argparse documentation like. This method is called by module constructor.
+        Arguments passed at module runs are stored in Module.args dictionary.
+        """
         
-        
-    def __init_vector_variables(self, vector):
-        
-        self.args_formats = {}
-        self.current_vector = vector
-        
-    def _prepare_vector(self):
         pass
         
+
+    def _prepare_vector(self):
+        self.formatted_args = self.args
+        
     def _execute_vector(self):
-        self._result = self.current_vector.execute( self.args_formats)
+        self._result = self.current_vector.execute(self.formatted_args)
     
     def _verify_vector_execution(self):
         # If self._result is set. False is probably a good return value.
         if self._result or self._result == False:
             raise ProbeSucceed(self.name,'Command succeeded')
      
-
-    def _probe(self):
-        
-        
-        
-        vectors = []
-        
-        if 'vector' in self.args and self.args['vector']:
-            selected_vector = self.vectors.get(self.args['vector'])
-            if selected_vector:
-                vectors = { self.args['vector'] : selected_vector }
-        else:
-            vectors = self.vectors
-            
-            
-        try:
-            for vector in vectors.values():
-                
-                try:
-                    self.__init_vector_variables(vector)
-                    self._prepare_vector()
-                    self._execute_vector()
-                    self._verify_vector_execution()
-                    
-                except ExecutionException:
-                    pass
-
-        except ProbeException, e:
-            raise ModuleException(self.name,  e.error)
-        
-        
-    
-

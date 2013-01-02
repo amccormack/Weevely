@@ -67,9 +67,9 @@ class SimpleTestCase(unittest.TestCase):
     @classmethod  
     def _run_cmd(cls, cmd):
         #print '\n%s' % cmd,
-        child = pexpect.spawn(cmd, timeout=1)
+        child = pexpect.spawn(cmd, timeout=int(conf['timeout']))
         idx = child.expect([pexpect.TIMEOUT, pexpect.EOF])
-        if idx == 0: child.interact()
+        #if idx == 0: child.interact()
         
 
     @classmethod  

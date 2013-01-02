@@ -1,4 +1,4 @@
-from core.moduleguess import Module
+from core.module import Module
 from core.storedargparse import StoredArgumentParser as ArgumentParser
 
 

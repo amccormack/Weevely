@@ -43,7 +43,7 @@ class Download(ModuleGuess):
     def _prepare_vector(self):
         
         remote_path = self.args['rpath']
-        self.args_formats['rpath'] = self.args['rpath']
+        self.formatted_args['rpath'] = self.args['rpath']
         
         # First check remote file existance
         
@@ -60,24 +60,24 @@ class Download(ModuleGuess):
                 if not upload_test:
                     raise ExecutionException(self.current_vector.name,'No transfer url dir found')
 
-                self.args_formats['downloadpath'] = upload_test[0]
+                self.formatted_args['downloadpath'] = upload_test[0]
                 self.args['url'] = upload_test[1]
 
-                self.support_vectors.get('remove').execute({ 'path' : self.args_formats['downloadpath'] })
+                self.support_vectors.get('remove').execute({ 'path' : self.formatted_args['downloadpath'] })
 
             
 
     def _execute_vector(self):
         
-        output = self.current_vector.execute( self.args_formats)
+        output = self.current_vector.execute( self.formatted_args)
         
         if self.current_vector.name in ('copy', 'symlink'):
 
-            if self.support_vectors.get('check_readable').execute({'rpath' : self.args_formats['downloadpath']}):
+            if self.support_vectors.get('check_readable').execute({'rpath' : self.formatted_args['downloadpath']}):
                 self._result = Request(self.args['url']).read()
                 # Force deleting. Does not check existance, because broken links returns False
             
-            self.support_vectors.get('remove').execute({'rpath' : self.args_formats['downloadpath']})
+            self.support_vectors.get('remove').execute({'rpath' : self.formatted_args['downloadpath']})
             
         else:
             # All others encode data in b64 format
@@ -101,12 +101,12 @@ class Download(ModuleGuess):
             raise ProbeException(self.name, 'Writing %s' % (e))
 
         response_md5 = md5(self._result).hexdigest()
-        remote_md5 = self.support_vectors.get('md5').execute({'rpath' : self.args_formats['rpath']})
+        remote_md5 = self.support_vectors.get('md5').execute({'rpath' : self.formatted_args['rpath']})
 
         # Consider as probe failed only MD5 mismatch
         if not remote_md5 == response_md5:
             
-            if self.current_vector.name in ('copy', 'symlink') and not self.args_formats['downloadpath'].endswith('.html') and not self.args_formats['downloadpath'].endswith('.htm'):
+            if self.current_vector.name in ('copy', 'symlink') and not self.formatted_args['downloadpath'].endswith('.html') and not self.formatted_args['downloadpath'].endswith('.htm'):
                 self.mprint("Transferred with '%s', rename as downloadable type as '.html' and retry" % (self.args['url']))
 
             self.mprint('MD5 hash of \'%s\' file mismatch, file corrupt' % ( local_path))

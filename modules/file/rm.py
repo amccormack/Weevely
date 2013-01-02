@@ -59,12 +59,12 @@ class Rm(ModuleGuess):
 
     def _prepare_vector(self):
         
-        self.args_formats = { 'rpath' : self.args['rpath'] }
+        self.formatted_args = { 'rpath' : self.args['rpath'] }
         
         if self.current_vector.name == 'rm':
-            self.args_formats['recursive'] = '-rf' if self.args['recursive'] else ''
+            self.formatted_args['recursive'] = '-rf' if self.args['recursive'] else ''
         else:
-            self.args_formats['recursive'] = '1' if self.args['recursive'] else ''
+            self.formatted_args['recursive'] = '1' if self.args['recursive'] else ''
             
             
     def _verify_vector_execution(self):

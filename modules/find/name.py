@@ -29,42 +29,42 @@ while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,
 
     def _prepare_vector(self):
         
-        self.args_formats = { 'rpath' : self.args['rpath'] }
+        self.formatted_args = { 'rpath' : self.args['rpath'] }
             
         if self.current_vector.name == 'find':
 
             if not self.args['equal']:
-                self.args_formats['string'] = '*%s*' % self.args['string']
+                self.formatted_args['string'] = '*%s*' % self.args['string']
             else:
-                self.args_formats['string'] = self.args['string']
+                self.formatted_args['string'] = self.args['string']
             
             if not self.args['case']:
-                self.args_formats['mode'] = '-iname'
+                self.formatted_args['mode'] = '-iname'
             else:
-                self.args_formats['mode'] = '-name'
+                self.formatted_args['mode'] = '-name'
                 
             if self.args['no_recursion']:
-                self.args_formats['recursion'] = '-maxdepth 1'
+                self.formatted_args['recursion'] = '-maxdepth 1'
             else:
-                self.args_formats['recursion'] = ''
+                self.formatted_args['recursion'] = ''
 
         elif self.current_vector.name == 'php_recursive':
             
-            self.args_formats['string'] = self.args['string']
+            self.formatted_args['string'] = self.args['string']
 
             if not self.args['equal']:
-                self.args_formats['mode'] = '/%%STRING%%/'
+                self.formatted_args['mode'] = '/%%STRING%%/'
             else:
-                self.args_formats['mode'] = '/^%%STRING%%$/'
+                self.formatted_args['mode'] = '/^%%STRING%%$/'
                 
             if not self.args['case']:
-                self.args_formats['mode'] += 'i'
+                self.formatted_args['mode'] += 'i'
                 
             
             if self.args['no_recursion']:
-                self.args_formats['recursion'] = 'False'
+                self.formatted_args['recursion'] = 'False'
             else:
-                self.args_formats['recursion'] = 'True'
+                self.formatted_args['recursion'] = 'True'
                 
 
             

@@ -1,7 +1,7 @@
 from modules.file.download import Download
 from tempfile import NamedTemporaryFile
 from core.storedargparse import StoredArgumentParser as ArgumentParser
-from core.moduleguess import Module
+from core.moduleguess import ModuleGuess
 
 class Read(Download):
     '''Read remote file'''
@@ -21,4 +21,4 @@ class Read(Download):
         return Download._verify_vector_execution(self)
     
     def _stringify_result(self):
-        return Module._stringify_result(self)
+        return ModuleGuess._stringify_result(self)

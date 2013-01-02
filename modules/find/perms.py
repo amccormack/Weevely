@@ -37,42 +37,42 @@ if(($f!='.')&&($f!='..')&&cktp($df,'d')&&$r){@swp($fdir, $df, $t, $a, $q,$r);}
 
     def _prepare_vector(self):
         
-        self.args_formats = { 'rpath' : self.args['rpath'] }
+        self.formatted_args = { 'rpath' : self.args['rpath'] }
         
         if self.current_vector.name == 'find':
             
             # Set first
-            self.args_formats['first'] = '-print -quit' if self.args['first'] else ''
+            self.formatted_args['first'] = '-print -quit' if self.args['first'] else ''
             
             # Set type
             type = self.args['type'] if self.args['type'] else ''
             if type:
                 type = '-type %s' % type
-            self.args_formats['type'] = type
+            self.formatted_args['type'] = type
                     
             # Set attr
-            self.args_formats['attr'] = '-writable' if self.args['writable'] else ''
-            self.args_formats['attr'] += ' -readable' if self.args['readable'] else ''
-            self.args_formats['attr'] += ' -executable' if self.args['executable'] else ''
+            self.formatted_args['attr'] = '-writable' if self.args['writable'] else ''
+            self.formatted_args['attr'] += ' -readable' if self.args['readable'] else ''
+            self.formatted_args['attr'] += ' -executable' if self.args['executable'] else ''
             
             # Set recursion
-            self.args_formats['recursion'] =  ' -maxdepth 1 ' if self.args['no_recursion'] else ''
+            self.formatted_args['recursion'] =  ' -maxdepth 1 ' if self.args['no_recursion'] else ''
 
         else:
             # Vector.name = php_find
             # Set first
-            self.args_formats['first'] = '1' if self.args['first'] else ''
+            self.formatted_args['first'] = '1' if self.args['first'] else ''
             
             # Set type
-            self.args_formats['type']  = self.args['type'] if self.args['type'] else ''
+            self.formatted_args['type']  = self.args['type'] if self.args['type'] else ''
             
             # Set attr
-            self.args_formats['attr'] = 'w' if self.args['writable'] else ''
-            self.args_formats['attr'] += 'r' if self.args['readable'] else ''
-            self.args_formats['attr'] += 'x' if self.args['executable'] else ''
+            self.formatted_args['attr'] = 'w' if self.args['writable'] else ''
+            self.formatted_args['attr'] += 'r' if self.args['readable'] else ''
+            self.formatted_args['attr'] += 'x' if self.args['executable'] else ''
             
             # Set recursion
-            self.args_formats['recursion'] = not self.args['no_recursion']
+            self.formatted_args['recursion'] = not self.args['no_recursion']
             
             
     def _stringify_result(self):

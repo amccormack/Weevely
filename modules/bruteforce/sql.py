@@ -110,9 +110,9 @@ class Sql(Module):
         for chunk in self.args['wordlist']:
             
             joined_chunk='\\n'.join(chunk)
-            args_formats = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'post_field' : post_field, 'data' : joined_chunk }
+            formatted_args = { 'hostname' : self.args['hostname'], 'username' : self.args['username'], 'post_field' : post_field, 'data' : joined_chunk }
             self.mprint("%s: from '%s' to '%s'..." % (self.args['username'], chunk[0], chunk[-1]))
-            result = self.support_vectors.get(self.args['dbms']).execute(args_formats)  
+            result = self.support_vectors.get(self.args['dbms']).execute(formatted_args)  
             if result:
                 user_pwd_matched = user_pwd_re.findall(result)
                 if user_pwd_matched and len(user_pwd_matched[0]) == 2:

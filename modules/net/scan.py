@@ -1,5 +1,5 @@
 
-from core.moduleguess import Module
+from core.module import Module
 from core.moduleexception import ModuleException, ProbeException
 from core.storedargparse import StoredArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork

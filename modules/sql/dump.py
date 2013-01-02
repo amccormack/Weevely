@@ -109,7 +109,7 @@ class Dump(ModuleGuess):
     def _prepare_vector(self):
         if not self.args['table']:
             self.args['table'] = ''
-        self.args_formats = self.args.copy()
+        self.formatted_args = self.args.copy()
         
     def _verify_vector_execution(self):
         if self._result and '-- Dumping data for table' in self._result:

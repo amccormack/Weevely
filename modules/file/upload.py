@@ -75,8 +75,8 @@ class Upload(ModuleGuess):
         i=1
         for chunk in self.args['content_chunks']:
             
-            args_formats = { 'rpath' : self.args['rpath'], 'post_field' : self.args['post_field'], 'data' : chunk }
-            self.current_vector.execute( args_formats)  
+            formatted_args = { 'rpath' : self.args['rpath'], 'post_field' : self.args['post_field'], 'data' : chunk }
+            self.current_vector.execute( formatted_args)  
             
             i+=1
 

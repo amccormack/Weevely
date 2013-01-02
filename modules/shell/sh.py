@@ -45,20 +45,20 @@ fclose($pipes[2]); proc_close($h);""")
             
         # Execute if is current vector is saved or choosen
         if self.current_vector.name in (self.stored_args['vector'], self.args['vector'])  :
-            self._result = self.current_vector.execute( self.args_formats)
+            self._result = self.current_vector.execute( self.formatted_args)
         
         
     def _prepare_vector(self):
         
         # Format cmd
-        self.args_formats['cmd'] = ' '.join(self.args['cmd']).replace( "'", "\\'" )
+        self.formatted_args['cmd'] = ' '.join(self.args['cmd']).replace( "'", "\\'" )
     
         # Format stderr
         if any('$stderr' in p for p in self.current_vector.payloads):
             if self.args['stderr']:
-                self.args_formats['stderr'] = ''
+                self.formatted_args['stderr'] = ''
             else:
-                self.args_formats['stderr'] = ' 2>&1'
+                self.formatted_args['stderr'] = ' 2>&1'
  
 
 
@@ -66,7 +66,7 @@ fclose($pipes[2]); proc_close($h);""")
         
         rand = str(random.randint( 11111, 99999 ))
         
-        slacky_formats = self.args_formats.copy()
+        slacky_formats = self.formatted_args.copy()
         slacky_formats['cmd'] = 'echo %s' % (rand)
         
         if self.current_vector.execute( slacky_formats) == rand:

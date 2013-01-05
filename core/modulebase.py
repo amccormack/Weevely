@@ -41,13 +41,14 @@ class ModuleBase:
         
         
     def run(self, arglist = []):
-        """This is the method called when module run. It calls other methods, in order 
+        """Main method called every module execution. It calls:
         
-        . checking arguments correctness with self._check_args()
-        . preparing vectors and enviroinments with self._prepare()
-        . running vectors with self._probe()
-        . verifying execution with self._verify()
-        . stringifying result with  self._stringify_result()
+        . Check and set arguments (method _check_args(), do not inherit)
+        . Optionally prepares the enviroinment or formats the passed arguments to simplify vector run 
+           (method _prepare(), inherition is optional)
+        . Runs vectors and saves results  (method _probe(), inherition is mandatory)
+        . Optionally verifies probe execution (method _verify(), inherition is optional)
+        . Stringify self._result (method stringify_result(), inherition is optional)
         
         """
         

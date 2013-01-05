@@ -3,7 +3,6 @@ from core.moduleexception import ModuleException, ProbeException, ExecutionExcep
 
 class ModuleGuessBase(Module):
 
-
     def _probe(self):
         
         vectors = []

@@ -141,7 +141,7 @@ class Terminal(Helper, Configs):
                 try:
                     rcfile = open(path, 'w').close()
                 except Exception, e:
-                    raise ModuleException("[!]","Creation '%s' rc file failed" % (path))
+                    raise ModuleException("","Creation '%s' rc file failed" % (path))
                 else:
                     return []
 
@@ -165,7 +165,7 @@ class Terminal(Helper, Configs):
     def __cwd_handler (self, cmd = None):
 
         if cmd == None or len(cmd) ==1:
-            cwd_new = Vector(self.modhandler,  'basedir', 'system.info', 'basedir').execute()
+            cwd_new = Vector(self.modhandler,  'first_cwd', 'system.info', 'cwd').execute()
         elif len(cmd) == 2:
             cwd_new = Vector(self.modhandler,  'getcwd', 'shell.php', 'chdir("$path") && print(getcwd());').execute({ 'path' : cmd[1] })
             if not cwd_new:

@@ -22,8 +22,8 @@ class Terminal(Helper, Configs):
     def __init__( self, modhandler):
 
         self.modhandler = modhandler
-
-        self.__load_rcfile(dirpath + rcfilepath, default_rcfile=True)
+        self._make_home_folder()
+        self.__load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
         self._init_completion()
         
     def loop(self):
@@ -141,7 +141,7 @@ class Terminal(Helper, Configs):
                 try:
                     rcfile = open(path, 'w').close()
                 except Exception, e:
-                    raise ModuleException("Creation '%s' rc file failed" % (path))
+                    raise ModuleException("[!]","Creation '%s' rc file failed" % (path))
                 else:
                     return []
 

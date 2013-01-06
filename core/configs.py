@@ -1,8 +1,17 @@
 import os
 import core.terminal
-import readline, atexit
+import atexit
 
-dirpath = '~/.weevely/'
+try:
+        import readline
+except ImportError:
+    try:
+        import pyreadline as readline
+    except ImportError: 
+        print '[!] Error, readline or pyreadline python module required. In Ubuntu linux run\n[!] sudo apt-get install python-readline'
+        sys.exit(1)
+
+dirpath = '.weevely'
 rcfilepath = 'weevely.rc'
 historyfilepath = 'weevely_history'
 
@@ -20,14 +29,18 @@ class Configs:
         return []
 
     def _historyfile(self):
-        return self.dirpath + historyfilepath
+        return os.path.join(self.dirpath, historyfilepath)
+
+    def _make_home_folder(self):
+
+        self.dirpath = os.path.join(os.path.expanduser('~'),dirpath)
+        
+        if not os.path.exists(self.dirpath):
+            os.mkdir(self.dirpath)
+
 
     def _init_completion(self):
 
-            self.dirpath = os.path.expanduser( dirpath )
-    
-            if not os.path.exists(self.dirpath):
-                os.mkdir(self.dirpath)
     
             self.historyfile = self._historyfile()
 

@@ -30,7 +30,7 @@ class ModHandler:
     
     	try:
     		current_path = os.path.realpath( __file__ )
-    		root_path = '/'.join(current_path.split('/')[:-2]) + '/'
+    		root_path = os.sep.join(current_path.split(os.sep)[:-2]) + os.sep
     		self.path_modules = root_path + 'modules'
     	except Exception, e :
     		raise Exception('Error finding module path: %s' % str(e))
@@ -51,7 +51,7 @@ class ModHandler:
             
             if os.path.isfile(file_path) and file_path.endswith('.py') and file_name != '__init__.py':
                 
-                module_name = '.'.join(file_path[:-3].split('/')[-2:])
+                module_name = '.'.join(file_path[:-3].split(os.sep)[-2:])
                 mod = __import__('modules.' + module_name, fromlist = ["*"])
                 classname = module_name.split('.')[-1].capitalize()
                 

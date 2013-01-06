@@ -21,7 +21,7 @@ class Info(Module):
 
     def _set_vectors(self):
             self.support_vectors.add_vector('document_root', 'shell.php', "@print($_SERVER['DOCUMENT_ROOT']);"),
-            self.support_vectors.add_vector('whoami', 'shell.php', "@print(get_current_user());"),
+            self.support_vectors.add_vector('whoami', 'shell.php', "$u = get_current_user(); if(!$u) { $u=posix_getpwuid(posix_geteuid()); if($u) { $u = $u['name']; } else { $u=getenv('username'); } } print($u);"),
             self.support_vectors.add_vector('hostname', 'shell.php', "@print(gethostname());"),
             self.support_vectors.add_vector('basedir', 'shell.php', "@print(getcwd());"),
             self.support_vectors.add_vector('safe_mode', 'shell.php', "(ini_get('safe_mode') && print(1)) || print(0);"),

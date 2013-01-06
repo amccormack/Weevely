@@ -10,31 +10,33 @@ from core.modulebase import ModuleBase
 
 class Module(ModuleBase):
     '''Generic Module class to inherit.
-    
-    Module object is a dynamically loaded Weevely extension that executes automatic
-    tasks on remote target. Vector objects contains the code to run on remote target.
-    
-    To create a new module, define an object that inherit Module (e.g. 'class MyModule(Module)')
-    into python file situated in 'modules/mygroup/mymodule.py'. Class needs the same name of the
-    python file, with first capital letter.
-    
-    At first run (e.g. running ':mymgroup.mymodule' from terminal for the first time), module 
-    constructor executes following main tasks:
-        
-        A) Defines module arguments (method _set_args(), inherition is recommended) 
-        B) Defines module vectors (method _set_vectors(), inherition is recommended)
-    
-    At every call (e.g. at every ':mymgroup.mymodule' run) run() method parse passed
-    arguments and execute following main tasks:
-    
-        1) Optionally prepares the enviroinment or formats the passed arguments to simplify vector run 
-           (method _prepare(), inherition is optional)
-        2) Runs vectors and saves results  (method _probe(), inherition is mandatory)
-        3) Optionally verifies probe execution (method _verify(), inherition is optional)
-    
-    Example of a basic module that download files from web into target:
 
-    ==================================== webdownload.py ===================================
+    The Module object is a dynamically loaded Weevely extension that executes
+    automatic tasks on the remote target. The Vector objects contain the code to
+    run on remote target.
+
+    To create a new module, define a class that inherit Module (e.g. 'class
+    Mymodule(Module)') in a python file located in a subdirectory of 'modules/',
+    for example 'modules/mygroup/mymodule.py'. The class name must be the same
+    as the python file but starting with a capital letter.
+
+    The module can then be executed from the terminal with ':mygroup.mymodule'.
+
+    Every time the module takes care of:
+
+        1) prepare the environment (method _prepare(), optional)
+        2) run vectors and save results (method _probe(), mandatory)
+        3) verify the probe execution (method _verify(), optional)
+
+    The first time the constructor performs the following preliminary tasks:
+
+        1) Defines module arguments (method _set_args(), recommended)
+        2) Defines module vectors (method _set_vectors(), recommended)
+
+    Follows an example of a basic module that downloads files from the web into
+    target:
+
+    ============================== webdownload.py ==============================
 
     from core.module import Module
     from core.moduleexception import ProbeException, ProbeSucceed
@@ -44,32 +46,35 @@ class Module(ModuleBase):
     class Webdownload(Module):
         
         def _set_args(self):
-            
-            # Declare accepted module parameters. Parameters passed at run are stored in self.args dictionary.
-            
+
+            # Declare the parameters accepted by this module. They will be
+            # stored in the self.args dictionary.
+
             self.argparser.add_argument('url')
             self.argparser.add_argument('rpath')
     
         def _set_vectors(self):
 
-            # Declare vectors to execute. Vector named 'wget' use module 'shell.sh', that execute
-            # shells commands, to run wget. Other vector named 'check_download' use other module
-            # 'file.check' included in Weevely to verify downloaded file. Payload variable fields 
-            # '$path' and '$url' are replaced at vector execution with self.args values.
-            
+            # Declare the vectors to execute. The vector named 'wget' uses the
+            # module 'shell.sh' that executes shell commands to run wget,
+            # 'check_download' uses 'file.check' (included in Weevely) to verify
+            # the downloaded file. The 'payloads' field will be replaced with
+            # values from self.args.
+
             self.support_vectors.add_vector(name='wget', interpreter='shell.sh', payloads = [ 'wget $url -O $rpath' ])
             self.support_vectors.add_vector(name='check_download', interpreter='file.check', payloads = [ '$rpath', 'exists' ])
             
         def _probe(self):
-       
-           # Start download calling 'wget' vector, formatting it with passed options in self.args dictionary.
+
+           # Start the download by calling the 'wget' vector.
            self.support_vectors.get('wget').execute(self.args)
        
         def _verify(self):
-       
-           # Verify downloaded file. Save vector return value in self._result and eventually raise 
-           # ProbeException to stop module execution and print error message.
-    
+
+           # Verify downloaded file. Save the vector return value in
+           # self._result and eventually raise ProbeException to stop module
+           # execution and print an error message.
+
            self._result = self.support_vectors.get('check_download').execute({ 'rpath' : self.args['rpath'] })
            if self._result == False:
                raise ProbeException(self.name, WARN_DOWNLOAD_FAIL)
@@ -82,8 +87,9 @@ class Module(ModuleBase):
 
         
     def _set_vectors(self):
-        """Inherit this method to add vectors in self.vectors and self.support_vectors lists, easily
-        callable in _probe() function. This method is called by module constructor. 
+        """Inherit this method to add vectors in self.vectors and
+        self.support_vectors lists. This method is called by the constructor.
+
         Example of vector declaration:
         
         > self.support_vectors.add_vector(name='vector_name', interpreter='module_name', payloads = [ 'module_param1', '$module_param2', .. ])
@@ -95,49 +101,55 @@ class Module(ModuleBase):
         pass
     
     def _set_args(self):
-        """Inherit this method to set self.argparser arguments. Set new arguments following
-        official python argparse documentation like. This method is called by module constructor.
-        Arguments passed at module runs are stored in Module.args dictionary.
+        """Inherit this method to set self.argparser arguments. This method is
+        called by module constructor. Arguments passed at module execution are
+        stored in the self.args dictionary. See the official python argparse
+        documentation.
         """
         
         pass
         
     def _init_module(self):
-        """Inherit this method to set eventual additional variables. Called by module constructor.
+        """Inherit this method to set additional variables. This method is
+        called by the constructor.
         """
-    
+        pass
+
     def _prepare(self):
-        """Inherit this method to prepare vectors and enviroinment for the probe, using declared
-        vectors. 
-        
-        This method is called at every module run. Throws ModuleException, ProbeException.
+        """Inherit this method to prepare vectors and enviroinment for the
+        probe, using declared vectors.
+
+        This method is called at every module execution. Throws ModuleException,
+        ProbeException.
         """
         
         pass
 
     def _probe(self):
-        """Inherit this method to execute main tasks. Vector declared before are used to call
-        other modules and execute shell and php statements. This method is mandatory to execute tasks. 
-        
+        """Inherit this method to execute the main task. Vector declared before
+        are used to call other modules and execute shell and php
+        statements. This method is mandatory.
+
         Example of vector selection and execution:
         
         > self.support_vectors.get('vector_name').execute({ '$module_param2' : self.args['arg2']})
-        
-        Vector is selected with VectorList.get(name=''), and launched by Vector.execute(templated_params={}), that
-        replace template variables and run it.
-        
-        Probe results should be stored in self._result. 
-        This method is called at every module run. Throws ModuleException, ProbeException, ProbeSucceed. 
-        
+
+        The vector is selected with VectorList.get(name=''), and launched with
+        Vector.execute(templated_params={}), that replaces the template
+        variables and run the vector.
+
+        Probe results should be stored in self._result.  This method is called
+        at every module execution.  Throws ModuleException, ProbeException,
+        ProbeSucceed.
+
         """
         pass
 
     
     def _verify(self):
-        """Inherit this method to check probe result.
-        
-        Results to print and return after moudule execution should be stored in self._result.
-        It is called at every module run. Throws ModuleException, ProbeException, ProbeSucceed.         
-        """
-        pass    
+        """Inherit this method to check the probe result.
 
+        The results should be stored in self._result. It is called at every
+        module execution. Throws ModuleException, ProbeException, ProbeSucceed.
+        """
+        pass

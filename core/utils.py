@@ -15,6 +15,11 @@ url_validator = compile(
 def join_abs_paths(paths,sep = '/'):
     return sep.join([p.strip(sep) for p in paths])
 
+def chunks(l, n):
+    """ Yield successive n-sized chunks from l.
+    """
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
 
 def b64_chunks(l, n):
     return [b64encode(l[i:i+n]) for i in range(0, len(l), n)]

@@ -86,6 +86,6 @@ Contributors
 
 presentation = '''
 [+] Welcome to Weevely. Browse filesystem and execute system commands.
-[+] Use ':help' to list available modules and run selected one.
+[+] Hint: Use ':help' to list available modules.
 
 '''

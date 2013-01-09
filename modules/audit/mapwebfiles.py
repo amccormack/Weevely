@@ -1,5 +1,5 @@
 from core.module import Module
-from core.moduleexception import ProbeException
+from core.moduleexception import ProbeException, ModuleException
 from core.storedargparse import StoredArgumentParser as ArgumentParser
 from external.crawler import Crawler
 from ast import literal_eval
@@ -42,6 +42,8 @@ class Mapwebfiles(Module):
         try:
             crawler = Crawler(url, self.args['depth'], '', '')
             crawler.crawl()
+        except ModuleException, e:
+            raise
         except Exception, e:
             raise ProbeException(self.name, "%s: %s" % (ERR_CRAWLER_EXCEPT, str(e)))
         else:

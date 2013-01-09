@@ -21,16 +21,8 @@ import hashlib
 from cgi import escape
 from traceback import format_exc
 from Queue import Queue, Empty as QueueEmpty
+from core.moduleexception import ModuleException
 
-try:
-    from BeautifulSoup import BeautifulSoup
-except ImportError:
-
-    try:
-        from bs4 import BeautifulSoup
-    except ImportError:
-        print '[!] Error, BeautifulSoup python module required. In Ubuntu linux run\n[!] sudo apt-get install python-beautifulsoup'
-        sys.exit(1)
 
 __version__ = "0.2"
 __copyright__ = "CopyRight (C) 2008-2011 by James Mills"
@@ -191,6 +183,9 @@ class Crawler(object):
                                 link = Link(this_url, link_url, "href")
                                 if link not in self.links_remembered:
                                     self.links_remembered.add(link)
+                                    
+                except ModuleException, e:
+                    raise
                 except Exception, e:
                     print >>sys.stderr, "ERROR: Can't process url '%s' (%s)" % (this_url, e)
                     #print format_exc()
@@ -229,6 +224,17 @@ class Fetcher(object):
         return (request, handle)
 
     def fetch(self):
+        
+        
+        try:
+            from BeautifulSoup import BeautifulSoup
+        except ImportError:
+            try:
+                from bs4 import BeautifulSoup
+            except ImportError:
+                raise ModuleException('crawler','BeautifulSoup python module required. In Debian-like Linux run:\nsudo apt-get install python-beautifulsoup')
+        
+        
         request, handle = self._open()
         self._addHeaders(request)
         if handle:

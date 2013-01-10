@@ -62,7 +62,7 @@ class WebEnv:
     
 
 class Upload2web(Upload):
-    '''Upload binary/ascii file into web folders and guess corresponding url'''
+    '''Upload binary/ascii file into remote web folders and guess corresponding url'''
 
 
     def _set_args(self):

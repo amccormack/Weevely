@@ -5,7 +5,7 @@ from core.moduleexception import ProbeException, ProbeSucceed
 WARN_DOWNLOAD_OK = 'Downloaded succeed'
 
 class Webdownload(ModuleGuess):
-    '''Download binary/ascii files from target filesystem'''
+    '''Download web URL to remote filesystem'''
 
     def _set_vectors(self):
         

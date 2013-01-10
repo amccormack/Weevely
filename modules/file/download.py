@@ -15,7 +15,7 @@ import os
 WARN_NO_SUCH_FILE = 'No such file or permission denied'
 
 class Download(ModuleGuess):
-    '''Download binary/ascii files from target filesystem'''
+    '''Download binary/ascii files from the remote filesystem'''
 
     def _set_vectors(self):
 

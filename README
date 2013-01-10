@@ -1,4 +1,4 @@
-Weevely is a stealth PHP web shell that simulate telnet-like connection. It is an essential tool for web application post exploitation, and can be used as stealth backdoor or as a web shell to manage legit web accounts, even free hosted ones.
+Weevely is a stealth PHP web shell that simulate an SSH-like connection. It is an essential tool for web application post exploitation, and can be used as stealth backdoor or as a web shell to manage legit web accounts, even free hosted ones.
 
 Official website:
 
@@ -15,14 +15,16 @@ https://github.com/epinna/Weevely/wiki/Generators-list
 
 Main features:
 
-* More than 30 modules to automatize administration and post exploitation tasks
+* More than 30 modules to automatize administration and post exploitation tasks:
+
   o Execute commands and browse remote filesystem, even with PHP security restriction
   o Audit common server misconfigurations
   o Run SQL console pivoting on target machine
-  o Open HTTP proxy to tunnel your traffic through target
-  o Simple file transfer from and to target
+  o Proxy your HTTP traffic through target
+  o Mount target filesystem in local mount point
+  o File transfer from and to target
   o Spawn reverse and direct TCP shells
-  o Bruteforce passwords of target system users
+  o Bruteforce SQL accounts through target system users
   o Run port scans from target machine
   o And so on..
 

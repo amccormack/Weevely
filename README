@@ -21,7 +21,7 @@ Main features:
   o Audit common server misconfigurations
   o Run SQL console pivoting on target machine
   o Proxy your HTTP traffic through target
-  o Mount target filesystem in local mount point
+  o Mount target filesystem to local mount point
   o File transfer from and to target
   o Spawn reverse and direct TCP shells
   o Bruteforce SQL accounts through target system users

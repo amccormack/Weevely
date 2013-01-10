@@ -24,7 +24,7 @@ from core.utils import randstr
 from core.moduleexception import ModuleException
 from string import Template, ascii_letters, digits
 
-PERMITTED_CHARS = ascii_letters + digits + '_.~#'
+PERMITTED_CHARS = ascii_letters + digits + '_.~'
 
 WARN_SHORT_PWD = 'Invalid password, use words longer than 3 characters'
 WARN_CHARS = 'Invalid password, password permitted chars are \'%s\'' % PERMITTED_CHARS

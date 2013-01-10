@@ -42,6 +42,8 @@ class Generators(SimpleTestCase):
         
         self.assertRegexpMatches(self._warn(':generate.php %s /tmp/sdalkjdas/kjh'  % (phpbd_pwd)), modules.generate.php.WARN_WRITING_DATA)
         self.assertRegexpMatches(self._warn(':generate.php %s %s2'  % (phpbd_pwd[:2], temp_file.name)), core.backdoor.WARN_SHORT_PWD)
+        self.assertRegexpMatches(self._warn(':generate.php @>!? %s3'  % (temp_file.name)), core.backdoor.WARN_CHARS)
+
 
         # No output expected 
         self.assertEqual(self._outp(':generate.php %s %s'  % (phpbd_pwd, temp_file.name+'2')),'')
@@ -62,6 +64,7 @@ class Generators(SimpleTestCase):
         
         self.assertRegexpMatches(self._warn(':generate.htaccess %s /tmp/sdalkjdas/kjh'  % (phpbd_pwd)), modules.generate.php.WARN_WRITING_DATA)
         self.assertRegexpMatches(self._warn(':generate.htaccess %s %s2'  % (phpbd_pwd[:2], temp_file.name)), core.backdoor.WARN_SHORT_PWD)
+        self.assertRegexpMatches(self._warn(':generate.htaccess @>!?!* %s3'  % (temp_file.name)), core.backdoor.WARN_CHARS)
 
 
         # No output expected 
@@ -89,6 +92,7 @@ class Generators(SimpleTestCase):
         
         self.assertRegexpMatches(self._warn(':generate.img %s /tmp/sdalkj'  % (phpbd_pwd)), modules.generate.img.WARN_IMG_NOT_FOUND)
         self.assertRegexpMatches(self._warn(':generate.img %s %s /tmp/ksdajhjksda/kjdha'  % (phpbd_pwd, temp_imgpathname)), modules.generate.img.WARN_DIR_CREAT)
+        self.assertRegexpMatches(self._warn(':generate.img [@>!?] %s %s3'  % (temp_imgpathname, temp_outputdir)), core.backdoor.WARN_CHARS)
 
         self.assertEqual(self._res(':generate.img %s %s %s'  % (phpbd_pwd, temp_imgpathname, temp_outputdir)), [os.path.join(temp_outputdir,temp_filename), os.path.join(temp_outputdir, '.htaccess')])
 

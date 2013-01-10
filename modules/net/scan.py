@@ -12,7 +12,7 @@ WARN_NO_SUCH_FILE = 'No such file or permission denied'
 WARN_INVALID_SCAN = 'Invalid scan range, check syntax'
 
 class Scan(Module):
-    '''Print interface addresses'''
+    '''Port scan open TCP ports'''
     
     def _set_vectors(self):
         self.support_vectors.add_vector('ifaces', 'net.ifaces', [])

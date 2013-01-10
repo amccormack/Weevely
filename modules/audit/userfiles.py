@@ -7,7 +7,7 @@ import os
 
 
 class Userfiles(Module):
-    '''Find wrong file permissions in users home folders'''
+    '''Guess files with wrong permissions in users home folders'''
 
     def _set_vectors(self):
         self.support_vectors.add_vector('enum', 'file.enum', ["asd", "-pathlist", "$pathlist"])

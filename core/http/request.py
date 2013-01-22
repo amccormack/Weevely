@@ -69,10 +69,14 @@ class Request:
         self.opener.addheaders.append((key, value))
 
     def read(self, bytes= -1):
-        if self.data:
-            handle = self.opener.open(self.url, data=urlencode(self.data))
-        else:
-            handle = self.opener.open(self.url)
+
+        try:
+            if self.data:
+                handle = self.opener.open(self.url, data=urlencode(self.data))
+            else:
+                handle = self.opener.open(self.url)
+        except urllib2.HTTPError, handle:
+            pass
 
         if bytes > 0:
             return handle.read(bytes)

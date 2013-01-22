@@ -1,5 +1,5 @@
 from core.module import Module
-from core.moduleexception import ModuleException, ProbeException, ExecutionException
+from core.moduleexception import ModuleException, ProbeException, ExecutionException, ProbeSucceed
 
 class ModuleGuessBase(Module):
 
@@ -26,6 +26,9 @@ class ModuleGuessBase(Module):
                     self._execute_vector()
                     self._verify_vector_execution()
                     
+                except ProbeSucceed, e:
+                    self.stored_args['vector'] = self.current_vector.name
+                    raise
                 except ExecutionException:
                     pass
 

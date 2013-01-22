@@ -42,9 +42,11 @@ class StoredArgumentParser(ArgumentParser):
                         replacement_value = None
                         # Check if there is a stored value and is not None
                         if action.dest in stored_args_dict and stored_args_dict[action.dest] != None:
+
                             # If positional, add it also to args to avoid 'too few arguments' exception on _parse_known_args
-                            if action.nargs not in [None, argparse.OPTIONAL]:
+                            if action.required or action.nargs not in [None, argparse.OPTIONAL]:
                                 args.append(stored_args_dict[action.dest])
+                                
                             replacement_value = self._get_values(action, [ stored_args_dict[action.dest] ])
                                 
                         # Else, check if default is present

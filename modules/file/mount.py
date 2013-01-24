@@ -20,8 +20,8 @@ WARN_MOUNT = 'Mount call failed'
 WARN_MOUNT_NOT_FOUND = 'No HTTPfs mount found'
 WARN_HTTPFS_CHECK = 'Check HTTPfs configuration following \'https://github.com/cyrus-and/httpfs\' instructions'
 WARN_MOUNT_OK = """Mounted '%s' into local folder '%s'. 
-Run ":net.mount -just-mount '%s'" to remount without reinstalling remote agent.
-Umount with ':net.mount -umount-all'. When not needed anymore, remove%sremote agent."""
+Run ":file.mount -just-mount '%s'" to remount without reinstalling remote agent.
+Umount with ':file.mount -umount-all'. When not needed anymore, remove%sremote agent."""
 
 class Mount(Upload2web):
     '''Mount remote filesystem using HTTPfs '''

@@ -100,7 +100,17 @@ class Upload2web(Upload):
             filename = self.args['lpath'].split('/')[-1]
             
             # Check if starting folder is actually in web root
-            absolute_path_folder, url_folder = webenv.folder_map(self.args['startpath'])
+            try:
+                absolute_path_folder, url_folder = webenv.folder_map(self.args['startpath'])
+            except ProbeException, e:
+                # If default research fails, retry from web root base folder
+                if self.args['startpath'] != '.':
+                    raise
+                else:
+                    try:
+                        absolute_path_folder, url_folder = webenv.folder_map(webenv.base_folder_path)
+                    except ProbeException, e2:                
+                        raise e
             
             # Start find in selected folder
             writable_subdirs = self.support_vectors.get('find_writable_dirs').execute({'path' : absolute_path_folder})

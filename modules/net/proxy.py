@@ -5,7 +5,7 @@ from core.storedargparse import StoredArgumentParser as ArgumentParser
 from argparse import SUPPRESS
 import re, os
 from random import choice
-from core.http.request import agents
+from core.http.request import agent
 
 import SocketServer
 import urllib
@@ -19,7 +19,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
     def __init__(self, request, client_address, server):
 
         self.proxies = {}
-        self.useragent = choice(agents)
+        self.useragent = agent
         self.phpproxy = server.rurl
 
         try:

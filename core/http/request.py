@@ -21,7 +21,7 @@ url_dissector = compile(
     r':(\d+)?' # optional port
     r'(?:/?|[/?]\S+)$', IGNORECASE)
 
-agents = (
+agent = choice((
     "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6",
     "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)",
     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:17.0) Gecko/20100101 Firefox/17.0",
@@ -34,7 +34,7 @@ agents = (
     "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0",
     "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11",
     "Mozilla/5.0 (Linux; U; Android 2.2; fr-fr; Desire_A8181 Build/FRF91)",
-)
+))
 
 class Request:
 
@@ -48,6 +48,7 @@ class Request:
             self.opener = urllib2.build_opener(SocksiPyHandler(*proxydata))
         else:
             self.opener = urllib2.build_opener()
+            
             
        
     def __parse_proxy(self, proxyurl):
@@ -77,6 +78,8 @@ class Request:
                 handle = self.opener.open(self.url)
         except urllib2.HTTPError, handle:
             pass
+        
+        self['User-agent'] = agent
 
         if bytes > 0:
             return handle.read(bytes)

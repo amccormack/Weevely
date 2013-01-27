@@ -69,7 +69,7 @@ class proxyClass {
             curl_setopt($ch, CURLOPT_POST,0);
         }
         curl_setopt($ch, CURLOPT_VERBOSE,0);
-        curl_setopt($ch, CURLOPT_USERAGENT,$_SERVER['user-agent']);
+        curl_setopt($ch, CURLOPT_USERAGENT,$_SERVER['HTTP_USER_AGENT']);
         if($posted) curl_setopt($ch, CURLOPT_POSTFIELDS,$POSTVARS);
         if($files)  curl_setopt($ch, CURLOPT_UPLOAD,1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION,1);

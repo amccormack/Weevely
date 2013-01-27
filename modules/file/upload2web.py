@@ -38,7 +38,7 @@ class WebEnv:
         if not absolute_path:
             raise ProbeException(self.name, '\'%s\' %s' % (relative_path_folder, WARN_NOT_FOUND))
         
-        if not absolute_path.startswith(self.base_folder_path):
+        if not absolute_path.startswith(self.base_folder_path.rstrip('/')):
             raise ProbeException(self.name, '\'%s\' %s' % (absolute_path, WARN_NOT_WEBROOT_SUBFOLDER) ) 
             
         relative_to_webroot_path = absolute_path.replace(self.base_folder_path,'')

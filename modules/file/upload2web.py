@@ -12,6 +12,7 @@ from argparse import SUPPRESS
 import os
 from random import choice
 from string import ascii_lowercase
+from urlparse import urlsplit, urlunsplit
 
 
 WARN_WEBROOT_INFO = 'Error getting web enviroinment informations'
@@ -26,9 +27,25 @@ class WebEnv:
         self.support_vectors = support_vectors
         self.name = 'webenv'
         
-        self.base_folder_path = self.support_vectors.get('document_root').execute()
-        self.base_folder_url = '/'.join(url.split('/')[:3])
-        if not self.base_folder_path:
+        script_folder = self.support_vectors.get('script_folder').execute()
+        script_url_splitted = urlsplit(url)
+        script_url_path_folder, script_url_path_filename = os.path.split(script_url_splitted.path)
+        
+        url_folder_pieces = script_url_path_folder.split(os.sep)
+        folder_pieces = script_folder.split(os.sep)
+
+        for pieceurl, piecefolder in zip(reversed(url_folder_pieces), reversed(folder_pieces)):
+            if pieceurl == piecefolder:
+                folder_pieces.pop()
+                url_folder_pieces.pop()
+            else:
+                break
+            
+        base_url_path_folder = os.sep.join(url_folder_pieces)
+        self.base_folder_url = urlunsplit(script_url_splitted[:2] + ( base_url_path_folder, ) + script_url_splitted[3:])
+        self.base_folder_path = os.sep.join(folder_pieces)
+        
+        if not self.base_folder_url or not self.base_folder_path:
             raise ProbeException(self.name, WARN_WEBROOT_INFO)
         
     def folder_map(self, relative_path_folder = '.'):
@@ -39,7 +56,7 @@ class WebEnv:
             raise ProbeException(self.name, '\'%s\' %s' % (relative_path_folder, WARN_NOT_FOUND))
         
         if not absolute_path.startswith(self.base_folder_path.rstrip('/')):
-            raise ProbeException(self.name, '\'%s\' %s' % (absolute_path, WARN_NOT_WEBROOT_SUBFOLDER) ) 
+            raise ProbeException(self.name, '\'%s\' not in \'%s\': %s' % (absolute_path, self.base_folder_path.rstrip('/'), WARN_NOT_WEBROOT_SUBFOLDER) ) 
             
         relative_to_webroot_path = absolute_path.replace(self.base_folder_path,'')
         
@@ -83,6 +100,7 @@ class Upload2web(Upload):
         self.support_vectors.add_vector('find_writable_dirs', 'find.perms', '-type d -writable $path'.split(' '))
         self.support_vectors.add_vector('document_root', 'system.info', 'document_root' )
         self.support_vectors.add_vector('normalize', 'shell.php', 'print(realpath("$path"));')
+        self.support_vectors.add_vector('script_folder', 'shell.php', 'print(dirname(__FILE__));')
 
     
     def _prepare(self):
@@ -109,7 +127,7 @@ class Upload2web(Upload):
                 else:
                     try:
                         absolute_path_folder, url_folder = webenv.folder_map(webenv.base_folder_path)
-                    except ProbeException, e2:                
+                    except ProbeException, e2:       
                         raise e
             
             # Start find in selected folder

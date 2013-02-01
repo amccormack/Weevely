@@ -1,6 +1,6 @@
-from baseclasses import FolderFSTestCase, conf
-import os, urllib2
-import os, sys, time
+from baseclasses import FolderFSTestCase
+from test import conf
+import os, sys, time, urllib2, signal
 sys.path.append(os.path.abspath('..'))
 import modules
 
@@ -44,6 +44,9 @@ class Proxies(FolderFSTestCase):
         self.assertTrue(page)
         self.assertRegexpMatches(page, conf['web_page4_content'])        
         
+
+    def __killpid(self, pid):
+        os.kill(pid, signal.SIGKILL)
         
     
     def test_phpproxy(self):
@@ -71,27 +74,34 @@ class Proxies(FolderFSTestCase):
         
         self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)
         
-        self._res(":net.proxy")
+        proxydata = self._res(":net.proxy")
         self.__check_proxyopen()
-        self._res(":net.proxy -startpath %s/.././%s/./ -lport 8082" % (self.dirs[0], self.dirs[0]))
+        self.__killpid(proxydata[2])
+        
+        proxydata = self._res(":net.proxy -startpath %s/.././%s/./ -lport 8082" % (self.dirs[0], self.dirs[0]))
         self.__check_proxyopen(proxyport=8082)
+        self.__killpid(proxydata[2])
         
         self.assertRegexpMatches(self._warn(":net.proxy -startpath unexistant"), modules.file.upload2web.WARN_NOT_FOUND)
         self.assertRegexpMatches(self._warn(":net.proxy -startpath /tmp/"), modules.file.upload2web.WARN_NOT_WEBROOT_SUBFOLDER)
         self.assertRegexpMatches(self._warn(":net.proxy -startpath /unexistant"), modules.file.upload2web.WARN_NOT_FOUND)
         
-        web_base_url = '%s%s' %  (conf['env_base_web_url'], self.basedir.replace(conf['env_base_web_dir'],''))
-        
-        self.assertEqual(self._res(":net.proxy %s/.././%s/./inte3.php -lport 8083 -force " % (self.dirs[0], self.dirs[0])), [ '%s/%s/inte3.php' % (self.basedir, self.dirs[0]), '%s/%s/inte3.php' % (web_base_url, self.dirs[0]) ])
+        web_base_url = '%s/%s' %  (conf['env_base_web_url'].rstrip('/'), self.basedir.replace(conf['env_base_web_dir'],'').lstrip('/'))
+        proxydata = self._res(":net.proxy %s/.././%s/./inte3.php -lport 8083 -force " % (self.dirs[0], self.dirs[0]))
+        self.assertEqual(proxydata[:2], [ '%s/%s/inte3.php' % (self.basedir.rstrip('/'), self.dirs[0].rstrip('/')), '%s/%s/inte3.php' % (web_base_url.rstrip('/'), self.dirs[0].rstrip('/')) ])
         self.__check_proxyopen(proxyport=8083)
         self.assertRaises(urllib2.URLError,self.__check_proxyopen,proxyport=8084)
+        self.__killpid(proxydata[2])        
 
-        self.assertEqual(self._res(":net.proxy %s/.././%s/./inte3.php -lport 8084 -force -just-install" % (self.dirs[0], self.dirs[0])), [ '%s/%s/inte3.php' % (self.basedir, self.dirs[0]), '%s/%s/inte3.php' % (web_base_url, self.dirs[0]) ])
+        proxydata = self._res(":net.proxy %s/.././%s/./inte3.php -lport 8084 -force -just-install" % (self.dirs[0], self.dirs[0]))
+        self.assertEqual( proxydata[:2], [ '%s/%s/inte3.php' % (self.basedir.rstrip('/'), self.dirs[0].rstrip('/')), '%s/%s/inte3.php' % (web_base_url.rstrip('/'), self.dirs[0].rstrip('/')) ])
         self.assertRaises(urllib2.URLError,self.__check_proxyopen,proxyport=8084)
-
-        self.assertEqual(self._res(":net.proxy -lport 8084 -force -just-run %s" % ('%s/%s/inte3.php' % (web_base_url, self.dirs[0]))), [ '', '%s/%s/inte3.php' % (web_base_url, self.dirs[0]) ])
+        self.__killpid(proxydata[2])  
+        
+        proxydata = self._res(":net.proxy -lport 8084 -force -just-run %s" % ('%s/%s/inte3.php' % (web_base_url, self.dirs[0])))
+        self.assertEqual( proxydata[:2], [ '', '%s/%s/inte3.php' % (web_base_url, self.dirs[0]) ])
         self.__check_proxyopen(proxyport=8084)
-
+        self.__killpid(proxydata[2])  
 
         self.assertRegexpMatches(self._warn(":net.proxy unexistant/unexistant"), modules.file.upload2web.WARN_NOT_FOUND)
         self.assertRegexpMatches(self._warn(":net.proxy /tmp/unexistant.php"), modules.file.upload2web.WARN_NOT_WEBROOT_SUBFOLDER)

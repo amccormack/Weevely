@@ -2,7 +2,7 @@ from baseclasses import RcTestCase
 from tempfile import NamedTemporaryFile
 from os import path, remove
 from commands import getstatusoutput
-from baseclasses import conf
+from test import conf
 
 rc_file = """
 :shell.php print(\'W\');

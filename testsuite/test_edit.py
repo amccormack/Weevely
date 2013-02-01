@@ -19,7 +19,6 @@ class Edit(SimpleTestCase):
         
         self.assertEqual(self._res(":file.read %s" % temp_filename), '11')
         
-        
         self.assertRegexpMatches(self._warn(""":file.edit /tmp/non/existant -editor "%s" """ % (editor)), modules.file.edit.WARN_UPLOAD_FAILED)
         self.assertRegexpMatches(self._warn(""":file.edit /etc/protocols -editor "%s" """ % (editor)), modules.file.edit.WARN_UPLOAD_FAILED)
         self.assertRegexpMatches(self._warn(""":file.edit /etc/shadow -editor "%s" """ % (editor)), modules.file.edit.WARN_DOWNLOAD_FAILED)

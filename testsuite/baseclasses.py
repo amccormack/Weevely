@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, socket, unittest, shlex, random, pexpect
+import sys, os, socket, unittest, shlex, random
 sys.path.append(os.path.abspath('..'))
 import core.terminal
 from core.modulehandler import ModHandler
@@ -10,12 +10,9 @@ from PythonProxy import start_server, start_dummy_tcp_server
 from thread import start_new_thread    
 from shutil import move
 from time import sleep
-
-confpath = 'conf.ini'
-
-configparser = ConfigParser()
-configparser.read(confpath)
-conf = configparser._sections['global']
+from test import conf
+from core.utils import randstr
+from commands import getstatusoutput
 
 class SimpleTestCase(unittest.TestCase):
     
@@ -31,7 +28,7 @@ class SimpleTestCase(unittest.TestCase):
 
     @classmethod  
     def _setenv(cls):  
-        cls.basedir = os.path.join(conf['env_base_writable_web_dir'], ''.join(random.choice(ascii_lowercase) for x in range(4)))
+        cls.basedir = os.path.join(conf['env_base_writable_web_dir'], randstr(4))
         cls._env_mkdir(cls.basedir)
         
     @classmethod     
@@ -39,8 +36,8 @@ class SimpleTestCase(unittest.TestCase):
         cls._env_rm()        
 
     @classmethod
-    def _run_test(cls, command, quiet=True):
-        if quiet:
+    def _run_test(cls, command):
+        if not conf['showtest']:
             stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')  
         else:
@@ -48,7 +45,7 @@ class SimpleTestCase(unittest.TestCase):
             
         cls.term.run_cmd_line(shlex.split(command))
         
-        if quiet: 
+        if not conf['showtest']: 
             sys.stdout = stdout
         
 
@@ -65,22 +62,25 @@ class SimpleTestCase(unittest.TestCase):
         return self.term._last_result
 
     @classmethod  
-    def _run_cmd(cls, cmd):
-        #print '\n%s' % cmd,
-        child = pexpect.spawn(cmd, timeout=int(conf['timeout']))
-        idx = child.expect([pexpect.TIMEOUT, pexpect.EOF])
-        #if idx == 0: child.interact()
+    def _run_cmd(cls, cmd, weevely = True):
+        if weevely:
+            command = '%s %s %s %s' % (conf['cmd'], conf['url'], conf['pwd'], cmd)
+        else:
+            command = cmd
+            
+        status, output = getstatusoutput(command)
         
-
+        if conf['showcmd']:
+            print '\n%s> %s' % (command, output)
+         
     @classmethod  
     def _env_mkdir(cls, relpath):
         abspath = os.path.join(cls.basedir, relpath)
         cmd = Template(conf['env_mkdir_command']).safe_substitute(path=abspath)
         cls._run_cmd(cmd)
-
         
     @classmethod  
-    def _env_newfile(cls, relpath, content = '1', currentuser=False):
+    def _env_newfile(cls, relpath, content = '1'):
     
         file = NamedTemporaryFile()
         file.close()
@@ -91,59 +91,38 @@ class SimpleTestCase(unittest.TestCase):
         f.close()
         
         abspath = os.path.join(cls.basedir, relpath)
-        if not currentuser:
-            cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
-        else:
-            cmd = Template(conf['env_cp_command_currentuser']).safe_substitute(frompath=frompath, topath=abspath)
-            
+        cmd = Template(conf['env_cp_command']).safe_substitute(frompath=frompath, topath=abspath)
         cls._run_cmd(cmd)
 
 
-
     @classmethod  
-    def _env_chmod(cls, relpath, mode='744', currentuser=False, recursion=False):
+    def _env_chmod(cls, relpath, mode='744'):
         abspath = os.path.join(cls.basedir, relpath)
         
-        if not recursion:
-            recursive = ''
-        else:
-            recursive = ' -R '
-        
-        if not currentuser:
-            cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode, recursive=recursive)
-        else:
-            cmd = Template(conf['env_chmod_command_currentuser']).safe_substitute(path=abspath, mode=mode, recursive=recursive)
-            
-
+        cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode)
         cls._run_cmd(cmd)
 
     @classmethod  
-    def _env_rm(cls, relpath = '', currentuser=False):
+    def _env_rm(cls, relpath = ''):
         abspath = os.path.join(cls.basedir, relpath)
         
         # Restore modes
-        cls._env_chmod(cls.basedir, recursion=True)
+        #cls._env_chmod(cls.basedir, recursion=True)
         
         if cls.basedir.count('/') < 3:
             print 'Please check %s, not removing' % cls.basedir
             return
         
-        if not currentuser:
-            cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
-        else:
-            cmd = Template(conf['env_rm_command_currentuser']).safe_substitute(path=abspath)
+        cmd = Template(conf['env_rm_command']).safe_substitute(path=abspath)
 
         cls._run_cmd(cmd)
 
 
     @classmethod  
-    def _env_cp(cls, absfrompath, reltopath, currentuser=False):
+    def _env_cp(cls, absfrompath, reltopath):
         
         abstopath = os.path.join(cls.basedir, reltopath)
-        if not currentuser:
-            cmd = Template(conf['env_cp_command']).safe_substitute(frompath=absfrompath, topath=abstopath)
-        else:
-            cmd = Template(conf['env_cp_command_currentuser']).safe_substitute(frompath=absfrompath, topath=abstopath)
+        cmd = Template(conf['env_cp_command']).safe_substitute(frompath=absfrompath, topath=abstopath)
             
         cls._run_cmd(cmd)
 
@@ -160,9 +139,10 @@ class FolderFSTestCase(SimpleTestCase):
         
         for i in range(1,len(newdirs)+1):
             folder = os.path.join(*newdirs[:i])
+            cls._env_mkdir(os.path.join(folder))
             cls.dirs.append(folder)
         
-        cls._env_mkdir(os.path.join(*newdirs))
+        
 
     @classmethod
     def _unsetenv(cls):
@@ -189,7 +169,20 @@ class FolderFileFSTestCase(FolderFSTestCase):
             i+=1
 
         # Restore modes
-        cls._env_chmod(cls.basedir, recursion=True)
+        #cls._env_chmod(cls.basedir, recursion=True)
+
+    @classmethod  
+    def _env_chmod(cls, relpath, mode='744', recursive = False):
+        
+        if recursive:
+            items = sorted(cls.filenames + cls.dirs)
+        else:
+            items = [ relpath ]
+        
+        for item in items:
+            abspath = os.path.join(cls.basedir, item)
+            cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode)
+            cls._run_cmd(cmd)
 
 class RcTestCase(SimpleTestCase):
     

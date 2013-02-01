@@ -1,9 +1,10 @@
-from baseclasses import SimpleTestCase, conf
+from baseclasses import SimpleTestCase
 from tempfile import NamedTemporaryFile
 import random, string
 import sys, os
 sys.path.append(os.path.abspath('..'))
 import modules
+from test import conf
 
 class BruteSQL(SimpleTestCase):
     

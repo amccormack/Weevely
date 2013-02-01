@@ -2,7 +2,7 @@ from baseclasses import ProxyTestCase
 from tempfile import NamedTemporaryFile
 from os import path, remove
 from commands import getstatusoutput
-from baseclasses import conf
+from test import conf
 import PythonProxy
 import os, sys
 sys.path.append(os.path.abspath('..'))

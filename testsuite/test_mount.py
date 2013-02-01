@@ -1,4 +1,5 @@
-from baseclasses import FolderFSTestCase, conf
+from baseclasses import FolderFSTestCase
+from test import conf
 from core.utils import randstr
 from tempfile import mkdtemp
 import os, sys

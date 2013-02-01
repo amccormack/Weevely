@@ -18,7 +18,6 @@ class FSEnum(SimpleTestCase):
                     'unexistant': ['', '', '', '']
                     }
         
-        
         temp_path = NamedTemporaryFile(); 
         temp_path.write('\n'.join(expected_enum_map.keys()))
         temp_path.flush() 

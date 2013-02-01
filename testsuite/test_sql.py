@@ -1,4 +1,5 @@
-from baseclasses import SimpleTestCase, conf
+from baseclasses import SimpleTestCase
+from test import conf
 from tempfile import NamedTemporaryFile
 import random, string
 import sys, os
@@ -43,7 +44,7 @@ class MySql(SimpleTestCase):
         
         # Standard test
         self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema' % ( user, pwd ) ), "-- Dumping data for table `COLUMNS`")
-        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema' % ( user ) ), modules.sql.dump.WARN_NO_DUMP)
+        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema' % ( user ) ), modules.sql.dump.WARN_DUMP_INCOMPLETE)
              
         # table
         self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
@@ -59,7 +60,7 @@ class MySql(SimpleTestCase):
         self.assertRegexpMatches(self._warn(':sql.dump %s %s information_schema -table TABLES -ldump /wrongpath' % ( user, pwd ) ), modules.sql.dump.WARN_DUMP_ERR_SAVING)
 
         # host
-        self.assertRegexpMatches(self._warn(':sql.dump %s %s information_schema -table TABLES -host wronghost' % ( user, pwd ) ), modules.sql.dump.WARN_NO_DUMP)
+        self.assertRegexpMatches(self._warn(':sql.dump %s %s information_schema -table TABLES -host wronghost' % ( user, pwd ) ), modules.sql.dump.WARN_DUMP_INCOMPLETE)
         
 
 class PGSql(SimpleTestCase):

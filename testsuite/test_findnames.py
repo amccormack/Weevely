@@ -1,4 +1,5 @@
-from baseclasses import FolderFileFSTestCase, conf
+from baseclasses import FolderFileFSTestCase
+from test import conf
 import os, sys
 sys.path.append(os.path.abspath('..'))
 import modules

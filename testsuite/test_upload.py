@@ -1,9 +1,11 @@
-from baseclasses import FolderFSTestCase, conf
+from baseclasses import FolderFSTestCase
+from test import conf
 from core.utils import randstr
 import os, sys
 from string import ascii_lowercase
 sys.path.append(os.path.abspath('..'))
 import modules
+from urlparse import urljoin
 
 
 class FSUpload(FolderFSTestCase):
@@ -34,9 +36,8 @@ class FSUpload(FolderFSTestCase):
         filename_rand = randstr(4)
         filepath_rand = os.path.join(self.basedir, filename_rand)
         
-        env_writable_base_url = os.path.join(conf['env_base_web_url'], self.basedir.replace(conf['env_base_web_dir'],''))
-        env_writable_url = os.path.join(conf['env_base_web_url'], conf['env_base_writable_web_dir'].replace(conf['env_base_web_dir'],''))
-        
+        env_writable_base_url = urljoin(conf['env_base_web_url'], self.basedir.replace(conf['env_base_web_dir'],''))
+        env_writable_url = urljoin(conf['env_base_web_url'], conf['env_base_writable_web_dir'].replace(conf['env_base_web_dir'],''))
         
         self._outp('cd %s' % self.basedir)
         self.assertEqual(self._res(':file.upload2web /etc/protocols' ), ['%s/protocols' % self.basedir, '%s/protocols' % env_writable_base_url])
@@ -55,7 +56,7 @@ class FSUpload(FolderFSTestCase):
         # In webroot but not writable
         self.assertRegexpMatches(self._warn(':file.upload2web /etc/protocols ../../protocols' ), modules.file.upload.WARN_UPLOAD_FAIL)
         
-        self.assertEqual(self._res(':file.upload2web /etc/protocols -startpath ../../ -force' ), ['%s/protocols' % conf['env_base_writable_web_dir'], '%s/protocols' % env_writable_url])
+        self.assertEqual(self._res(':file.upload2web /etc/protocols -startpath ../../ -force' ), ['%s/protocols' % conf['env_base_writable_web_dir'].rstrip('/'), '%s/protocols' % env_writable_url.rstrip('/')])
         self.__class__._env_rm('%s/protocols' % conf['env_base_writable_web_dir'])
         
         self.assertEqual(self._res(':file.upload2web /bin/true -force'), ['%s/true' % self.basedir, '%s/true' % env_writable_base_url])

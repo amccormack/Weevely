@@ -1,11 +1,11 @@
-from baseclasses import SimpleTestCase
 import sys, os
+from test import conf
 sys.path.append(os.path.abspath('..'))
 import modules
-
+from unittest import skipIf
+from baseclasses import SimpleTestCase
 
 class Shells(SimpleTestCase):
-
 
     def test_php(self):
         
@@ -19,16 +19,17 @@ class Shells(SimpleTestCase):
         self.assertEqual(self._outp(':shell.php echo(2); -precmd print(1);'), '12')  
         self.assertEqual(self._outp(':shell.php -post "{ \'FIELD\':\'VALUE\' }" echo($_POST[\'FIELD\']);'), 'VALUE') 
 
+    @skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
     def test_sh(self):
         self.assertEqual(self._outp(':shell.sh echo $((1+1))'), '2')
         self.assertEqual(self._outp('echo $((1+1))'), '2')
         self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector shell_exec'), '2')
-        self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector system'), '2')
         self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector exec'), '2')
         self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector popen'), '2')
         #self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector python_eval'), '2')
         #self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector perl_system'), '2')
         self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector proc_open'), '2')
+        self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector system'), '2')
         self.assertEqual(self._outp(':shell.sh \'(echo "VISIBLE" >&2)\' -stderr'), 'VISIBLE')
         self.assertEqual(self._outp(':shell.sh \'(echo "INVISIBLE" >&2)\''), '')
       

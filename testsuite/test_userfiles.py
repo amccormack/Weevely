@@ -1,34 +1,21 @@
-from baseclasses import SimpleTestCase, FolderFSTestCase, conf
+from baseclasses import SimpleTestCase, FolderFSTestCase
+from test import conf
 from tempfile import NamedTemporaryFile
+from unittest import skipIf
 import os
 
 
 class FSUserFiles(SimpleTestCase):
     
-    @classmethod
-    def _setenv(cls):    
-        FolderFSTestCase._setenv.im_func(cls)
-        cls._env_chmod(conf['currentuser_home_path'], '755', currentuser=True)
-        cls._env_chmod(conf['currentuser_path_1'], '644', currentuser=True)
-        cls._env_chmod(conf['currentuser_path_2'], '644', currentuser=True)
-        
-    @classmethod
-    def _unsetenv(cls):
-        FolderFSTestCase._unsetenv.im_func(cls)
-        cls._env_chmod(conf['currentuser_home_path'], conf['currentuser_home_mode'], currentuser=True)
-        cls._env_chmod(conf['currentuser_path_1'], conf['currentuser_default_mode_1'], currentuser=True)
-        cls._env_chmod(conf['currentuser_path_2'], conf['currentuser_default_mode_2'], currentuser=True)
-        
-    
-    
+    @skipIf(not conf['permtest'] or "false" in conf['permtest'].lower(), "Skipping permission tests")
     def test_userfiles(self):
         
         expected_enum_map = {
-            os.path.join(conf['currentuser_home_path'],conf['currentuser_path_1']): ['exists', 'readable', '', ''],
-            os.path.join(conf['currentuser_home_path'],conf['currentuser_path_2']): ['exists', 'readable', '', '']
+            os.path.join(conf['permtest_home_path'],conf['permtest_path_1']): ['exists', 'readable', '', ''],
+            os.path.join(conf['permtest_home_path'],conf['permtest_path_2']): ['exists', 'readable', '', '']
             }
         
-        path_list = [conf['currentuser_path_1'], conf['currentuser_path_2'] ]
+        path_list = [conf['permtest_path_1'], conf['permtest_path_2'] ]
         
         temp_path = NamedTemporaryFile(); 
         temp_path.write('\n'.join(path_list)+'\n')
@@ -41,3 +28,4 @@ class FSUserFiles(SimpleTestCase):
 
         temp_path.close()
       
+        print 'Remember to restore \'%s\' permission to \'700\'' % conf['permtest_home_path']

@@ -1,7 +1,9 @@
 from baseclasses import FolderFileFSTestCase
+from test import conf
 import os, sys
 sys.path.append(os.path.abspath('..'))
 import modules
+from unittest import skipIf
 
 class FSRemove(FolderFileFSTestCase):
 
@@ -26,11 +28,13 @@ class FSRemove(FolderFileFSTestCase):
         self.assertRegexpMatches(self._warn(':file.rm %s -recursive -vector php_rmdir' % os.path.join(self.basedir,self.dirs[2])), 'function rrmdir')
 
         # Vectors
-        self.assertRegexpMatches(self._warn(':set shell.php debug=1'), 'debug=\'1\'')
         self.assertRegexpMatches(self._warn(':file.rm %s -recursive -vector rm' % os.path.join(self.basedir,self.dirs[1])), 'rm -rf %s' % os.path.join(self.basedir,self.dirs[1]) )
         
+        self.assertRegexpMatches(self._warn(':set shell.php debug=4'), 'debug=\'4\'')
+        
+        
+    @skipIf(not conf['rm_undeletable'], "No undeletable file specified")
+    def test_rm_undeletable(self):
         # No permissions
-        self.__class__._env_newfile('%s-currentuser' % self.filenames[0],currentuser=True)
-        self.assertRegexpMatches(self._warn(':file.rm %s' % os.path.join(self.basedir,'%s-currentuser' % self.filenames[0])), modules.file.rm.WARN_NO_SUCH_FILE)
-        self.__class__._env_rm('%s-currentuser' % self.filenames[0],currentuser=True)
+        self.assertRegexpMatches(self._warn(':file.rm %s' % conf['rm_undeletable']), modules.file.rm.WARN_DELETE_FAIL)
         

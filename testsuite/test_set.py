@@ -1,4 +1,5 @@
 from baseclasses import SimpleTestCase
+from core.utils import randstr
 import sys, os
 sys.path.append(os.path.abspath('..'))
 
@@ -8,32 +9,38 @@ class Set(SimpleTestCase):
 
     def test_set(self):
         
-        sh_params = [ x.dest for x in self.term.modhandler.load('shell.sh').argparser._actions ]
+        module_params = [ x.dest for x in self.term.modhandler.load('file.upload').argparser._actions ]
         
-        # First, execute a shell.sh command to initialize shell
-        self._res('echo')
+        filename_rand = randstr(4)
+        filepath_rand = os.path.join(self.basedir, filename_rand)
+
+        self._res(':set shell.php debug=1')
+
+        self.assertTrue(self._res(':file.upload /etc/hosts %s -content MYTEXT' % filepath_rand))
         
-        sh_params_print = self._warn(':set shell.sh')
+        params_print = self._warn(':set file.upload')
         # Basic parameter output
-        self.assertRegexpMatches(sh_params_print, '%s=\'.*\' ' % '=\'.*\' '.join(sh_params) )
+        self.assertRegexpMatches(params_print, '%s=\'.*\'[\s]+' % '=\'.*\'[\s]+'.join(module_params) )
         
-        # Shell.sh should have an already set vector
-        self.assertRegexpMatches(sh_params_print, 'vector=\'[\w]+\'')
+        # Module should have an already set vector
+        self.assertRegexpMatches(params_print, 'vector=\'[\w]+\'')
         
         #Set parameter previously to execute command without 
-        self.assertRegexpMatches(self._warn(':set shell.sh cmd="echo ASD"'), 'cmd=\'echo ASD\'' )
-        self.assertRegexpMatches(self._warn(':set shell.sh'), 'cmd=\'echo ASD\'' )
-        self.assertEqual(self._res(':shell.sh'), 'ASD' )
+        self.assertRegexpMatches(self._warn(':set file.upload lpath="/etc/hosts"'), 'lpath=\'/etc/hosts\'' )
+        self.assertRegexpMatches(self._warn(':set file.upload rpath="%s1"' % filepath_rand), 'rpath=\'%s1\'' % filepath_rand )
+        self.assertRegexpMatches(self._warn(':set file.upload'),'lpath=\'/etc/hosts\'[\s]+rpath=\'%s1\'' % filepath_rand )
+        self.assertTrue(self._res(':file.upload'))
         
         #Set wrongly parameter with choices
-        self.assertRegexpMatches(self._warn(':set shell.sh vector="nonexistant"'), 'vector=\'nonexistant\'' )
-        self.assertRegexpMatches(self._warn(':shell.sh "echo ASD"'), 'invalid choice' )        
-             
+        self.assertRegexpMatches(self._warn(':set file.upload vector="nonexistant"'), 'vector=\'nonexistant\'' )
+        self.assertRegexpMatches(self._warn(':file.upload /etc/hosts %s2' % filepath_rand), 'invalid choice' )      
+           
         # Reset parameters
-        self.assertRegexpMatches(self._warn(':set shell.sh vector=""'), 'vector=\'\'' )
-        self.assertRegexpMatches(self._warn(':set shell.sh cmd='), 'cmd=\'\'' )
-        self.assertEqual(self._res('echo ASD'), 'ASD' )      
-
+        self.assertRegexpMatches(self._warn(':set file.upload vector=""'), 'vector=\'\'' )
+        self.assertRegexpMatches(self._warn(':set file.upload lpath='), 'lpath=\'\'' )
+        self.assertRegexpMatches(self._warn(':set file.upload rpath='), 'rpath=\'\'' )
+        self.assertTrue(self._res(':file.upload /etc/hosts %s3 -mycontent ASD' % filepath_rand))     
+        
         #Set wrongly parameter with choices but run it correctly
         self.assertRegexpMatches(self._warn(':set shell.php debug="asd"'), 'debug=\'asd\'' )
         self.assertEqual(self._res(':shell.php print(\'ASD\'); -debug 4'), 'ASD' )   

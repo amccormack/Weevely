@@ -15,14 +15,8 @@ class MySql(SimpleTestCase):
         
         user = conf['mysql_sql_user']
         pwd = conf['mysql_sql_pwd']
-        default_user = conf['mysql_sql_default_user']
         
         self.assertEqual(self._res(':sql.console %s %s -query "SELECT USER();"' % ( user, pwd ) ), [['%s@localhost' % user ]])
-        
-        self.assertRegexpMatches(self._warn(':sql.console %s wrongpass -query "SELECT USER();"' % ( user) ), modules.sql.console.WARN_FALLBACK)
-        self.assertEqual(self._res(':sql.console %s wrongpass -query "SELECT USER();"' % ( user ) ), [['%s@localhost' % default_user ]])
-        
-        self.assertEqual(self._res(':sql.console %s %s -host notreachable -query "SELECT USER();"' % ( user, pwd ) ), [['%s@localhost' % default_user ]])
 
         self.assertEqual(self._res(':sql.console %s %s -query "SELECT USER();"' % ( user, pwd ) ), [['%s@localhost' % user ]])
         
@@ -34,6 +28,20 @@ class MySql(SimpleTestCase):
       
         self._res(':sql.console %s %s -query "drop database asd;" ' % ( user, pwd ))
                       
+
+    @skipIf(conf['test_only_dbms'] == 'postgres' or not conf['mysql_sql_default_user'], "Skipping mysql tests")
+    def test_query_fallback_user(self):
+        
+        default_user = conf['mysql_sql_default_user']
+        user = conf['mysql_sql_user']
+        pwd = conf['mysql_sql_pwd']
+        
+        self.assertRegexpMatches(self._warn(':sql.console %s wrongpass -query "SELECT USER();"' % ( user) ), modules.sql.console.WARN_FALLBACK)
+        self.assertEqual(self._res(':sql.console %s wrongpass -query "SELECT USER();"' % ( user ) ), [['%s@localhost' % default_user ]])
+        
+        self.assertEqual(self._res(':sql.console %s %s -host notreachable -query "SELECT USER();"' % ( user, pwd ) ), [['%s@localhost' % default_user ]])
+       
+        
 
     @skipIf(conf['test_only_dbms'] == 'postgres', "Skipping mysql tests")
     def test_dump(self):

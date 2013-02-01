@@ -7,7 +7,7 @@ import sys, os
 sys.path.append(os.path.abspath('..'))
 from modules.backdoor.reversetcp import WARN_BINDING_SOCKET
 
-@skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+@skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
 class Backdoors(TestCase):
     def setUp(self):
         

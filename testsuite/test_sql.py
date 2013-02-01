@@ -57,10 +57,7 @@ class MySql(SimpleTestCase):
         # table
         self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
          
-        # vectors
-        self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -vector mysqldump -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
-        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema  -vector mysqldump -table TABLES' % ( user ) ), modules.sql.dump.WARN_NO_DUMP)
-             
+  
         self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -vector mysqlphpdump -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
         self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema  -vector mysqlphpdump -table TABLES' % ( user ) ), modules.sql.dump.WARN_DUMP_INCOMPLETE)
 
@@ -69,7 +66,20 @@ class MySql(SimpleTestCase):
 
         # host
         self.assertRegexpMatches(self._warn(':sql.dump %s %s information_schema -table TABLES -host wronghost' % ( user, pwd ) ), modules.sql.dump.WARN_DUMP_INCOMPLETE)
-        
+
+
+
+    @skipIf(conf['test_only_dbms'] == 'postgres', "Skipping mysql tests")
+    @skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
+    def test_dump(self):
+
+        user = conf['mysql_sql_user']
+        pwd = conf['mysql_sql_pwd']
+
+        # vectors
+        self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -vector mysqldump -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
+        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema  -vector mysqldump -table TABLES' % ( user ) ), modules.sql.dump.WARN_NO_DUMP)
+                   
 
 class PGSql(SimpleTestCase):
     

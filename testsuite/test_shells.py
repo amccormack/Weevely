@@ -19,7 +19,7 @@ class Shells(SimpleTestCase):
         self.assertEqual(self._outp(':shell.php echo(2); -precmd print(1);'), '12')  
         self.assertEqual(self._outp(':shell.php -post "{ \'FIELD\':\'VALUE\' }" echo($_POST[\'FIELD\']);'), 'VALUE') 
 
-    @skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+    @skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
     def test_sh(self):
         self.assertEqual(self._outp(':shell.sh echo $((1+1))'), '2')
         self.assertEqual(self._outp('echo $((1+1))'), '2')

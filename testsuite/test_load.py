@@ -3,6 +3,7 @@ from tempfile import NamedTemporaryFile
 from os import path, remove
 from commands import getstatusoutput
 from test import conf
+from unittest import skipIf
 
 rc_file = """
 :shell.php print(\'W\');
@@ -14,6 +15,7 @@ echo EE
 echo VELY
 """
 
+@skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
 class Load(RcTestCase):
 
     def test_load(self):

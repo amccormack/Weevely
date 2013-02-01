@@ -27,7 +27,7 @@ class FSDownload(FolderFileFSTestCase):
         self.assertEqual(self._res(':file.download %s %s -vector copy'  % (self.download_path, self.temp_path.name)), '1')
         self.assertEqual(self._res(':file.download %s %s -vector symlink'  % (self.download_path, self.temp_path.name)), '1')
 
-    @skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+    @skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
     def test_download_sh(self):
         self.assertEqual(self._res(':file.download %s %s -vector base64'  % (self.download_path, self.temp_path.name)), '1')
         
@@ -42,7 +42,7 @@ class FSDownload(FolderFileFSTestCase):
         self.assertEqual(self._outp(':file.read %s -vector copy'  % (self.download_path)), '1')
         self.assertEqual(self._outp(':file.read %s -vector symlink'  % (self.download_path)), '1')
         
-    @skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+    @skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
     def test_read_sh(self):
         self.assertEqual(self._outp(':file.read %s -vector base64'  % (self.download_path)), '1')
         

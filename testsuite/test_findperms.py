@@ -20,7 +20,7 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -type f').split('\n')), self.sorted_files)
         self.assertEqual(sorted(self._outp(':find.perms -vector php_recursive -type d').split('\n')), self.sorted_folders)
 
-    @skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+    @skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
     def test_perms_sh(self):
         self.assertEqual(sorted(self._outp(':find.perms -vector find').split('\n')), self.sorted_files_and_folders)
         self.assertEqual(sorted(self._outp(':find.perms -vector find -type f').split('\n')), self.sorted_files)
@@ -56,7 +56,7 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -type f -no-recursion')), [])
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -type d -no-recursion')), self.sorted_folders[:2])
 
-    @skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+    @skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
     def test_no_recursion_sh(self):
 
         self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)
@@ -66,7 +66,7 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.perms -vector find -type f -no-recursion')), [])
         self.assertEqual(sorted(self._res(':find.perms -vector find -type d -no-recursion')), self.sorted_folders[:2])
 
-    @skipIf(not conf['shell_sh'] or "false" in conf['shell_sh'].lower(), "Skipping shell.sh dependent tests")
+    @skipIf(not conf['shell_sh'] , "Skipping shell.sh dependent tests")
     def test_equal_vector(self):
 
         self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)

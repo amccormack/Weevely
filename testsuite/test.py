@@ -32,6 +32,8 @@ configparser.read(parsed.ini_file)
 conf = configparser._sections['global']
 conf['showcmd'] = parsed.showcmd
 conf['showtest'] = parsed.showtest
+conf['shell_sh'] = True if conf['shell_sh'].lower() == 'true' else False
+
 
 if __name__ == "__main__":
     run_all(parsed.test_patterns)

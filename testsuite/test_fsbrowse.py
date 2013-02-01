@@ -1,6 +1,10 @@
 from baseclasses import FolderFSTestCase
 import os
+from test import conf
+from unittest import skipIf
 
+
+@skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")
 class ShellsFSBrowse(FolderFSTestCase):
 
         

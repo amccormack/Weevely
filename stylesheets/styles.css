@@ -265,7 +265,7 @@ div.previewlist { width: 100%; }
 
 a.preview-link{ display:block; margin:20px; }
 a.preview-link .play-button{display:none;position:absolute;left:50%;top:50%; }
-a.preview-link .play-button .arrow{color:black;font-size:80px;margin-left:-37px;margin-top:-50px}
+a.preview-link .play-button .arrow{color:black;font-size:80px;margin-left:-30px;margin-top:-45px}
 a.preview-link:hover{text-decoration:none}
 a.preview-link:hover .play-button{display:block}
 div.presentation{
@@ -276,8 +276,8 @@ text-align:center;
 width: 33%;
 }
 div.presentation .preview{font-family:'Bitstream Vera Sans Mono', 'Courier New', monospace;
-width:210px;
-height:170px;
+width:110px;
+height:70px;
 font-size:12px;
 line-height:inherit;
 background-color:#E4E4E4;

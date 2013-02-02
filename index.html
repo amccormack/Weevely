@@ -43,25 +43,25 @@
         <p><center>Latest version: 0.7.1</center></p>
       </header>
       <section>
-        <p>Weevely is a stealth PHP <strong>web shell</strong> that simulate <strong>telnet-like</strong> connection. It is an essential tool for web application <strong>post exploitation</strong>, and can be used as <strong>stealth backdoor</strong> or as a web shell to manage legit web accounts, even <strong>free hosted</strong> ones. </p>
+        <p>Weevely is a stealth PHP <strong>web shell</strong> that provides a <strong>telnet-like</strong> console. It is an essential tool for web application <strong>post exploitation</strong>, and can be used as <strong>stealth backdoor</strong> or as a web shell to manage legit web accounts, even <strong>free hosted</strong> ones. </p>
 
-        <p>Weevely is currently included in <a href="http://www.backtrack-linux.org/">Backtrack</a> and <a href="http://www.backbox.org/">Backbox</a> and other Linux distributions for penetration testing.</p>
+        <p>Weevely is currently included in <a href="http://www.backtrack-linux.org/">Backtrack</a> and <a href="http://www.backbox.org/">Backbox</a> and all the major Linux distributions oriented for penetration testing.</p>
 		
-        
         
         <p class="highlighted">Start with a quick <a href="https://github.com/epinna/Weevely/wiki/Tutorial">Tutorial</a>, read about <a href="https://github.com/epinna/Weevely/wiki/Modules-list">Modules</a> and <a href="https://github.com/epinna/Weevely/wiki/Generators-list">Generators</a>.</p>
 
 <ul>
-<li>More than 30 modules to automatize administration and post exploitation</li>
+<li>More than 30 modules to automatize administration and post exploitation tasks</li>
 <ul>
 <small>
 <li>Execute commands and browse remote filesystem, even with PHP security restriction</li>
 <li>Audit common server misconfigurations</li>
 <li>Run SQL console pivoting on target machine</li>
-<li>Open HTTP proxy to tunnel your traffic through target</li>
+<li>Proxy your HTTP traffic through target</li>
+<li>Mount target filesystem to local mount point</li>
 <li>Simple file transfer from and to target</li>
 <li>Spawn reverse and direct TCP shells</li>
-<li>Bruteforce passwords of target system users</li>
+<li>Bruteforce SQL accounts through target system</li>
 <li>Run port scans from target machine</li>
 <li>And so on..</li>
 </small>
@@ -78,6 +78,61 @@
 
 
         <p><small>Hosted on GitHub Pages.</p>
+
+
+
+<div class="previewlist">
+
+<div class="presentation">Mount target filesystem locally
+<a href="http://ascii.io/a/1919" class="preview-link" target="_blank">
+<div class="play-button">
+<div class="arrow">►</div>
+</div>
+<pre class="preview">
+www-data@target:writable $ :help file.mount
+Mount remote filesystem using HTTPfs
+usage: :file.mount [-remote-mount REMOTE_MOUNT] [-local-mount LOCAL_MOUNT]
+                   [-rpath [RPATH]] [-startpath STARTPATH] [-just-mount URL]
+                   [-just-install] [-umount-all] [-httpfs-path HTTPFS_PATH]
+</pre>
+</a>
+</div>	
+
+<div class="presentation">Proxy HTTP traffic through target
+<a href="http://ascii.io/a/1931" class="preview-link" target="_blank">
+<div class="play-button">
+<div class="arrow">►</div>
+</div>
+<pre class="preview">
+www-data@target:writable $ :help net.proxy
+Install and run Proxy to tunnel traffic through target
+usage: :net.proxy [-startpath STARTPATH] [-force] [-just-run URL]
+                  [-just-install] [-lhost LHOST] [-lport LPORT]
+                  [rpath]
+</pre>
+</a>
+</div>	
+
+<div class="presentation">From PHP to root
+<a href="http://ascii.io/a/1911" class="preview-link" target="_blank">
+<div class="play-button">
+<div class="arrow">►</div>
+</div>
+<pre class="preview">
+www-data@target:writable $ :help file.edit
+Edit remote file
+usage: :file.edit [-editor EDITOR] rpath
+positional arguments:
+  rpath           Remote path
+
+optional arguments:
+  -editor EDITOR  Choose editor. default: vim
+</pre>
+</a>
+</div>	
+
+<div style="clear:both"></div>
+</div>
 
 <p>
 <iframe width="420" height="315" src="http://www.youtube.com/embed/3ILY670721A" frameborder="0" allowfullscreen></iframe>

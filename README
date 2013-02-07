@@ -15,7 +15,7 @@ https://github.com/epinna/Weevely/wiki/Generators-list
 
 Main features:
 
-* More than 30 modules to automatize administration and post exploitation tasks:
+* More than 30 modules to automate administration and post exploitation tasks:
 
   o Execute commands and browse remote filesystem, even with PHP security restriction
   o Audit common server misconfigurations

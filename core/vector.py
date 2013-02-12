@@ -49,7 +49,10 @@ class Vector:
             list_of_key_formats_in_payload = [s for s in format_template_list if '$%s' % s in payload]
             
             # Extract from format dict just the ones for current payload part
-            dict_of_formats_in_payload = {k:v for k,v in format_list.iteritems() if k in list_of_key_formats_in_payload}
+            dict_of_formats_in_payload = {}
+            for k, v in format_list.iteritems():
+                if k in list_of_key_formats_in_payload:
+                    dict_of_formats_in_payload[k]=v
             
             if dict_of_formats_in_payload:
                 formatted_list.append(Template(payload).safe_substitute(**dict_of_formats_in_payload))

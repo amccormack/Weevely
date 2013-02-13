@@ -45,13 +45,22 @@ class Terminal(Helper, Configs):
                                                              path=self.modhandler.load('shell.php').stored_args['path'], 
                                                              prompt = 'PHP>' if (self.modhandler.interpreter == 'shell.php') else '$' )
 
-            try:
-                cmd = shlex.split(raw_input( prompt ).strip())
-            except ValueError:
+            input_cmd = raw_input( prompt ).strip()
+            if input_cmd and (input_cmd[0] == ':' or input_cmd[:2] in ('ls', 'cd')):
+                # This is a module call, pre-split to simulate argv list to pass to argparse 
+                try:
+                    cmd = shlex.split(input_cmd)
+                except ValueError:
+                    self._tprint('[!] [terminal] Error: command parse fail%s' % os.linesep)
+                    continue
+                
+            elif input_cmd:
+                # This is a direct command, do not split
+                cmd = [ input_cmd ] 
+            else:
                 continue
-            if not cmd:
-                continue
-
+            
+            
             self.run_cmd_line(cmd)
 
 
@@ -82,7 +91,7 @@ class Terminal(Helper, Configs):
             ## Set call if ":set module" or ":set module param value"
             elif command[0] == set_string and len(command) > 1: 
                     self.modhandler.load(command[1]).store_args(command[2:])
-                    self._tprint(self.modhandler.load(command[1]).format_stored_args() + '\n')
+                    self._tprint(self.modhandler.load(command[1]).format_stored_args() + os.linesep)
 
             ## Load call
             elif command[0] == load_string and len(command) == 2:
@@ -113,7 +122,7 @@ class Terminal(Helper, Configs):
                 if res != None: self._last_result = res
                 
         except KeyboardInterrupt:
-            self._tprint('[!] Stopped execution')
+            self._tprint('[!] Stopped execution%s' % os.linesep)
         except ModuleException, e:
             self._tprint('[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep))
         
@@ -169,7 +178,7 @@ class Terminal(Helper, Configs):
         elif len(cmd) == 2:
             cwd_new = Vector(self.modhandler,  'getcwd', 'shell.php', 'chdir("$path") && print(getcwd());').execute({ 'path' : cmd[1] })
             if not cwd_new:
-                self._tprint("[!] Folder '%s' change failed, no such file or directory or permission denied" % cmd[1])                
+                self._tprint("[!] Folder '%s' change failed, no such file or directory or permission denied%s" % (cmd[1], os.linesep))                
             
         self.modhandler.load('shell.php').stored_args['path'] = cwd_new
         

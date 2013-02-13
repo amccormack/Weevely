@@ -9,8 +9,6 @@ from core.moduleexception import ModuleException
 from core.storedargparse import StoredArgumentParser as ArgumentParser
 from core.vector import VectorsDict
 
-import argparse
-
 from re import compile
 
 re_lsb_release = compile('Description:[ \t]+(.+)')

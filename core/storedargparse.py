@@ -1,5 +1,4 @@
-import argparse
-from argparse import SUPPRESS, Namespace, ArgumentError, _UNRECOGNIZED_ARGS_ATTR, ArgumentParser, HelpFormatter
+from core.argparse import OPTIONAL, SUPPRESS, Namespace, ArgumentError, _UNRECOGNIZED_ARGS_ATTR, ArgumentParser, HelpFormatter
 from core.moduleexception import ModuleException
 
 
@@ -44,7 +43,7 @@ class StoredArgumentParser(ArgumentParser):
                         if action.dest in stored_args_dict and stored_args_dict[action.dest] != None:
 
                             # If positional, add it also to args to avoid 'too few arguments' exception on _parse_known_args
-                            if action.required or action.nargs not in [None, argparse.OPTIONAL]:
+                            if action.required or action.nargs not in [None, OPTIONAL]:
                                 args.append(stored_args_dict[action.dest])
                                 
                             replacement_value = self._get_values(action, [ stored_args_dict[action.dest] ])

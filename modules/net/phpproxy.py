@@ -2,7 +2,7 @@ from modules.file.upload2web import Upload2web
 from modules.file.upload import WARN_NO_SUCH_FILE
 from core.moduleexception import ModuleException, ProbeException
 from core.storedargparse import StoredArgumentParser as ArgumentParser
-from argparse import SUPPRESS
+from core.argparse import SUPPRESS
 import re, os
 from core.utils import randstr
 

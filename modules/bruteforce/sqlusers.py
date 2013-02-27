@@ -2,7 +2,7 @@ from core.module import Module
 from core.moduleexception import ProbeException, ProbeSucceed
 from core.storedargparse import StoredArgumentParser as ArgumentParser
 from ast import literal_eval
-from argparse import SUPPRESS
+from core.argparse import SUPPRESS
 from os import sep
 from string import ascii_lowercase
 from random import choice

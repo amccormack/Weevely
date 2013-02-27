@@ -4,7 +4,7 @@ from core.moduleexception import ModuleException, ProbeException
 from core.storedargparse import StoredArgumentParser as ArgumentParser
 from external.ipaddr import IPNetwork
 import re, os
-from argparse import SUPPRESS
+from core.argparse import SUPPRESS
 from core.utils import randstr
 from base64 import b64encode
 

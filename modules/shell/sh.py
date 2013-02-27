@@ -6,7 +6,7 @@ Created on 22/ago/2011
 from core.moduleexception import ModuleException, ProbeException, ExecutionException, ProbeSucceed
 from core.moduleguess import ModuleGuess
 from core.storedargparse import StoredArgumentParser as ArgumentParser
-from argparse import SUPPRESS
+from core.argparse import SUPPRESS
 import random
 
 MSG_SH_INTERPRETER_SUCCEED = 'Shell interpreter load succeed'

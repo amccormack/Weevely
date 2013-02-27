@@ -10,7 +10,7 @@ from core.http.cmdrequest import CmdRequest, NoDataException
 from random import choice
 from hashlib import md5
 from core.storedargparse import StoredArgumentParser as ArgumentParser
-from argparse import SUPPRESS
+from core.argparse import SUPPRESS
 from core.utils import b64_chunks
 from base64 import b64encode
 

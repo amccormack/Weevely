@@ -21,7 +21,7 @@ $h=@opendir($d); while ($f = @readdir($h)) { if(substr($fdir,0,1)=='/') { $df='/
 $df.=join('/', array(trim($d, '/'), trim($f, '/')));
 if(($f!='.')&&($f!='..')&&ckprint($df,$t,$a) && ($q!="")) return;
 if(($f!='.')&&($f!='..')&&cktp($df,'d')&&$r){@swp($fdir, $df, $t, $a, $q,$r);}
-} closedir($h); }""")
+} if($h) { closedir($h); } }""")
         self.vectors.add_vector("find" , 'shell.sh', "find $rpath $recursion $type $attr $first 2>/dev/null")
     
     def _set_args(self):

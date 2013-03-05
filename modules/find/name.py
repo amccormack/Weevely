@@ -15,7 +15,7 @@ function ckdir($df, $f) { return ($f!='.')&&($f!='..')&&@is_dir($df); }
 function match($f, $s, $m) { return preg_match(str_replace("%%STRING%%",$s,$m),$f); }
 function swp($d, $m, $s,$r){ $h = @opendir($d);
 while ($f = readdir($h)) { $df=$d.'/'.$f; if(($f!='.')&&($f!='..')&&match($f,$s,$m)) print($df."\n"); if(@ckdir($df,$f)&&$r) @swp($df, $m, $s, $r); }
-@closedir($h); }""")
+if($h) { @closedir($h); } }""")
         self.vectors.add_vector("find" , 'shell.sh', "find $rpath $recursion $mode \"$string\" 2>/dev/null")
     
     def _set_args(self):

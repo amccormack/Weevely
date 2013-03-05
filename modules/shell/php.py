@@ -168,7 +168,7 @@ class Php(Module):
             path = '.'
 
         if path:
-            response = self.__do_request("$path=\"%s\"; $d=@opendir($path); $a=array(); while(($f = readdir($d))) { $a[]=$f; }; sort($a); print(join('\n', $a));" % path, self.stored_args['mode'])
+            response = self.__do_request("$path=\"%s\"; $d=@opendir($path); $a=array(); if($d) { while(($f = readdir($d))) { $a[]=$f; }; sort($a); print(join('\n', $a)); }" % path, self.stored_args['mode'])
             
             if response:
                 return response

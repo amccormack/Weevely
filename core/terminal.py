@@ -179,6 +179,7 @@ class Terminal(Helper, Configs):
             cwd_new = Vector(self.modhandler,  'getcwd', 'shell.php', 'chdir("$path") && print(getcwd());').execute({ 'path' : cmd[1] })
             if not cwd_new:
                 self._tprint("[!] Folder '%s' change failed, no such file or directory or permission denied%s" % (cmd[1], os.linesep))                
+                return
             
         self.modhandler.load('shell.php').stored_args['path'] = cwd_new
         

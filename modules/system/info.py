@@ -8,11 +8,16 @@ from core.module import Module
 from core.moduleexception import ModuleException
 from core.storedargparse import StoredArgumentParser as ArgumentParser
 from core.vector import VectorsDict
+import urllib2
 
 from re import compile
 
 re_lsb_release = compile('Description:[ \t]+(.+)')
 re_etc_lsb_release = compile('(?:DISTRIB_DESCRIPTION|PRETTY_NAME)="(.+)"')
+re_exitaddress = compile('\nExitAddress[\s]+([^\s]+)')
+
+
+WARN_NO_EXITLIST = 'Error downloading TOR exit list'
 
 class Info(Module):
     """Collect system informations"""
@@ -38,9 +43,25 @@ class Info(Module):
             self.release_support_vectors.add_vector('read' , 'file.read',  '$rpath')
     
     def _set_args(self):
-        additional_args = ['all', 'release']
+        additional_args = ['all', 'release', 'check_tor']
         self.argparser.add_argument('info', help='Information',  choices = self.support_vectors.keys() + additional_args, default='all', nargs='?')
 
+    def __check_tor(self):
+        
+        exitlist_urls = ('http://exitlist.torproject.org/exit-addresses', 'http://exitlist.torproject.org/exit-addresses.new')
+        
+        exitlist_content = ''
+        for url in exitlist_urls:
+            try:
+                exitlist_content += urllib2.urlopen(url, timeout=1).read() + '\n'
+            except Exception, e:
+                self.mprint('%s: \'%s\'' % ( WARN_NO_EXITLIST, url))
+            
+        addresses = re_exitaddress.findall(exitlist_content)
+        client_ip = self.support_vectors.get('client_ip').execute()
+        
+        return client_ip in addresses
+            
 
 
     def __guess_release(self):
@@ -65,7 +86,9 @@ class Info(Module):
 
     def _probe(self):
         
-        if self.args['info'] == 'release':
+        if self.args['info'] == 'check_tor':
+            self._result = self.__check_tor()
+        elif self.args['info'] == 'release':
             self._result = self.__guess_release().strip()
         elif self.args['info'] != 'all':
             self._result = self.support_vectors.get(self.args['info']).execute()
@@ -77,6 +100,7 @@ class Info(Module):
                 self._result[vect.name] = vect.execute()
                 
             self._result['release'] = self.__guess_release()
+            self._result['check_tor'] = self.__check_tor()
                 
                     
         

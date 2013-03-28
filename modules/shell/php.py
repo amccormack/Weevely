@@ -113,8 +113,13 @@ class Php(Module):
         except Exception, e:
             raise ProbeException(self.name, '%s. %s' % (str(e), WARN_CONN_ERR))
     
-        if 'error' in response and 'eval()\'d code' in response:
-            raise ProbeException(self.name, '\'%s\' %s' % (cmd, WARN_INVALID_RESPONSE))
+        if 'eval()\'d code' in response:
+            if len(response)>=30: 
+                response_sum = response[:30] + '...'
+            else: 
+                response_sum = response
+            
+            raise ProbeException(self.name, '%s: \'%s\'' % (WARN_INVALID_RESPONSE, response_sum))
         
         self.mprint( "Response: %s" % response, msg_class)
         
@@ -135,9 +140,6 @@ class Php(Module):
             if response == rand:
                 
                 self.stored_args['mode'] = currentmode
-                
-                #Set as best interpreter
-                #self.modhandler.interpreter = self.name
                 
                 if self.args['just_probe']:
                     self._result = True 

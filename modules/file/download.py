@@ -8,7 +8,7 @@ from core.moduleexception import  ModuleException, ExecutionException, ProbeExce
 from core.http.request import Request
 from base64 import b64decode
 from hashlib import md5
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from core.utils import randstr
 import os
 

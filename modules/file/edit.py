@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ProbeException, ProbeSucceed
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 
 from tempfile import mkdtemp
 from os import path

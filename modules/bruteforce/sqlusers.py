@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ProbeException, ProbeSucceed
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from ast import literal_eval
 from core.argparse import SUPPRESS
 from os import sep
@@ -18,7 +18,7 @@ class Sqlusers(Sql):
         self.argparser.add_argument('-wordfile', help='Local wordlist path')
         self.argparser.add_argument('-startline', help='Start line of local wordlist', type=int, default=0)
         self.argparser.add_argument('-chunksize', type=int, default=5000)
-        self.argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=literal_eval, default=[])
+        self.argparser.add_argument('-wordlist', help='Try words written as "[\'word1\', \'word2\']"', type=type([]), default=[])
         self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
 
     def _set_vectors(self):

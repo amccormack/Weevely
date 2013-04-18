@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ProbeException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from ast import literal_eval
 from core.utils import join_abs_paths
 import os
@@ -17,7 +17,7 @@ class Userfiles(Module):
         self.argparser.add_argument('-auto-web', help='Enumerate common files in /home/*', action='store_true')
         self.argparser.add_argument('-auto-home', help='Enumerate common files in /home/*/public_html/', action='store_true')
         self.argparser.add_argument('-pathfile', help='Enumerate paths in PATHLIST in /home/*')
-        self.argparser.add_argument('-pathlist', help='Enumerate path written as [\'path1\', \'path2\',] in /home/*', type=literal_eval, default=[])
+        self.argparser.add_argument('-pathlist', help='Enumerate path written as [\'path1\', \'path2\',] in /home/*', type=type([]), default=[])
 
 
 

@@ -1,4 +1,7 @@
 # Author: Steven J. Bethard <steven.bethard@gmail.com>.
+from moduleexception import ModuleException
+from ast import literal_eval
+
 
 """Command-line parsing library
 
@@ -865,6 +868,7 @@ class _StoreConstAction(Action):
                  default=None,
                  required=False,
                  help=None,
+                 type=None,
                  metavar=None):
         super(_StoreConstAction, self).__init__(
             option_strings=option_strings,
@@ -1182,6 +1186,13 @@ class Namespace(_AttributeHolder):
 
     def __contains__(self, key):
         return key in self.__dict__
+
+
+
+class StoredNamespace(Namespace):
+    
+    stored = True
+
 
 
 class _ActionsContainer(object):
@@ -1949,14 +1960,14 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
         # if we didn't use all the Positional objects, there were too few
         # arg strings supplied.
         if positionals:
-            self.error(_('too few arguments'))
+            if not hasattr(namespace, 'stored'): self.error(_('too few arguments'))
 
         # make sure all required actions were present
         for action in self._actions:
             if action.required:
                 if action not in seen_actions:
                     name = _get_action_name(action)
-                    self.error(_('argument %s is required') % name)
+                    if not hasattr(namespace, 'stored'): self.error(_('argument %s is required') % name)
 
         # make sure all required groups had one option present
         for group in self._mutually_exclusive_groups:
@@ -1971,7 +1982,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
                              for action in group._group_actions
                              if action.help is not SUPPRESS]
                     msg = _('one of the arguments %s is required')
-                    self.error(msg % ' '.join(names))
+                    if not hasattr(namespace, 'stored'): self.error(msg % ' '.join(names))
 
         # return the updated namespace and the extra arguments
         return namespace, extras
@@ -2245,7 +2256,12 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
 
         # convert the value to the appropriate type
         try:
-            result = type_func(arg_string)
+            if not arg_string:
+                raise ValueError("Empty value")
+            elif type_func.__name__ != 'identity':
+                result = type_func(literal_eval(arg_string))
+            else:
+                result = type_func(arg_string)
 
         # ArgumentTypeErrors indicate errors
         except ArgumentTypeError:
@@ -2346,7 +2362,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
     # ===============
     def exit(self, status=0, message=None):
         if message:
-            self._print_message(message, _sys.stderr)
+            self._print_message(message)
         _sys.exit(status)
 
     def error(self, message):
@@ -2358,5 +2374,5 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
         If you override this in a subclass, it should not return -- it
         should either exit or raise an exception.
         """
-        self.print_usage(_sys.stderr)
-        self.exit(2, _('%s: error: %s\n') % (self.prog, message))
+        self.print_usage()
+        raise ModuleException(self.prog[1:], message)

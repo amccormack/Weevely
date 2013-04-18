@@ -42,7 +42,7 @@ class Terminal(Helper, Configs):
             prompt = '{user}@{host}:{path} {prompt} '.format(
                                                              user=username, 
                                                              host=hostname, 
-                                                             path=self.modhandler.load('shell.php').stored_args['path'], 
+                                                             path=getattr(self.modhandler.load('shell.php').stored_args_namespace, 'path'), 
                                                              prompt = 'PHP>' if (self.modhandler.interpreter == 'shell.php') else '$' )
 
             input_cmd = raw_input( prompt ).strip()
@@ -117,6 +117,7 @@ class Terminal(Helper, Configs):
                     cmd = [ ' '.join(command) ] 
                 
                 res, out = self.modhandler.load(interpreter).run(cmd)
+
                 if out != '': self._last_output += out
                 if res != None: self._last_result = res
                 
@@ -180,7 +181,7 @@ class Terminal(Helper, Configs):
                 self._tprint("[!] Folder '%s' change failed, no such file or directory or permission denied%s" % (cmd[1], os.linesep))                
                 return
             
-        self.modhandler.load('shell.php').stored_args['path'] = cwd_new
+        setattr(self.modhandler.load('shell.php').stored_args_namespace, 'path', cwd_new)
         
 
     def __env_init(self):

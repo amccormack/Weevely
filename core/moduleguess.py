@@ -109,7 +109,6 @@ class ModuleGuess(ModuleGuessBase):
         
         pass
 
-
     def _init_module(self):
         """Inherit this method to set eventual additional variables. Called by module constructor.
         """

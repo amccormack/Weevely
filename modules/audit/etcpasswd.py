@@ -1,6 +1,6 @@
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ProbeException, ProbeSucceed, ExecutionException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 
 class User:
 

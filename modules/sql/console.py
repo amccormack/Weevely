@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ModuleException, ProbeException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser, StoredNamespace
 import re
 
 WARN_NO_DATA = 'No data returned'
@@ -42,15 +42,17 @@ pg_close();"""])
         self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
         self.argparser.add_argument('-query', help='Execute single query')
 
-    def _init_module(self):
-        self.stored_args['vector'] = None
-        self.stored_args['prompt'] = 'SQL> '
+    def _init_stored_args(self):
+        self.stored_args_namespace = StoredNamespace()
+        setattr(self.stored_args_namespace, 'vector', '')
+        setattr(self.stored_args_namespace, 'prompt', 'SQL> ')
         
     def _query(self, query):
 
         # Does not re-use fallback vectors
-        if self.stored_args['vector'] and not self.stored_args['vector'].endswith('_fallback'):
-            vector = self.stored_args['vector']
+        stored_vector = getattr(self.stored_args_namespace,'vector') 
+        if stored_vector.endswith('_fallback'):
+            vector = stored_vector
         else:
             vector = self.args['dbms']
         
@@ -72,14 +74,17 @@ pg_close();"""])
                 
                 if user:
                     user = user[:-1]
-                    self.stored_args['prompt'] = '%s SQL> ' % user
-                    self.stored_args['vector'] = vector
+                    setattr(self.stored_args_namespace, 'vector', vector)
+                    setattr(self.stored_args_namespace, 'prompt', '%s SQL> ' % user)
+                    
                     self.mprint('\'%s:%s@%s\' %s: \'%s\'' % (self.args['user'], self.args['pass'], self.args['host'], WARN_FALLBACK, user))
            
                 
-        elif result and self.stored_args['vector'] == None:
-                self.stored_args['prompt'] = "%s@%s SQL> " % (self.args['user'], self.args['host'])
-                self.stored_args['vector'] = vector
+        elif result and getattr(self.stored_args_namespace, 'vector') == None:
+            
+                setattr(self.stored_args_namespace, 'vector', vector)
+                setattr(self.stored_args_namespace, 'prompt', "%s@%s SQL> " % (self.args['user'], self.args['host']))
+            
         
         if result:
             return [ line.split('|') for line in result[:-1].replace('|\n', '\n').split('\n') ]   
@@ -96,7 +101,7 @@ pg_close();"""])
                 self._result = None
                 self._output = ''
                 
-                query  = raw_input( self.stored_args['prompt'] ).strip()
+                query  = raw_input( getattr(self.stored_args_namespace,'prompt') ).strip()
                 
                 if not query:
                     continue

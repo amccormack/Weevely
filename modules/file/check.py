@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ProbeException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 
 class Check(Module):
     '''Check remote files type, md5 and permission'''

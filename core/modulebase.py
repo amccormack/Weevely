@@ -1,11 +1,12 @@
 
 
 from moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
-from core.storedargparse import StoredArgumentParser as ArgumentParser, Namespace
+from core.argparse import ArgumentParser, StoredNamespace, _StoreTrueAction, _StoreFalseAction, _callable
 from types import ListType, StringTypes, DictType
 from core.prettytable import PrettyTable
 from core.vector import VectorsDict
 from os import linesep
+import copy
 
 
 class ModuleBase:
@@ -19,11 +20,11 @@ class ModuleBase:
 
         self._init_vectors()
         self._init_args()
+        self._init_stored_args()
         
         self._set_vectors()
         self._set_args()
         
-        self._init_module_variables()
         self._init_module()
         
     def _init_vectors(self):
@@ -93,15 +94,16 @@ class ModuleBase:
         
             self.modhandler._last_warns += msg + linesep
             
-    def _init_module_variables(self):
-        self.stored_args = {}
+    def _init_stored_args(self):
+        self.stored_args_namespace = StoredNamespace()
     
-    def _check_args(self, args):
-        """This method parse and merge new arguments with stored arguments (assigned with :set).
-        Parsed args are in self.args dictionary.
+    def _check_args(self, submitted_args):
+        """This method parse and merge new arguments with stored arguments (assigned with :set)
         """
+        namespace = copy.copy(self.stored_args_namespace)
+        namespace.stored = False
         
-        parsed_namespace, remaining_args = self.argparser.parse_known_stored_and_new_args(args=args, stored_args_dict = self.stored_args)
+        parsed_namespace = self.argparser.parse_args(submitted_args, namespace)
         self.args = vars(parsed_namespace)
         
 
@@ -157,24 +159,22 @@ class ModuleBase:
                     table.add_row([field, str(self._result[field])])
                 
 
-                
             self._output = table.get_string()
         # Else, try to stringify
         else:
             self._output = str(self._result)
         
         
-    def store_args(self, args):
-
-        for argument in args:
-            if '=' in argument:
-                key, value = argument.split('=')
-                
-                # Reset value
-                if value == '':
-                    value = None
-                
-                self.stored_args[key] = value
+    def store_args(self, submitted_args):
+        
+        # With no arguments, reset stored variables 
+        if not submitted_args:
+            self._init_stored_args()
+            
+        # Else, store them
+        else:
+            self.stored_args_namespace = self.argparser.parse_args(submitted_args, self.stored_args_namespace)
+        
         
     def format_help(self, help = True, stored_args=True,  name = True, descr=True, usage=True, padding = 0):
         
@@ -205,16 +205,15 @@ class ModuleBase:
                 
     def format_stored_args(self):
     
-        stored_args_str = ''
-        i = 1
-        for argument in [ action.dest for action in self.argparser._actions if action.dest != 'help' ]:
-            value = self.stored_args[argument] if (argument in self.stored_args and self.stored_args[argument] != None) else ''
-            stored_args_str += '%s=\'%s\' ' % (argument, value)
+        stringified_stored_args = ''
+        
+        for index, argument in enumerate(action.dest for action in self.argparser._actions if action.dest != 'help' ):
+            value = getattr(self.stored_args_namespace, argument) if (argument in self.stored_args_namespace and getattr(self.stored_args_namespace, argument) != None) else ''
+            stringified_stored_args += '%s=\'%s\' ' % (argument, value)
             
-            if i%4 == 0:
-                stored_args_str += '\n'
-            i+=1
+            if index+1 % 4 == 0:
+                stringified_stored_args += '\n'
             
-        return stored_args_str
+        return stringified_stored_args
         
     

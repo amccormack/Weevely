@@ -1,6 +1,6 @@
 from modules.file.download import Download
 from tempfile import NamedTemporaryFile
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from core.moduleguess import ModuleGuess
 
 class Read(Download):

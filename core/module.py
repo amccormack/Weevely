@@ -1,7 +1,7 @@
 
 
 from moduleexception import ModuleException, ProbeException, ProbeSucceed, InitException
-from core.storedargparse import StoredArgumentParser as ArgumentParser, Namespace
+from core.argparse import ArgumentParser, Namespace
 from types import ListType, StringTypes, DictType
 from core.prettytable import PrettyTable
 from core.vector import VectorsDict
@@ -108,7 +108,7 @@ class Module(ModuleBase):
         """
         
         pass
-        
+
     def _init_module(self):
         """Inherit this method to set additional variables. This method is
         called by the constructor.

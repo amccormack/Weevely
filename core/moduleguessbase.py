@@ -27,7 +27,7 @@ class ModuleGuessBase(Module):
                     self._verify_vector_execution()
                     
                 except ProbeSucceed, e:
-                    self.stored_args['vector'] = self.current_vector.name
+                    setattr(self.stored_args_namespace, 'vector' , self.current_vector.name)
                     raise
                 except ExecutionException:
                     pass

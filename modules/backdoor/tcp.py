@@ -1,6 +1,6 @@
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException, ProbeSucceed, ProbeException, ExecutionException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from urlparse import urlparse
 from socket import error
 from telnetlib import Telnet

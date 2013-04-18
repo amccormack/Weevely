@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ProbeException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from ast import literal_eval
 from core.prettytable import PrettyTable
 import os
@@ -13,9 +13,9 @@ class Enum(Module):
         self.support_vectors.add_vector('getperms','shell.php',  "$f='$rpath'; if(file_exists($f)) { print('e'); if(is_readable($f)) print('r'); if(is_writable($f)) print('w'); if(is_executable($f)) print('x'); }")
     
     def _set_args(self):
-        self.argparser.add_argument('pathfile', help='Enuemrate paths written in PATHFILE')
+        self.argparser.add_argument('pathfile', help='Enumerate paths written in PATHFILE')
         self.argparser.add_argument('-printall', help='Print also paths not found', action='store_true')
-        self.argparser.add_argument('-pathlist', help='Enumerate paths written as "[\'/path/1\', \'/path/2\']"', type=literal_eval, default=[])
+        self.argparser.add_argument('-pathlist', help='Enumerate paths written as "[\'/path/1\', \'/path/2\']"', type=type([]), default=[])
 
 
 

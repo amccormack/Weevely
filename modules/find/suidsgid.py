@@ -1,5 +1,5 @@
 from core.module import Module
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 
 
 class Suidsgid(Module):
@@ -7,9 +7,9 @@ class Suidsgid(Module):
     def _set_vectors(self):
         self.support_vectors.add_vector( "find" , 'shell.sh', "find $rpath $perm 2>/dev/null")
     
-    
+        
     def _set_args(self):
-        self.argparser.add_argument('rpath', help='Remote starting path')
+        self.argparser.add_argument('-rpath', help='Remote starting path', default='/')
         self.argparser.add_argument('-suid', help='Find only suid', action='store_true')
         self.argparser.add_argument('-sgid', help='Find only sgid', action='store_true')
         

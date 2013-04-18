@@ -6,7 +6,7 @@ Created on 22/ago/2011
 
 from core.module import Module
 from core.moduleexception import ModuleException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from core.vector import VectorsDict
 import urllib2
 

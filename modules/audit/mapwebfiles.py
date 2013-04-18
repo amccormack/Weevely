@@ -1,6 +1,6 @@
 from core.module import Module
 from core.moduleexception import ProbeException, ModuleException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from external.crawler import Crawler
 from ast import literal_eval
 from core.prettytable import PrettyTable
@@ -22,7 +22,7 @@ class Mapwebfiles(Module):
     def _set_args(self):
         self.argparser.add_argument('url', help='HTTP URL where start crawling (es. http://host/path/page.html)')
         self.argparser.add_argument('baseurl', help='HTTP base url (es. http://host/path/)')
-        self.argparser.add_argument('rpath', help='Remote web root corresponding to crawled path (es. /var/www/path)', type=str)
+        self.argparser.add_argument('rpath', help='Remote web root corresponding to crawled path (es. /var/www/path)')
         self.argparser.add_argument('-depth', help='Crawl depth', type=int, default=3)
 
 

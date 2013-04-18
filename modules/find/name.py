@@ -2,7 +2,7 @@
 
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ModuleException, ProbeException
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 
 
 class Name(ModuleGuess):
@@ -20,7 +20,7 @@ if($h) { @closedir($h); } }""")
     
     def _set_args(self):
         self.argparser.add_argument('string', help='String to match')
-        self.argparser.add_argument('rpath', help='Remote starting path', default ='.', nargs='?')
+        self.argparser.add_argument('-rpath', help='Remote starting path', default ='.', nargs='?')
         self.argparser.add_argument('-equal', help='Match if name is exactly equal (default: match if contains)', action='store_true', default=False)
         self.argparser.add_argument('-case', help='Case sensitive match (default: insenstive)', action='store_true', default=False)
         self.argparser.add_argument('-vector', choices = self.vectors.keys())

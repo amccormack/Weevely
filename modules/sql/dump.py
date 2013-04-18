@@ -1,6 +1,6 @@
 from core.moduleguess import ModuleGuess
 from core.moduleexception import ProbeException, ProbeSucceed
-from core.storedargparse import StoredArgumentParser as ArgumentParser
+from core.argparse import ArgumentParser
 from tempfile import mkdtemp
 from os import path
 
@@ -84,7 +84,7 @@ mysql_close();
 
 WARN_DUMP_ERR_SAVING = 'Can\'t save dump file'
 WARN_DUMP_SAVED = 'Dump file saved'
-WARN_DUMP_INCOMPLETE = 'Dump seems incorrect, saving anyway for debug purposes'
+WARN_DUMP_INCOMPLETE = 'Dump failed, saving anyway for debug purposes'
 WARN_NO_DUMP = 'Dump failed, check credentials and dbms informations'
 
 class Dump(ModuleGuess):
@@ -116,7 +116,7 @@ class Dump(ModuleGuess):
             raise ProbeSucceed(self.name,'Dumped')
             
     def _stringify_result(self):
-        
+
         if self._result: 
             if not '-- Dumping data for table' in self._result:
                 self.mprint(WARN_DUMP_INCOMPLETE)

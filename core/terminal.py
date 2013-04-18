@@ -173,6 +173,8 @@ class Terminal(Helper, Configs):
 
     def __cwd_handler (self, cmd = None):
 
+        cwd_new = ''
+        
         if cmd == None or len(cmd) ==1:
             cwd_new = Vector(self.modhandler,  'first_cwd', 'system.info', 'cwd').execute()
         elif len(cmd) == 2:
@@ -181,7 +183,8 @@ class Terminal(Helper, Configs):
                 self._tprint("[!] Folder '%s' change failed, no such file or directory or permission denied%s" % (cmd[1], os.linesep))                
                 return
             
-        setattr(self.modhandler.load('shell.php').stored_args_namespace, 'path', cwd_new)
+        if cwd_new:
+            setattr(self.modhandler.load('shell.php').stored_args_namespace, 'path', cwd_new)
         
 
     def __env_init(self):

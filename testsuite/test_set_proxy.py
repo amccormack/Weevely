@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath('..'))
 import core.http.request
 
 rc_file = """
-:set shell.php proxy=http://localhost:%i
+:set shell.php -proxy http://localhost:%i
 :shell.php echo(\'WE\'.\'EV\'.\'ELY\');
 """
 
@@ -19,7 +19,7 @@ class SetProxy(ProxyTestCase):
     def test_proxy(self):
         
         ## Runtime test
-        self.assertRegexpMatches(self._warn(':set shell.php proxy=http://localhost:%i' % self.__class__.proxyport), 'proxy=\'http://localhost:%i\'' % self.__class__.proxyport)
+        self.assertRegexpMatches(self._warn(':set shell.php -proxy http://localhost:%i' % self.__class__.proxyport), 'proxy=\'http://localhost:%i\'' % self.__class__.proxyport)
         self.assertEqual(PythonProxy.proxy_counts,0)
         self.assertEqual(self._outp(':shell.php echo(1+1);'), '2')
         self.assertGreater(PythonProxy.proxy_counts,0)
@@ -50,7 +50,7 @@ class SetProxy(ProxyTestCase):
         self.assertGreaterEqual(PythonProxy.proxy_counts, PythonProxy.dummy_counts)
             
         
-        self.assertRegexpMatches(self._warn(':set shell.php proxy=wrong://localhost:%i' % self.__class__.proxyport), 'proxy=\'wrong://localhost:%i\'' % self.__class__.proxyport)
+        self.assertRegexpMatches(self._warn(':set shell.php -proxy wrong://localhost:%i' % self.__class__.proxyport), 'proxy=\'wrong://localhost:%i\'' % self.__class__.proxyport)
         self.assertRegexpMatches(self._warn(':shell.php echo(1+1);'), core.http.request.WARN_UNCORRECT_PROXY)
         
         

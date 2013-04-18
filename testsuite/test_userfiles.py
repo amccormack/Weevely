@@ -23,7 +23,7 @@ class FSUserFiles(SimpleTestCase):
         
         self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles"))
         self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles -pathlist \"%s\"" % str(path_list)))
-        self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles -auto-user"))
+        self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles -auto-home"))
         self.assertDictContainsSubset(expected_enum_map, self._res(":audit.userfiles -pathfile %s" % temp_path.name))
 
         temp_path.close()

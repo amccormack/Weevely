@@ -7,11 +7,11 @@ from unittest import skipIf
 
 rc_file = """
 :shell.php print(\'W\');
-:set shell.php debug=1
+:set shell.php -debug 1
 echo EE
 # echo X
 # shell.php print(\'X\');
-:set shell.php debug=
+:set shell.php
 echo VELY
 """
 

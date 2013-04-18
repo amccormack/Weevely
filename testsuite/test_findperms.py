@@ -70,6 +70,10 @@ class FSFindCheck(FolderFileFSTestCase):
     def test_equal_vector(self):
 
         self.assertEqual(self._path('cd %s' % self.basedir), self.basedir)
+        
+        # Disable shell.sh stderr to avoid "file not found" warning message pollution
+        self._res(":set shell.sh -no-stderr")
+        
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive')), sorted(self._res(':find.perms -vector find')))
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -writable')), sorted(self._res(':find.perms -vector find -writable')))
         self.assertEqual(sorted(self._res(':find.perms -vector php_recursive -readable')), sorted(self._res(':find.perms -vector find -readable')))

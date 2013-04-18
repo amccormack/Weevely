@@ -32,7 +32,7 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.name W[0-9] -vector find')), sorted_folders)     
         self.assertEqual(sorted(self._res(':find.name w[0-9] -case -vector find')), sorted_folders)
         self.assertEqual(sorted(self._res(':find.name file-1.txt -equal -vector find')), ['./w1/file-1.txt'])   
-        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2 -vector find')), ['./w1/w2/file-2.txt'])   
+        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2 -vector find')), ['w1/w2/file-2.txt'])   
         
 
 
@@ -47,7 +47,7 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.name W[0-9]')), sorted_folders)     
         self.assertEqual(sorted(self._res(':find.name w[0-9] -case')), sorted_folders)
         self.assertEqual(sorted(self._res(':find.name file-1.txt -equal')), ['./w1/file-1.txt'])   
-        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2')), ['./w1/w2/file-2.txt'])   
+        self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2')), ['w1/w2/file-2.txt'])   
 
         self.assertEqual(sorted(self._res(':find.name fIle- -case')), [])
         self.assertEqual(sorted(self._res(':find.name W[0-9] -case')), [])
@@ -55,13 +55,13 @@ class FSFindCheck(FolderFileFSTestCase):
         self.assertEqual(sorted(self._res(':find.name 2.txt -rpath w1/w2 -equal')), [])   
         self.assertEqual(sorted(self._res(':find.name 2.txt -rpath /asdsad -equal')), [])  
 
-        self.assertEqual(sorted(self._res(':find.name FILE- w1 -no-recursion')), ['w1/file-1.txt'])
-        self.assertEqual(sorted(self._res(':find.name file- w1 -case -no-recursion')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name FILE- -rpath w1 -no-recursion')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name file- -rpath w1 -case -no-recursion')), ['w1/file-1.txt'])
         self.assertEqual(sorted(self._res(':find.name W[0-9] -no-recursion')),  ['./w1'])   
         self.assertEqual(sorted(self._res(':find.name w[0-9] -case -no-recursion')), ['./w1'])       
 
-        self.assertEqual(sorted(self._res(':find.name FILE- w1 -no-recursion -vector find')), ['w1/file-1.txt'])
-        self.assertEqual(sorted(self._res(':find.name file- w1 -case -no-recursion  -vector find')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name FILE- -rpath w1 -no-recursion -vector find')), ['w1/file-1.txt'])
+        self.assertEqual(sorted(self._res(':find.name file- -rpath w1 -case -no-recursion  -vector find')), ['w1/file-1.txt'])
         self.assertEqual(sorted(self._res(':find.name W[0-9] -no-recursion  -vector find')),  ['./w1'])   
         self.assertEqual(sorted(self._res(':find.name w[0-9] -case -no-recursion  -vector find')), ['./w1'])           
         

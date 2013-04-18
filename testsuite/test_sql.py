@@ -78,7 +78,7 @@ class MySql(SimpleTestCase):
 
         # vectors
         self.assertRegexpMatches(self._res(':sql.dump %s %s information_schema -vector mysqldump -table TABLES' % ( user, pwd ) ), "-- Dumping data for table `TABLES`")
-        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema  -vector mysqldump -table TABLES' % ( user ) ), modules.sql.dump.WARN_NO_DUMP)
+        self.assertRegexpMatches(self._warn(':sql.dump %s wrongpwd information_schema  -vector mysqldump -table TABLES' % ( user ) ), modules.sql.dump.WARN_DUMP_INCOMPLETE)
                    
 
 class PGSql(SimpleTestCase):

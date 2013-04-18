@@ -9,44 +9,41 @@ class Set(SimpleTestCase):
 
     def test_set(self):
         
-        module_params = [ x.dest for x in self.term.modhandler.load('file.upload').argparser._actions ]
+        module_params = [ x.dest for x in self.term.modhandler.load('shell.sh').argparser._actions if x.dest != 'help' ]
         
         filename_rand = randstr(4)
         filepath_rand = os.path.join(self.basedir, filename_rand)
 
-        self._res(':set shell.php debug=1')
 
-        self.assertTrue(self._res(':file.upload /etc/hosts %s -content MYTEXT' % filepath_rand))
+        self.assertRegexpMatches(self._res(':shell.sh ls'), '.\n..')
         
-        params_print = self._warn(':set file.upload')
+        params_print = self._warn(':help shell.sh')
         # Basic parameter output
-        self.assertRegexpMatches(params_print, '%s=\'.*\'[\s]+' % '=\'.*\'[\s]+'.join(module_params) )
+        self.assertRegexpMatches(params_print.strip().split('\n')[-1], 'stored arguments: %s=\'.*\'' % '=\'.*\'[\s]+'.join(module_params) )
         
         # Module should have an already set vector
         self.assertRegexpMatches(params_print, 'vector=\'[\w]+\'')
         
         #Set parameter previously to execute command without 
-        self.assertRegexpMatches(self._warn(':set file.upload lpath="/etc/hosts"'), 'lpath=\'/etc/hosts\'' )
-        self.assertRegexpMatches(self._warn(':set file.upload rpath="%s1"' % filepath_rand), 'rpath=\'%s1\'' % filepath_rand )
-        self.assertRegexpMatches(self._warn(':set file.upload'),'lpath=\'/etc/hosts\'[\s]+rpath=\'%s1\'' % filepath_rand )
-        self.assertTrue(self._res(':file.upload'))
+        self.assertRegexpMatches(self._warn(':set shell.sh ls'), 'cmd=\'\[\'ls\'\]\'' )
+        self.assertRegexpMatches(self._res(':shell.sh'), '.\n..')
+        
+        #Redo previous test, with shell.php precmd
+        self._res(':set shell.php -precmd echo("WEEV");')
+        self.assertRegexpMatches(self._warn(':set shell.sh echo ILY'), 'cmd=\'\[\'echo\'\, \'ILY\'\]\'' )
+        self.assertRegexpMatches(self._res(':shell.sh'), 'WEEVILY')
+        
+        #Reset parameters
+        self._res(':set shell.sh')
+        params_print = self._warn(':help shell.sh')
+        self.assertRegexpMatches(params_print.strip().split('\n')[-1], 'stored arguments: %s=\'\'' % '=\'\'[\s]+'.join(module_params) )
         
         #Set wrongly parameter with choices
-        self.assertRegexpMatches(self._warn(':set file.upload vector="nonexistant"'), 'vector=\'nonexistant\'' )
-        self.assertRegexpMatches(self._warn(':file.upload /etc/hosts %s2' % filepath_rand), 'invalid choice' )      
-           
-        # Reset parameters
-        self.assertRegexpMatches(self._warn(':set file.upload vector=""'), 'vector=\'\'' )
-        self.assertRegexpMatches(self._warn(':set file.upload lpath='), 'lpath=\'\'' )
-        self.assertRegexpMatches(self._warn(':set file.upload rpath='), 'rpath=\'\'' )
-        self.assertTrue(self._res(':file.upload /etc/hosts %s3 -mycontent ASD' % filepath_rand))     
-        
-        #Set wrongly parameter with choices but run it correctly
-        self.assertRegexpMatches(self._warn(':set shell.php debug="asd"'), 'debug=\'asd\'' )
-        self.assertEqual(self._res(':shell.php print(\'ASD\'); -debug 4'), 'ASD' )   
-        self.assertRegexpMatches(self._warn(':set shell.php debug='), 'debug=\'\'' )
-
-        #Set wrongly parameter type
-        self.assertRegexpMatches(self._warn(':set shell.php debug=\'asd\''), 'debug=\'asd\'' )
-        self.assertRegexpMatches(self._warn('echo'), 'invalid int value' )    
-
+        #Expected arguments
+        self.assertRegexpMatches(self._warn(':set shell.php -precmd'), 'argument -precmd: expected at least one argument')
+        #Expected int
+        self.assertRegexpMatches(self._warn(':set shell.php -debug asd'), 'argument -debug: invalid int value: \'asd\'')
+        #Expected dict
+        self.assertRegexpMatches(self._warn(':set shell.php -post 1'), 'argument -post: invalid dict value: \'1\'')
+        #Expected list - strings are easily castable as list, so this don\'t fail. not a big deal
+        #self.assertRegexpMatches(self._warn(':set bruteforce.sqlusers -wordlist {}'), 'argument -wordlist: invalid list value: \'1\'')        

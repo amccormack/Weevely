@@ -114,8 +114,8 @@ class Php(Module):
             raise ProbeException(self.name, '%s. %s' % (str(e), WARN_CONN_ERR))
     
         if 'eval()\'d code' in response:
-            if len(response)>=30: 
-                response_sum = response[:30] + '...'
+            if len(response)>=100: 
+                response_sum = '...' + response[-100:] 
             else: 
                 response_sum = response
             

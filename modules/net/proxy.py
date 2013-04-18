@@ -6,7 +6,6 @@ from core.argparse import SUPPRESS
 from os import path
 from random import choice
 from core.http.request import agent
-
 from core.utils import url_validator
 from subprocess import Popen
 from sys import executable

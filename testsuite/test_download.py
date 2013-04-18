@@ -20,6 +20,9 @@ class FSDownload(FolderFileFSTestCase):
         self.assertRegexpMatches(self._warn(':file.download /etc/passwd /tmpsaddsaas/asd') , 'Errno')
         self.assertRegexpMatches(self._warn(':file.download /etc/shadow /tmp/asd') , modules.file.download.WARN_NO_SUCH_FILE)
 
+        # False and True printout
+        self.assertEqual(self._outp(':file.download /etc/issue %s'  % (self.temp_path.name)), 'True')
+        self.assertEqual(self._outp(':file.download /etc/issue2 %s'  % (self.temp_path.name)).rstrip().split('\n')[-1], 'False')
 
         self.assertEqual(self._res(':file.download %s %s -vector file'  % (self.download_path, self.temp_path.name)), '1')
         self.assertEqual(self._res(':file.download %s %s -vector fread'  % (self.download_path, self.temp_path.name)), '1')

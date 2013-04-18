@@ -39,6 +39,7 @@ class Download(ModuleGuess):
     def _prepare(self):
         self.transfer_dir = None
         self.lastreadfile = ''
+        self._output = 'False'
 
     def _prepare_vector(self):
         
@@ -116,10 +117,9 @@ class Download(ModuleGuess):
             self.mprint('MD5 check failed')
         
         raise ProbeSucceed(self.name, 'File downloaded to \'%s\'.' % (local_path))
-    
-    
-    
+        
     def _stringify_result(self):
-        # Not convert self._result to self._output (no output prints)
-        self._output = ''
+        # Not convert self._result to self._output (no output prints), but simulate a True/False return
+        if self._result: 
+            self._output = 'True'
     

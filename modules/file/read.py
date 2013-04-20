@@ -21,4 +21,5 @@ class Read(Download):
         return Download._verify_vector_execution(self)
     
     def _stringify_result(self):
+        self._result = self._content
         return ModuleGuess._stringify_result(self)

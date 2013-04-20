@@ -2,6 +2,8 @@ from core.module import Module
 from core.moduleexception import ProbeException
 from core.argparse import ArgumentParser
 
+WARN_INVALID_VALUE = 'Invalid returned value'
+
 class Check(Module):
     '''Check remote files type, md5 and permission'''
 
@@ -14,6 +16,8 @@ class Check(Module):
         self.support_vectors.add_vector("write", 'shell.php', "(is_writable('$rpath') && print(1))|| print(0);")
         self.support_vectors.add_vector("exec", 'shell.php', "(is_executable('$rpath') && print(1)) || print(0);")
         self.support_vectors.add_vector("isfile", 'shell.php', "(is_file('$rpath') && print(1)) || print(0);")
+        self.support_vectors.add_vector("size", 'shell.php', "print(filesize('$rpath'));")
+        
     
     def _set_args(self):
         self.argparser.add_argument('rpath', help='Remote path')
@@ -25,12 +29,18 @@ class Check(Module):
         
         value = self.support_vectors.get(self.args['attr']).execute(self.args)
         
-        if value == '1':
+        if self.args['attr'] == 'md5' and value:
+            self._result = value
+        elif self.args['attr'] == 'size':
+            try:
+                self._result = int(value)
+            except ValueError, e:
+                raise ProbeException(self.name, "%s: '%s'" % (WARN_INVALID_VALUE, value))
+            
+        elif value == '1':
             self._result = True
         elif value == '0':
             self._result = False
-        elif self.args['attr'] == 'md5' and value:
-            self._result = value
         else:
-             raise ProbeException(self.name, "Incorrect returned value: '%s'" % (value))
+             raise ProbeException(self.name, "%s: '%s'" % (WARN_INVALID_VALUE, value))
             

@@ -30,6 +30,8 @@ class Upload(ModuleGuess):
         self.support_vectors.add_vector("rm", 'file.rm', "$rpath -recursive".split(' '))
         self.support_vectors.add_vector("check_exists", 'file.check', "$rpath exists".split(' '))
         self.support_vectors.add_vector('md5', 'file.check', '$rpath md5'.split(' '))
+        self.support_vectors.add_vector('clear', 'shell.php', "file_put_contents('$rpath', '');" )
+        
     
     def _set_args(self):
         self.argparser.add_argument('lpath')
@@ -61,7 +63,7 @@ class Upload(ModuleGuess):
             if not self.args['force']:
                 raise ProbeException(self.name, '%s. Overwrite \'%s\' using -force option.' % (WARN_FILE_EXISTS, self.args['rpath']))
             else:
-                self.support_vectors.get('rm').execute({'rpath' : self.args['rpath']})
+                self.support_vectors.get('clear').execute({'rpath' : self.args['rpath']})
                 
     def _prepare(self):
 

@@ -69,7 +69,7 @@ class Edit(Module):
             
             if rpath_existant:
                 if self.support_vectors.get('md5').execute({ 'rpath' : self.args['rpath'] }) != md5_lpath_orig:
-                    recover_msg += 'Remote file is different from original one, recover immediatly backup copy situated in \'%s\'' % lpath_orig
+                    recover_msg += 'Upload fail but remote file result modified. Recover backup copy from \'%s\'' % lpath_orig
         
             raise ProbeException(self.name, '%s \'%s\' %s' % (WARN_UPLOAD_FAILED, self.args['rpath'], recover_msg))
 

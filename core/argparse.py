@@ -1960,7 +1960,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
         # if we didn't use all the Positional objects, there were too few
         # arg strings supplied.
         if positionals:
-            if not hasattr(namespace, 'stored'): self.error(_('too few arguments'))
+            if not hasattr(namespace, 'stored') or getattr(namespace, 'stored') == False: self.error(_('too few arguments'))
 
         # make sure all required actions were present
         for action in self._actions:

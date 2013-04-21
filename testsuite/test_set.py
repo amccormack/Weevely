@@ -24,14 +24,9 @@ class Set(SimpleTestCase):
         # Module should have an already set vector
         self.assertRegexpMatches(params_print, 'vector=\'[\w]+\'')
         
-        #Set parameter previously to execute command without 
-        self.assertRegexpMatches(self._warn(':set shell.sh ls'), 'cmd=\'\[\'ls\'\]\'' )
-        self.assertRegexpMatches(self._res(':shell.sh'), '.\n..')
-        
-        #Redo previous test, with shell.php precmd
+        #Use shell.php precmd
         self._res(':set shell.php -precmd echo("WEEV");')
-        self.assertRegexpMatches(self._warn(':set shell.sh echo ILY'), 'cmd=\'\[\'echo\'\, \'ILY\'\]\'' )
-        self.assertRegexpMatches(self._res(':shell.sh'), 'WEEVILY')
+        self.assertRegexpMatches(self._res(':shell.sh echo ILY'), 'WEEVILY')
         
         #Reset parameters
         self._res(':set shell.sh')

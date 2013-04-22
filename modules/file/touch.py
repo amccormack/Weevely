@@ -2,6 +2,7 @@ from core.moduleguess import ModuleGuess
 from core.moduleexception import ProbeException, ProbeSucceed, ModuleException
 import time
 import datetime
+import os
 
 
 class Touch(ModuleGuess):
@@ -14,6 +15,8 @@ class Touch(ModuleGuess):
 
         self.support_vectors.add_vector(name="exists", interpreter='file.check', payloads = ['$rpath', 'exists'])
         self.support_vectors.add_vector(name='get_epoch', interpreter='file.check', payloads = ['$rpath', 'time_epoch'])
+        self.support_vectors.add_vector(name='ls', interpreter='file.ls', payloads = ['$rpath'])
+        
         
     def _set_args(self):
         self.argparser.add_argument('rpath')
@@ -39,14 +42,36 @@ class Touch(ModuleGuess):
             raise ProbeException(self.name, 'can\'t get timestamp from \'%s\'' % ref_epoch)
         
         return ref_epoch
-        
+    
+    def __get_oldest_ts(self, rpath, limit=5):
+      
+      rfolder, rfile = os.path.split(rpath)
+      if not rfolder:
+          rfolder = '.'
+      
+      file_ls_all = self.support_vectors.get('ls').execute({ 'rpath' : rfolder})
+      
+      if len(file_ls_all) >= limit:
+          file_ls = file_ls_all[:limit]
+      else:
+          file_ls = file_ls_all
+      
+      file_ts = []
+      for file in file_ls:
+          ts = self.__get_epoch_ts(file)
+          if ts: file_ts.append(ts)
+          
+      if file_ts:
+          return min(file_ts)
+      else:
+          return 0
     
     def _prepare_vector(self):
         
         self.formatted_args['rpath'] = self.args['rpath']
         if self.args['oldest'] == True:
             # get oldest timestamp
-            pass
+            self.formatted_args['epoch_time'] = self.__get_oldest_ts(self.args['rpath'])
             
         elif self.args['ref']:
             self.formatted_args['epoch_time'] = self.__get_epoch_ts(self.args['ref'][0])
@@ -69,5 +94,5 @@ class Touch(ModuleGuess):
             
     def _stringify_result(self):
         if self._result:
-            self._output = 'Current timestamp: %s' % datetime.datetime.fromtimestamp(self._result).strftime('%Y-%m-%d %H:%M:%S')
+            self._output = 'Changed timestamp: %s' % datetime.datetime.fromtimestamp(self._result).strftime('%Y-%m-%d %H:%M:%S')
        

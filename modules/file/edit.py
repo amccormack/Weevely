@@ -12,6 +12,7 @@ WARN_DOWNLOAD_FAILED = 'Edit failed, check path and reading permission of'
 WARN_BACKUP_FAILED = 'Backup version copy failed'
 WARN_UPLOAD_FAILED = 'Edit failed, check path and writing permission of'
 WARN_EDIT_FAILED = 'Edit failed, temporary file not found'
+WARN_KEEP_FAILED = 'Fail keeping original timestamp'
 
 class Edit(Module):
     '''Edit remote file'''
@@ -22,11 +23,14 @@ class Edit(Module):
         self.support_vectors.add_vector('upload', 'file.upload', [ "$lpath", "$rpath", "-force" ])
         self.support_vectors.add_vector('md5', 'file.check', [ "$rpath", "md5" ])
         self.support_vectors.add_vector('exists', 'file.check', [ "$rpath", "exists" ])
+        self.support_vectors.add_vector('get_time', 'file.check', [ "$rpath", "time_epoch" ])
+        self.support_vectors.add_vector('set_time', 'file.touch', [ "$rpath", "-epoch", "$epoch" ])
 
 
     def _set_args(self):
         self.argparser.add_argument('rpath', help='Remote path')
         self.argparser.add_argument('-editor', help='Choose editor. default: vim',  default = 'vim')
+        self.argparser.add_argument('-keep-ts', help='Keep original timestamp',  action='store_true')
         
 
     def _probe(self):
@@ -43,6 +47,9 @@ class Edit(Module):
         if rpath_existant:
             if not self.support_vectors.get('download').execute({ 'rpath' : self.args['rpath'], 'lpath' : lpath }):
                 raise ProbeException(self.name, '%s \'%s\'' % (WARN_DOWNLOAD_FAILED, self.args['rpath']))
+            
+            if self.args['keep_ts']:
+                self.args['epoch'] = self.support_vectors.get('get_time').execute({'rpath' : self.args['rpath']})
                 
             try:
                 copy(lpath, lpath_orig)
@@ -72,8 +79,15 @@ class Edit(Module):
                     recover_msg += 'Upload fail but remote file result modified. Recover backup copy from \'%s\'' % lpath_orig
         
             raise ProbeException(self.name, '%s \'%s\' %s' % (WARN_UPLOAD_FAILED, self.args['rpath'], recover_msg))
-
         
+        if self.args['keep_ts'] and self.args['epoch']:
+            new_ts_output, new_ts = self.support_vectors.get('set_time').execute(self.args, return_out_res = True)
+
+            if new_ts_output:
+                self.mprint(new_ts_output)
+            else:
+                raise ProbeException(self.name, WARN_KEEP_FAILED)
+                
         self._result = True
         
     def _stringify_result(self):

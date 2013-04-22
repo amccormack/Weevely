@@ -21,8 +21,8 @@ class Touch(ModuleGuess):
     def _set_args(self):
         self.argparser.add_argument('rpath')
         self.argparser.add_argument('-time', help='Use timestamp like \'2004-02-29 16:21:42\' or \'16:21\'')
-        self.argparser.add_argument('-epoch', nargs=1, help='Use epoch timestamp')
-        self.argparser.add_argument('-ref', nargs=1, help='Use other file\'s time')
+        self.argparser.add_argument('-epoch', help='Use epoch timestamp')
+        self.argparser.add_argument('-ref', help='Use other file\'s time')
         self.argparser.add_argument('-oldest', action='store_true', help='Use time of the oldest file in same folder')        
     
         
@@ -58,9 +58,10 @@ class Touch(ModuleGuess):
           file_ls = file_ls_all
       
       file_ts = []
-      for file in file_ls:
+      for file in [ rfolder.rstrip('/') + '/' + filepath for filepath in file_ls ]:
           ts = self.__get_epoch_ts(file)
-          if ts: file_ts.append(ts)
+          if ts: 
+              file_ts.append(ts)
           
       if file_ts:
           return min(file_ts)
@@ -75,13 +76,13 @@ class Touch(ModuleGuess):
             self.formatted_args['epoch_time'] = self.__get_oldest_ts(self.args['rpath'])
             
         elif self.args['epoch']:
-            self.formatted_args['epoch_time'] = float(self.args['epoch'][0])
+            self.formatted_args['epoch_time'] = float(self.args['epoch'])
             
         elif self.args['ref']:
-            self.formatted_args['epoch_time'] = self.__get_epoch_ts(self.args['ref'][0])
+            self.formatted_args['epoch_time'] = self.__get_epoch_ts(self.args['ref'])
             
         elif self.args['time']:
-            self.formatted_args['epoch_time'] = int(time.mktime(dateutil.parser.parse(self.args['time'][0], yearfirst=True).timetuple()))
+            self.formatted_args['epoch_time'] = int(time.mktime(dateutil.parser.parse(self.args['time'], yearfirst=True).timetuple()))
 
         else:
             raise ModuleException(self.name, 'Too few arguments, specify -time or -ref or -oldest')

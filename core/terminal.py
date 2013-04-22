@@ -196,7 +196,7 @@ class Terminal(Helper, Configs):
         hostname =  Vector(self.modhandler, "hostname", 'system.info', "hostname").execute()
         
         if Vector(self.modhandler, "safe_mode", 'system.info', "safe_mode").execute() == '1':
-            self._tprint('[!] PHP Safe mode enabled')
+            self._tprint('[!] PHP Safe mode enabled%s' % os.linesep)
             
         
         return username, hostname

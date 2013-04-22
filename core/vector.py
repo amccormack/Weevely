@@ -2,12 +2,13 @@ from core.moduleexception import ModuleException
 from string import Template
 from types import ListType, StringTypes, DictType
 import thread
+import collections
 
-class VectorsDict(dict):
+class VectorsDict(collections.OrderedDict):
     
     def __init__(self, modhandler, *args):
         self.modhandler = modhandler
-        dict.__init__(self, args)
+        collections.OrderedDict.__init__(self, args)
 
     def add_vector(self, name, interpreter, payloads):
         self[name] = Vector(self.modhandler, name, interpreter, payloads)

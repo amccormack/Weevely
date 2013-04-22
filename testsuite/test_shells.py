@@ -30,7 +30,9 @@ class Shells(SimpleTestCase):
         #self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector perl_system'), '2')
         self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector proc_open'), '2')
         self.assertEqual(self._outp(':shell.sh echo "$((1+1))" -vector system'), '2')
-        
+
+
+    @skipIf(not conf['shell_sh'], "Skipping shell.sh dependent tests")        
     def test_stderr(self):
         self.assertEqual(self._outp(':shell.sh \'(echo "VISIBLE" >&2)\''), 'VISIBLE')
         self.assertEqual(self._outp(':shell.sh \'(echo "INVISIBLE" >&2)\' -no-stderr'), '')

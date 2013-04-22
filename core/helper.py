@@ -42,11 +42,11 @@ class Helper:
     
     
 
-banner = '''      ________                      __
-     |  |  |  |-----.----.-.--.----'  |--.--.
-     |  |  |  |  -__| -__| |  | -__|  |  |  |
-     |________|_____|____|___/|____|__|___  | v1.01
-                                      |_____|
+banner = '''      ________                     __
+     |  |  |  |----.----.-.--.----'  |--.--.
+     |  |  |  | -__| -__| |  | -__|  |  |  |
+     |________|____|____|___/|____|__|___  | v1.02
+                                     |_____|
               Stealth tiny web shell
 '''
 
@@ -69,19 +69,21 @@ usage = '''
 
 credits = '''
 Website
-                   http://epinna.github.com/Weevely/
+            http://epinna.github.com/Weevely/
 
 Author
-                   Emilio Pinna
-                   http://disse.cting.org
+            Emilio Pinna
+            http://disse.cting.org
 
 Contributors
+           Francesco Manzoni
+           http://www.francescomanzoni.com/
            Andrea Cardaci
            http://cyrus-and.github.com/
-                   Raffaele Forte, Backbox Linux
-                   http://www.backbox.org
-                   Simone Margaritelli
-                   http://www.evilsocket.net/
+           Raffaele Forte, Backbox Linux
+           http://www.backbox.org
+           Simone Margaritelli
+           http://www.evilsocket.net/
 '''
 
 presentation = '''

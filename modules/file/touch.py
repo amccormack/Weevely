@@ -81,7 +81,7 @@ class Touch(ModuleGuess):
             self.formatted_args['epoch_time'] = self.__get_epoch_ts(self.args['ref'][0])
             
         elif self.args['time']:
-            self.formatted_args['epoch_time'] = int(time.mktime(dateutil.parser.parse(self.args['time'][0]).timetuple()))
+            self.formatted_args['epoch_time'] = int(time.mktime(dateutil.parser.parse(self.args['time'][0], yearfirst=True).timetuple()))
 
         else:
             raise ModuleException(self.name, 'Too few arguments, specify -time or -ref or -oldest')

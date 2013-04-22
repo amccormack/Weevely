@@ -5,7 +5,6 @@ import re
 
 WARN_NO_DATA = 'No data returned'
 WARN_CHECK_CRED = 'check credentials and dbms availability'
-WARN_FALLBACK = 'bad credentials, falling back to default ones'
 
 class Console(Module):
     '''Run SQL console or execute single queries'''
@@ -31,13 +30,10 @@ if($result) {
 while ($content = pg_fetch_row($result)) {
 foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
 pg_close();"""])
-                                                
-                             
-    
-
+                              
     def _set_args(self):
-        self.argparser.add_argument('user', help='SQL username')
-        self.argparser.add_argument('pass', help='SQL password')
+        self.argparser.add_argument('-user', help='SQL username')
+        self.argparser.add_argument('-pass', help='SQL password')
         self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')
         self.argparser.add_argument('-dbms', help='DBMS', choices = ['mysql', 'postgres'], default='mysql')
         self.argparser.add_argument('-query', help='Execute single query')
@@ -47,56 +43,23 @@ pg_close();"""])
         setattr(self.stored_args_namespace, 'vector', '')
         setattr(self.stored_args_namespace, 'prompt', 'SQL> ')
         
-    def _query(self, query):
-
-        # Does not re-use fallback vectors
-        stored_vector = getattr(self.stored_args_namespace,'vector') 
-        if stored_vector.endswith('_fallback'):
-            vector = stored_vector
-        else:
-            vector = self.args['dbms']
-        
-        result = self.support_vectors.get(vector).execute({ 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : query })
-        
-        if not result:
-            
-            vector = self.args['dbms'] + '_fallback'
-            
-            result = self.support_vectors.get(vector).execute({ 'query' : query })
-      
-            if result:
-                
-                # First fallback call. Set console
-                
-                get_current_user = 'SELECT USER;' if self.args['dbms'] == 'postgres' else 'SELECT USER();'
-                
-                user = self.support_vectors.get(vector).execute({ 'query' : get_current_user })
-                
-                if user:
-                    user = user[:-1]
-                    setattr(self.stored_args_namespace, 'vector', vector)
-                    setattr(self.stored_args_namespace, 'prompt', '%s SQL> ' % user)
-                    
-                    self.mprint('\'%s:%s@%s\' %s: \'%s\'' % (self.args['user'], self.args['pass'], self.args['host'], WARN_FALLBACK, user))
-           
-                
-        elif result and getattr(self.stored_args_namespace, 'vector') == None:
-            
-                setattr(self.stored_args_namespace, 'vector', vector)
-                setattr(self.stored_args_namespace, 'prompt', "%s@%s SQL> " % (self.args['user'], self.args['host']))
-            
-        
-        if result:
-            return [ line.split('|') for line in result[:-1].replace('|\n', '\n').split('\n') ]   
 
 
+    def _prepare(self):
+
+        self.args['vector'] = 'pg' if self.args['dbms'] == 'postgres' else 'mysql'
+        if not self.args['user'] or not self.args['pass']:
+            self.args['vector'] += '_fallback'
+            
         
 
     def _probe(self):
 
-        self.args['dbms'] = 'pg' if self.args['dbms'] == 'postgres' else 'mysql'
 
         if not self.args['query']:
+            
+            self._check_credentials()
+            
             while True:
                 self._result = None
                 self._output = ''
@@ -112,7 +75,7 @@ pg_close();"""])
                     self.mprint('%s %s' % (WARN_NO_DATA, WARN_CHECK_CRED))
                 elif not self._result:
                     self.mprint(WARN_NO_DATA)
-                else:
+                else:   
                     self._stringify_result()
                     
                 print self._output
@@ -122,4 +85,25 @@ pg_close();"""])
             self._result = self._query(self.args['query'])
 
             if self._result == None:
-                self.mprint('%s %s' % (WARN_NO_DATA, WARN_CHECK_CRED))
+                self.mprint('%s, %s.' % (WARN_NO_DATA, WARN_CHECK_CRED))
+                
+    def _query(self, query):
+
+        result = self.support_vectors.get(self.args['vector']).execute({ 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : query })
+   
+        if result:
+            return [ line.split('|') for line in result[:-1].replace('|\n', '\n').split('\n') ]   
+
+
+    def _check_credentials(self):
+
+        get_current_user = 'SELECT USER;' if self.args['vector']== 'postgres' else 'SELECT USER();'
+        
+        user = self.support_vectors.get(self.args['dbms']).execute({ 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : get_current_user })
+        
+        if user:
+            user = user[:-1]
+            setattr(self.stored_args_namespace, 'vector', self.args['vector'])
+            setattr(self.stored_args_namespace, 'prompt', '%s SQL> ' % user)
+        else:
+            raise ProbeException(self.name, "%s of %s " % (WARN_CHECK_CRED, self.args['host']) )

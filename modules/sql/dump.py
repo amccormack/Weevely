@@ -97,8 +97,8 @@ class Dump(ModuleGuess):
     
     
     def _set_args(self):
-        self.argparser.add_argument('user', help='SQL username')
-        self.argparser.add_argument('pass', help='SQL password')
+        self.argparser.add_argument('-user', help='SQL username')
+        self.argparser.add_argument('-pass', help='SQL password')
         self.argparser.add_argument('db', help='Database to dump')
         self.argparser.add_argument('-table', help='Table to dump')
         self.argparser.add_argument('-host', help='DBMS host or host:port', default='127.0.0.1')

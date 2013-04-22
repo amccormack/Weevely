@@ -92,7 +92,7 @@ class ModuleBase:
                 
             print module_str + str(msg)
         
-            self.modhandler._last_warns += msg + linesep
+            self.modhandler._last_warns += str(msg) + linesep
             
     def _init_stored_args(self):
         self.stored_args_namespace = StoredNamespace()

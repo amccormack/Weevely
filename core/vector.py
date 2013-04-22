@@ -34,7 +34,7 @@ class Vector:
         elif payloads and isinstance (payloads, StringTypes):
             self.payloads.append(payloads)
         
-    def execute(self, format_list = {}, return_out_res_warn = False):
+    def execute(self, format_list = {}, return_out_res = False):
 
         # Check type dict
         if not isinstance(format_list, DictType):
@@ -62,7 +62,7 @@ class Vector:
 
         res, out = self.modhandler.load(self.interpreter).run(formatted_list)
         
-        if return_out_res_warn:
+        if return_out_res:
             return out, res
         else:
             return res
@@ -71,7 +71,3 @@ class Vector:
     def execute_background(self, format_list = {}):
         thread.start_new_thread(self.execute, (format_list,))
         
-
-#    def __repr__(self):
-#        return '[%s, %s, %s]' % (self.name,self.interpreter,  self.payloads)
-

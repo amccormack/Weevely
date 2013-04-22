@@ -21,6 +21,7 @@ class Touch(ModuleGuess):
     def _set_args(self):
         self.argparser.add_argument('rpath')
         self.argparser.add_argument('-time', help='Use timestamp like \'2004-02-29 16:21:42\' or \'16:21\'')
+        self.argparser.add_argument('-epoch', nargs=1, help='Use epoch timestamp')
         self.argparser.add_argument('-ref', nargs=1, help='Use other file\'s time')
         self.argparser.add_argument('-oldest', action='store_true', help='Use time of the oldest file in same folder')        
     
@@ -72,6 +73,9 @@ class Touch(ModuleGuess):
         if self.args['oldest'] == True:
             # get oldest timestamp
             self.formatted_args['epoch_time'] = self.__get_oldest_ts(self.args['rpath'])
+            
+        elif self.args['epoch']:
+            self.formatted_args['epoch_time'] = float(self.args['epoch'][0])
             
         elif self.args['ref']:
             self.formatted_args['epoch_time'] = self.__get_epoch_ts(self.args['ref'][0])

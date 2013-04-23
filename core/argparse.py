@@ -2341,7 +2341,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
     def print_help(self, file=None):
         if file is None:
             file = _sys.stdout
-        self._print_message(self.format_help(), file)
+        #self._print_message(self.format_help(), file)
 
     def print_version(self, file=None):
         import warnings
@@ -2361,9 +2361,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
     # Exiting methods
     # ===============
     def exit(self, status=0, message=None):
-        if message:
-            self._print_message(message)
-        _sys.exit(status)
+        pass
 
     def error(self, message):
         """error(message: string)
@@ -2375,4 +2373,4 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
         should either exit or raise an exception.
         """
         self.print_usage()
-        raise ModuleException(self.prog[1:], message)
+        raise ModuleException(self.prog[1:], message + '. Run \':help %s\' for help.' % self.prog[1:])

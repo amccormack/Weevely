@@ -38,7 +38,7 @@ class ModuleBase:
         """This method initialize ArgumentParser objects self.argparser.
         """
         
-        self.argparser = ArgumentParser(prog=':%s' % self.name, description = self.__doc__)
+        self.argparser = ArgumentParser(prog=':%s' % self.name, description = self.__doc__, add_help=False)
         
         
     def run(self, arglist = []):

@@ -80,7 +80,7 @@ class Edit(Module):
         
             raise ProbeException(self.name, '%s \'%s\' %s' % (WARN_UPLOAD_FAILED, self.args['rpath'], recover_msg))
         
-        if self.args['keep_ts'] and self.args['epoch']:
+        if self.args['keep_ts'] and self.args.get('epoch', None):
             new_ts_output, new_ts = self.support_vectors.get('set_time').execute(self.args, return_out_res = True)
 
             if new_ts_output:

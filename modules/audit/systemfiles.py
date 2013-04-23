@@ -14,7 +14,7 @@ class Systemfiles(Module):
         self.support_vectors.add_vector('find', 'find.perms', ["$path", "$mode"])
         self.support_vectors.add_vector('findfiles', 'find.perms', ["$path", "$mode", "-type", "f"])
         self.support_vectors.add_vector('findnorecurs', 'find.perms', ["$path", "$mode", "-no-recursion"])
-        self.support_vectors.add_vector('findfilesnorecurs', 'find.perms', ["$path", "$mode", "-no-recursion", "$recurs", "-type", "f"])
+        self.support_vectors.add_vector('findfilesnorecurs', 'find.perms', ["$path", "$mode", "-no-recursion", "-type", "f"])
         self.support_vectors.add_vector('users', 'audit.etcpasswd', ["-real"])
         self.support_vectors.add_vector('check', 'file.check', ["$path", "$attr"])
     

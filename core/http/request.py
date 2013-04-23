@@ -49,7 +49,7 @@ class Request:
         else:
             self.opener = urllib2.build_opener()
             
-            
+        self.opener.addheaders = [('User-agent', agent)]
        
     def __parse_proxy(self, proxyurl):
 
@@ -79,7 +79,6 @@ class Request:
         except urllib2.HTTPError, handle:
             pass
         
-        self['User-agent'] = agent
 
         if bytes > 0:
             return handle.read(bytes)

@@ -42,3 +42,6 @@ class Shells(SimpleTestCase):
         self.assertEqual(self._outp(':system.info os'), 'Linux')
         self.assertRegexpMatches(self._outp(':system.info'), 'safe_mode')
         
+    def test_useragent(self):
+        self.assertNotRegexpMatches(self._outp(""":shell.php "print_r(\$_SERVER['HTTP_USER_AGENT']);" """), 'urllib')
+        

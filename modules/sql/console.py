@@ -10,27 +10,12 @@ class Console(Module):
     '''Run SQL console or execute single queries'''
     
     def _set_vectors(self):
-        
-        self.support_vectors.add_vector('mysql', 'shell.php', ["""if(mysql_connect("$host","$user","$pass")){
-$result = mysql_query("$query"); if($result) {
-while ($content = mysql_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-mysql_close();}""" ])
-        self.support_vectors.add_vector('mysql_fallback', 'shell.php', [ """$result = mysql_query("$query");
-if($result) {
-while ($content = mysql_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}"""]),
-        self.support_vectors.add_vector('pg', 'shell.php', ["""if(pg_connect("host=$host user=$user password=$pass")){
-$result = pg_query("$query"); if($result) {
-while ($content = pg_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-pg_close();}""" ]),
-        self.support_vectors.add_vector('pg_fallback', 'shell.php', [ """$result = pg_query("$query");
-if($result) {
-while ($content = pg_fetch_row($result)) {
-foreach($content as $key => $value){echo $value . "|";} echo "\n";}}
-pg_close();"""])
-                              
+
+        self.support_vectors.add_vector('mysql', 'shell.php', ["""if(mysql_connect("$host","$user","$pass")){$r=mysql_query("$query");if($r){while($c=mysql_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";}echo PHP_EOL;}};mysql_close();}""" ])
+        self.support_vectors.add_vector('mysql_fallback', 'shell.php', [ """$r=mysql_query("$query");if($r){while($c=mysql_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";}echo PHP_EOL;}};mysql_close();"""]),
+        self.support_vectors.add_vector('pg', 'shell.php', ["""if(pg_connect("host=$host user=$user password=$pass")){$r=pg_query("$query");if($r){while($c=pg_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";}echo PHP_EOL;}};pg_close();}""" ]),
+        self.support_vectors.add_vector('pg_fallback', 'shell.php', ["""$r=pg_query("$query");if($r){while($c=pg_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";} echo PHP_EOL;}};pg_close();"""])
+
     def _set_args(self):
         self.argparser.add_argument('-user', help='SQL username')
         self.argparser.add_argument('-pass', help='SQL password')

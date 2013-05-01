@@ -21,7 +21,6 @@
 from core.terminal import Terminal, module_trigger, help_string
 from core.modulehandler import ModHandler
 from core.moduleexception import ModuleException
-from core.argparse import ArgumentParser
 from core.helper import banner, credits, usage
 
 import sys

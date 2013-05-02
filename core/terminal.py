@@ -45,7 +45,7 @@ class Terminal(Helper, Configs):
                                                              path=getattr(self.modhandler.load('shell.php').stored_args_namespace, 'path'), 
                                                              prompt = 'PHP>' if (self.modhandler.interpreter == 'shell.php') else '$' )
 
-            input_cmd = raw_input( prompt ).strip()
+            input_cmd = raw_input( prompt )
             if input_cmd and (input_cmd[0] == ':' or input_cmd[:2] in ('ls', 'cd')):
                 # This is a module call, pre-split to simulate argv list to pass to argparse 
                 try:

@@ -45,11 +45,11 @@ class Terminal(Helper, Configs):
                                                              path=getattr(self.modhandler.load('shell.php').stored_args_namespace, 'path'), 
                                                              prompt = 'PHP>' if (self.modhandler.interpreter == 'shell.php') else '$' )
 
-			# Python 3 doesn't support raw_input() and use a 'new' input()
-			try:
-	            input_cmd = raw_input( prompt )
+			# Python 3 doesn't support raw_input(), it uses a 'new' input()
+            try:
+                input_cmd = raw_input( prompt )
 
-			except NameError:
+            except NameError:
 				input_cmd = input( prompt )
 
             if input_cmd and (input_cmd[0] == ':' or input_cmd[:2] in ('ls', 'cd')):

@@ -38,11 +38,22 @@ if __name__ == "__main__":
         password = sys.argv[2]
 
         try:
-            Terminal ( ModHandler( url, password ) ).loop()
+            Terminal ( ModHandler(url, password) ).loop()
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
         except (KeyboardInterrupt, EOFError):
             print '\n[!] Exiting. Bye ^^'
+
+    elif len(sys.argv) >= 3 and sys.argv[1].startswith('session'):
+
+        session = sys.argv[2]
+
+        try:
+           Terminal( ModHandler('', '')).loop(session)
+        except ModuleException, e:
+           print '[!] [%s] %s ' % (e.module, e.error)
+        except KeyboardInterrupt:
+           print '\n[!] Exiting. Bye ^^'
 
     elif len(sys.argv) >= 3 and sys.argv[1].startswith('generate'):
 

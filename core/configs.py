@@ -1,6 +1,8 @@
 import os
 import core.terminal
 import atexit
+from urlparse import urlparse
+from ConfigParser import ConfigParser
 
 try:
         import readline
@@ -13,9 +15,52 @@ except ImportError:
 
 dirpath = '.weevely'
 rcfilepath = 'weevely.rc'
+cfgfile = 'weevely.conf'
+cfgfilepath = 'sessions'
 historyfilepath = 'weevely_history'
 
-class Configs:
+class Configs():
+
+    def _read_cfg(self, session):
+        sessionfile = os.path.join(cfgfilepath, session, cfgfile)
+        parser = ConfigParser()
+
+        try:
+          with open(sessionfile):
+            parser.read(sessionfile)
+            for key, value in parser.items('global'):
+              setattr(self, key, value)
+            self._tprint("[+] Reading session file '%s'\n" % sessionfile)
+            return self.url, self.password          
+              
+        except (IOError, Exception) as e:
+          print( "[!] Error: %s" % e)
+	  raise
+          #self._tprint( "[!] Error opening '%s' file.\n" % sessionfile)
+
+    def _write_cfg(self, url, configDict):
+
+        session = urlparse(url).hostname
+        sessionfile = os.path.join(cfgfilepath, session, cfgfile)
+        parser = ConfigParser()
+
+        try:
+          if not os.path.exists(os.path.join(cfgfilepath, session)):
+             os.makedirs(os.path.join(cfgfilepath, session))
+
+          writer = open(sessionfile, 'w')
+          parser.add_section('global')
+          parser.set('global', 'url', url)
+          for k, v in configDict.iteritems():
+              parser.set('global', k, v)    
+          parser.write(writer)
+
+          print("[+] Writing session file '%s'\n" % sessionfile)
+
+        except (IOError, Exception) as e:
+          #print( "[!] Error: %s" % e)
+          print( "[!] Error writing '%s' file: \n" % sessionfile)
+	 
 
     def _read_rc(self, rcpath):
 

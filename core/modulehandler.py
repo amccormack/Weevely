@@ -1,6 +1,5 @@
 import os,sys
 from moduleexception import ModuleException
-
 from helper import Helper
 
 
@@ -66,6 +65,11 @@ class ModHandler:
 
         self.ordered_groups = self.modules_names_by_group.keys()
         self.ordered_groups.sort()
+
+    def connect(self, url, password):
+        
+        self.url = url
+        self.password = password
 
     def load(self, module_name):
 

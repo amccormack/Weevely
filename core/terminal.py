@@ -20,21 +20,27 @@ gen_string = ':generator'
 class Terminal(Helper, Configs):
 
     def __init__( self, modhandler):
-
         self.modhandler = modhandler
         self._make_home_folder()
-        self.__load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
         self._init_completion()
+        self._load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
         
-    def loop(self):
+    def loop(self, session=None):
 
         self._tprint(self._format_presentation())
-        
         try:
-            username, hostname = self.__env_init()
+           if session:            
+              url, password = self._read_cfg(session)
+              self.modhandler.connect(url, password) 
+              username, hostname = self.__env_init()
+           else:
+              username, hostname = self.__env_init(True)
+              
         except ModuleException, e:
             return
-        
+        except IOError:
+            exit
+
         self.__cwd_handler()
         
         while self.modhandler.interpreter:
@@ -142,7 +148,7 @@ class Terminal(Helper, Configs):
             raise ModuleException('terminal','Interpreter guess failed')
         
 
-    def __load_rcfile(self, path, default_rcfile=False):
+    def _load_rcfile(self, path, default_rcfile=False):
 
         path = os.path.expanduser(path)
 
@@ -187,7 +193,7 @@ class Terminal(Helper, Configs):
             setattr(self.modhandler.load('shell.php').stored_args_namespace, 'path', cwd_new)
         
 
-    def __env_init(self):
+    def __env_init(self, saveflag=False):
         
         # At terminal start, try to probe automatically best interpreter
         self.__guess_best_interpreter()
@@ -197,6 +203,9 @@ class Terminal(Helper, Configs):
         
         if Vector(self.modhandler, "safe_mode", 'system.info', "safe_mode").execute() == '1':
             self._tprint('[!] PHP Safe mode enabled%s' % os.linesep)
-            
+        
+        if saveflag:
+           configDict = {'username':username, 'password':self.modhandler.password, 'hostname':hostname}
+           self._write_cfg(self.modhandler.url, configDict)
         
         return username, hostname

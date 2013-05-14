@@ -5,7 +5,7 @@ Created on 22/ago/2011
 '''
 
 from core.moduleexception import ModuleException
-from core.configs import Configs, dirpath, rcfilepath
+#from core.configs import Configs, dirpath, rcfilepath
 from core.vector import Vector
 from core.helper import Helper
 import os, re, shlex
@@ -17,20 +17,20 @@ load_string = ':load'
 gen_string = ':generator'
 
 
-class Terminal(Helper, Configs):
+class Terminal(Helper):
 
     def __init__( self, modhandler):
         self.modhandler = modhandler
-        self._make_home_folder()
-        self._init_completion()
-        self._load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
+        #self._make_home_folder()
+        #self._init_completion()
+        #self._load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
         
-    def loop(self, session=None):
+    def loop(self, sessionfile=None):
 
         self._tprint(self._format_presentation())
         try:
-           if session:
-              url, password = self._read_cfg(session)
+           if sessionfile:
+              url, password = self.modhandler._read_cfg(sessionfile)
               self.modhandler.connect(url, password)
               username, hostname = self.__env_init()
            else:
@@ -39,7 +39,7 @@ class Terminal(Helper, Configs):
         except ModuleException, e:
             return
         except IOError:
-            exit
+            return
 
         self.__cwd_handler()
         
@@ -212,6 +212,6 @@ class Terminal(Helper, Configs):
 
         if saveflag:
            configDict = {'username':username, 'password':self.modhandler.password, 'hostname':hostname}
-           self._write_cfg(self.modhandler.url, configDict)
+           self.modhandler._write_cfg(self.modhandler.url, configDict)
         
         return username, hostname

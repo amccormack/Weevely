@@ -1,9 +1,10 @@
 import os,sys
 from moduleexception import ModuleException
+from core.configs import Configs, dirpath, rcfilepath
 from helper import Helper
 
 
-class ModHandler:
+class ModHandler(Configs):
 
     def __init__(self, url = None, password = None):
 

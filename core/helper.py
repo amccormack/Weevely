@@ -57,6 +57,9 @@ usage = '''
 [+] Run command directly from command line
     weevely <url> <password> [ "<command> .." | :<module> .. ]  
 
+[+] Restore a saved session file
+    weevely session [ <file> ]
+
 [+] Generate PHP backdoor
     weevely generate <password> [ <path> ] ..
 
@@ -89,5 +92,4 @@ Contributors
 presentation = '''
 [+] Welcome to Weevely. Browse filesystem and execute system commands.
 [+] Hint: Use ':help' to list available modules.
-
 '''

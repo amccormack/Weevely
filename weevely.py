@@ -45,10 +45,10 @@ if __name__ == "__main__":
 
     elif len(sys.argv) >= 3 and sys.argv[1].startswith('session'):
 
-        session = sys.argv[2]
+        sessionfile = sys.argv[2]
 
         try:
-           Terminal( ModHandler('', '')).loop(session)
+           Terminal(ModHandler()).loop(sessionfile)
         except ModuleException, e:
            print '[!] [%s] %s ' % (e.module, e.error)
         except KeyboardInterrupt:
@@ -63,12 +63,12 @@ if __name__ == "__main__":
             genname = 'generate.php' 
 
         try:
-            Terminal (ModHandler('', '')).run_cmd_line([':%s' % genname ] + sys.argv[2:])
+            Terminal (ModHandler()).run_cmd_line([':%s' % genname ] + sys.argv[2:])
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
 
     elif len(sys.argv) >= 2 and sys.argv[1] == 'help':
-        Terminal (ModHandler('', '')).run_cmd_line([':help' ] + sys.argv[2:])
+        Terminal (ModHandler()).run_cmd_line([':help' ] + sys.argv[2:])
 
 
     elif len(sys.argv) > 3:

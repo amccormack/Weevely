@@ -21,7 +21,6 @@ class Terminal(Helper):
 
     def __init__( self, modhandler):
         self.modhandler = modhandler
-<<<<<<< HEAD
         #self._make_home_folder()
         #self._init_completion()
         #self._load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
@@ -41,27 +40,6 @@ class Terminal(Helper):
             return
         except IOError:
             return
-=======
-        self._make_home_folder()
-        self._init_completion()
-        self._load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
-        
-    def loop(self, session=None):
-
-        self._tprint(self._format_presentation())
-        try:
-           if session:            
-              url, password = self._read_cfg(session)
-              self.modhandler.connect(url, password) 
-              username, hostname = self.__env_init()
-           else:
-              username, hostname = self.__env_init(True)
-              
-        except ModuleException, e:
-            return
-        except IOError:
-            exit
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
 
         self.__cwd_handler()
         
@@ -231,16 +209,9 @@ class Terminal(Helper):
         
         if Vector(self.modhandler, "safe_mode", 'system.info', "safe_mode").execute() == '1':
             self._tprint('[!] PHP Safe mode enabled%s' % os.linesep)
-<<<<<<< HEAD
 
         if saveflag:
            configDict = {'username':username, 'password':self.modhandler.password, 'hostname':hostname}
            self.modhandler._write_cfg(self.modhandler.url, configDict)
-=======
-        
-        if saveflag:
-           configDict = {'username':username, 'password':self.modhandler.password, 'hostname':hostname}
-           self._write_cfg(self.modhandler.url, configDict)
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
         
         return username, hostname

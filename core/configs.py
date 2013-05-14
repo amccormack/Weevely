@@ -1,11 +1,7 @@
 import os
 import core.terminal
 import atexit
-<<<<<<< HEAD
 from urlparse import urlparse, urlsplit
-=======
-from urlparse import urlparse
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
 from ConfigParser import ConfigParser
 
 try:
@@ -19,23 +15,14 @@ except ImportError:
 
 dirpath = '.weevely'
 rcfilepath = 'weevely.rc'
-<<<<<<< HEAD
 cfgext = '.conf'
-=======
-cfgfile = 'weevely.conf'
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
 cfgfilepath = 'sessions'
 historyfilepath = 'weevely_history'
 
 class Configs():
 
-<<<<<<< HEAD
     def _read_cfg(self, sessionfile):
         #sessionfile = os.path.join(cfgfilepath, sessionfile)
-=======
-    def _read_cfg(self, session):
-        sessionfile = os.path.join(cfgfilepath, session, cfgfile)
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
         parser = ConfigParser()
 
         try:
@@ -43,15 +30,9 @@ class Configs():
             parser.read(sessionfile)
             for key, value in parser.items('global'):
               setattr(self, key, value)
-<<<<<<< HEAD
             print("[+] Reading session file '%s'\n" % sessionfile)
             return self.url, self.password
 
-=======
-            self._tprint("[+] Reading session file '%s'\n" % sessionfile)
-            return self.url, self.password          
-              
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
         except (IOError, Exception) as e:
           print( "[!] Error: %s" % e)
 	  raise
@@ -59,7 +40,6 @@ class Configs():
 
     def _write_cfg(self, url, configDict):
 
-<<<<<<< HEAD
         hostname = urlparse(url).hostname
         weevname =  os.path.splitext(os.path.basename(urlsplit(url).path))[0]
         sessionfile = os.path.join(cfgfilepath, hostname, weevname + cfgext)
@@ -68,25 +48,11 @@ class Configs():
         try:
           if not os.path.exists(os.path.join(cfgfilepath, hostname)):
              os.makedirs(os.path.join(cfgfilepath, hostname))
-=======
-        session = urlparse(url).hostname
-        sessionfile = os.path.join(cfgfilepath, session, cfgfile)
-        parser = ConfigParser()
-
-        try:
-          if not os.path.exists(os.path.join(cfgfilepath, session)):
-             os.makedirs(os.path.join(cfgfilepath, session))
-
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
           writer = open(sessionfile, 'w')
           parser.add_section('global')
           parser.set('global', 'url', url)
           for k, v in configDict.iteritems():
-<<<<<<< HEAD
-              parser.set('global', k, v)
-=======
               parser.set('global', k, v)    
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
           parser.write(writer)
 
           print("[+] Writing session file '%s'\n" % sessionfile)
@@ -94,11 +60,6 @@ class Configs():
         except (IOError, Exception) as e:
           #print( "[!] Error: %s" % e)
           print( "[!] Error writing '%s' file: \n" % sessionfile)
-<<<<<<< HEAD
-
-=======
-	 
->>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
 
     def _read_rc(self, rcpath):
 

@@ -1,6 +1,9 @@
 import os,sys
 from moduleexception import ModuleException
+<<<<<<< HEAD
 from core.configs import Configs, dirpath, rcfilepath
+=======
+>>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
 from helper import Helper
 
 
@@ -68,7 +71,11 @@ class ModHandler(Configs):
         self.ordered_groups.sort()
 
     def connect(self, url, password):
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 465030c40dd69818a10c18d9509bd72622b524dd
         self.url = url
         self.password = password
 

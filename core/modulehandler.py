@@ -1,10 +1,10 @@
 import os,sys
 from moduleexception import ModuleException
-
+from core.configs import Configs, dirpath, rcfilepath
 from helper import Helper
 
 
-class ModHandler:
+class ModHandler(Configs):
 
     def __init__(self, url = None, password = None):
 
@@ -66,6 +66,10 @@ class ModHandler:
 
         self.ordered_groups = self.modules_names_by_group.keys()
         self.ordered_groups.sort()
+
+    def connect(self, url, password):
+        self.url = url
+        self.password = password
 
     def load(self, module_name):
 

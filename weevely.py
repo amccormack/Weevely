@@ -37,11 +37,22 @@ if __name__ == "__main__":
         password = sys.argv[2]
 
         try:
-            Terminal ( ModHandler( url, password ) ).loop()
+            Terminal ( ModHandler(url, password) ).loop()
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
         except (KeyboardInterrupt, EOFError):
             print '\n[!] Exiting. Bye ^^'
+
+    elif len(sys.argv) >= 3 and sys.argv[1].startswith('session'):
+
+        sessionfile = sys.argv[2]
+
+        try:
+           Terminal(ModHandler()).loop(sessionfile)
+        except ModuleException, e:
+           print '[!] [%s] %s ' % (e.module, e.error)
+        except KeyboardInterrupt:
+           print '\n[!] Exiting. Bye ^^'
 
     elif len(sys.argv) >= 3 and sys.argv[1].startswith('generate'):
 
@@ -52,12 +63,12 @@ if __name__ == "__main__":
             genname = 'generate.php' 
 
         try:
-            Terminal (ModHandler('', '')).run_cmd_line([':%s' % genname ] + sys.argv[2:])
+            Terminal (ModHandler()).run_cmd_line([':%s' % genname ] + sys.argv[2:])
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
 
     elif len(sys.argv) >= 2 and sys.argv[1] == 'help':
-        Terminal (ModHandler('', '')).run_cmd_line([':help' ] + sys.argv[2:])
+        Terminal (ModHandler()).run_cmd_line([':help' ] + sys.argv[2:])
 
 
     elif len(sys.argv) > 3:

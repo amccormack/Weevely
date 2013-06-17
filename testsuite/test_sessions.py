@@ -11,7 +11,7 @@ import modules.generate.img
 import core.backdoor
 from commands import getstatusoutput
 from unittest import skipIf
-from core.sessions import default_session 
+from core.sessions import default_session, WARN_NOT_FOUND, WARN_BROKEN_SESS, WARN_LOAD_ERR
 
 class Sessions(SimpleTestCase):
     
@@ -23,7 +23,6 @@ class Sessions(SimpleTestCase):
         phpbd_url = os.path.join(web_base_url, phpbdname)
         
         return phpbd_url
-                 
     
     def test_sessions(self):
         
@@ -68,5 +67,27 @@ class Sessions(SimpleTestCase):
         outp = self._warn(':session %s' % (curr3))
         outp = self._warn(':session')
         self.assertEqual(outp, "Current session: '%s'%sLoaded: '%s'%sAvailable: '%s'%s%s" % (curr3, os.linesep, "', '".join(sorted([curr2, curr3, curr1])), os.linesep, curr1, os.linesep,os.linesep))
-        
 
+        # Unexistant session file
+        self.assertRegexpMatches(self._warn(':session /tmp/asd'), WARN_NOT_FOUND)
+
+        # Unexpected session file
+        self.assertRegexpMatches(self._warn(':session /etc/motd'), WARN_BROKEN_SESS)
+
+        # Create session file without fields
+        curr4 = '/tmp/%s.session' % randstr(5)
+        open(curr4,'w').write("""[global]
+url = asd
+username = 
+hostname = 
+rcfile =""")
+        
+        # Broken session file
+        self.assertRegexpMatches(self._warn(':session %s' % curr4), WARN_BROKEN_SESS)
+        
+        # Load broken session file at start
+        call = "'echo'"
+        command = '%s session %s %s' % (conf['cmd'], curr4, call)
+        status, output = getstatusoutput(command)
+        self.assertRegexpMatches(output, WARN_BROKEN_SESS)
+        

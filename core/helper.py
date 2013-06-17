@@ -57,7 +57,7 @@ usage = '''
     weevely <url> <password> [ "<command> .." | :<module> .. ]  
 
 [+] Restore a saved session file
-    weevely [ <file> ]
+    weevely session [ <file> ]
 
 [+] Generate PHP backdoor
     weevely generate <password> [ <path> ] ..

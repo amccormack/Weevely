@@ -13,6 +13,10 @@ historyfilepath = 'history'
 
 default_session = { 'global' : OrderedDict([('url', ''), ('username', ''), ('password', ''), ('hostname', ''), ('rcfile', '')]) }
 
+WARN_NOT_FOUND = 'Session file not found'
+WARN_MISSING_FIELDS = 'Missing field'
+WARN_LOAD_ERR = "Error loading session file"
+
 class Sessions():
 
     def __init__(self, url = None, password = None, sessionfile=None):
@@ -36,7 +40,7 @@ class Sessions():
             self._load_fake_session()
             
         if not self.current_session_name:
-            raise ModuleException("session", "Error loading session file")   
+            raise ModuleException("session", WARN_LOAD_ERR)   
 
 
     def _load_fake_session(self):
@@ -49,17 +53,20 @@ class Sessions():
         
         for sect in default_session:
             if not sect in session_dict:
-                raise ModuleException("session", "Missing '%s' field" % sect)
+                raise ModuleException("session", "%s '%s'" % (WARN_MISSING_FIELDS, sect))
             
             for subsect in default_session[sect]:
                 if not subsect in session_dict[sect]:
-                    raise ModuleException("session", "Missing '%s' field" % sect)
+                    raise ModuleException("session", "%s '%s'" % (WARN_MISSING_FIELDS, sect))
 
 
 
     def _load_session_file(self, session_name, just_return = False):
 
         parser = ConfigParser()
+        
+        if not os.path.isfile(session_name):
+            raise ModuleException('session', WARN_NOT_FOUND)
 
         try:
             parser.read(session_name)            

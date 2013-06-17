@@ -14,7 +14,7 @@ historyfilepath = 'history'
 default_session = { 'global' : OrderedDict([('url', ''), ('username', ''), ('password', ''), ('hostname', ''), ('rcfile', '')]) }
 
 WARN_NOT_FOUND = 'Session file not found'
-WARN_MISSING_FIELDS = 'Missing field'
+WARN_BROKEN_SESS = 'Broken session file, missing fields'
 WARN_LOAD_ERR = "Error loading session file"
 
 class Sessions():
@@ -53,11 +53,11 @@ class Sessions():
         
         for sect in default_session:
             if not sect in session_dict:
-                raise ModuleException("session", "%s '%s'" % (WARN_MISSING_FIELDS, sect))
+                raise ModuleException("session", "%s '%s'" % (WARN_BROKEN_SESS, sect))
             
             for subsect in default_session[sect]:
                 if not subsect in session_dict[sect]:
-                    raise ModuleException("session", "%s '%s'" % (WARN_MISSING_FIELDS, sect))
+                    raise ModuleException("session", "%s '%s'" % (WARN_BROKEN_SESS, sect))
 
 
 
@@ -70,8 +70,8 @@ class Sessions():
 
         try:
             parser.read(session_name)            
-        except (IOError) as e:
-          raise ModuleException("session", e)
+        except Exception as e:
+          raise ModuleException("session", WARN_BROKEN_SESS)
         
         self._validate_session_data(parser._sections)
         

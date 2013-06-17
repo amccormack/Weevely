@@ -19,7 +19,7 @@ class Phpproxy(Upload2web):
 
 
     def _get_proxy_path(self):
-        return os.path.join(self.modhandler.path_modules, 'net', 'external', 'phpproxy.php')
+        return os.path.join(self.modhandler.modules_path, 'net', 'external', 'phpproxy.php')
     
     def _prepare(self):
 

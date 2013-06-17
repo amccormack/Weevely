@@ -5,41 +5,50 @@ Created on 22/ago/2011
 '''
 
 from core.moduleexception import ModuleException
-#from core.configs import Configs, dirpath, rcfilepath
 from core.vector import Vector
 from core.helper import Helper
-import os, re, shlex
+from core.sessions import cfgfilepath, historyfilepath
+import os, re, shlex, atexit
+
+
+try:
+    import readline
+except ImportError:
+    try:
+        import pyreadline as readline
+    except ImportError: 
+        print '[!] Error, readline or pyreadline python module required. In Ubuntu linux run\n[!] sudo apt-get install python-readline'
+        sys.exit(1)
+
+
 
 module_trigger = ':'
 help_string = ':help'
 set_string = ':set'
 load_string = ':load'
 gen_string = ':generator'
+session_string = ':session'
 
 
 class Terminal(Helper):
 
     def __init__( self, modhandler):
-        self.modhandler = modhandler
-        #self._make_home_folder()
-        #self._init_completion()
-        #self._load_rcfile(os.path.join(os.path.expanduser('~'), dirpath, rcfilepath), default_rcfile=True)
         
-    def loop(self, sessionfile=None):
+        self.modhandler = modhandler
+
+        self._init_completion()
+        self._load_rcfile(self.modhandler.sessions.get_session()['global']['rcfile'])
+        
+        # Register methods to dump files at exit
+        atexit.register( readline.write_history_file, os.path.join(cfgfilepath, historyfilepath))
+        atexit.register( modhandler.sessions.write_sessions_files)
+
+        
+    def loop(self):
 
         self._tprint(self._format_presentation())
-        try:
-           if sessionfile:
-              url, password = self.modhandler._read_cfg(sessionfile)
-              self.modhandler.connect(url, password)
-              username, hostname = self.__env_init()
-           else:
-              username, hostname = self.__env_init(True)
-
-        except ModuleException, e:
-            return
-        except IOError:
-            return
+        
+        username, hostname = self.__env_init()
 
         self.__cwd_handler()
         
@@ -86,6 +95,7 @@ class Terminal(Helper):
         self.modhandler._last_warns = ''
         self._last_result = None
         
+        
         try:
     
             ## Help call
@@ -107,12 +117,23 @@ class Terminal(Helper):
             ## Load call
             elif command[0] == load_string and len(command) == 2:
                 # Recursively call run_cmd_line() and return to avoid to reprint last output
-                self.__load_rcfile(command[1])
+                self._load_rcfile(command[1])
                 return
 
+            ## Handle cd call
             elif command[0] == 'cd':
                 self.__cwd_handler(command)
                 
+            ## Handle session management
+            elif command[0] == session_string:
+                if len(command) >= 3 and command[1].startswith('http'):
+                    self.modhandler.sessions.load_session(command[1], command[2], None)
+                    self.modhandler.set_url_pwd()
+                elif len(command) >= 2:
+                    self.modhandler.sessions.load_session(None, None, command[1])
+                    self.modhandler.set_url_pwd()
+                else:
+                    self._tprint(self.modhandler.sessions.format_sessions(2))
             else:
                     
                 ## Module call
@@ -154,23 +175,24 @@ class Terminal(Helper):
             raise ModuleException('terminal','Interpreter guess failed')
         
 
-    def _load_rcfile(self, path, default_rcfile=False):
-
+    def _load_rcfile(self, path):
+        
+        if not path:
+            return
+        
         path = os.path.expanduser(path)
 
-        if default_rcfile and not os.path.exists(path):
-                try:
-                    rcfile = open(path, 'w').close()
-                except Exception, e:
-                    raise ModuleException("","Creation '%s' rc file failed" % (path))
-                else:
-                    return []
-
+        try:
+            rcfile = open(path, 'r')
+        except Exception, e:
+            self._tprint( "[!] Error opening '%s' file." % path)
+            return
+            
         last_output = ''
         last_warns = ''
         last_result = []
         
-        for cmd in self._read_rc(path):
+        for cmd in [c.strip() for c in rcfile.read().split('\n') if c.strip() and c[0] != '#']:
             self._tprint('[LOAD] %s%s' % (cmd, os.linesep))
             self.run_cmd_line(shlex.split(cmd))
             
@@ -199,7 +221,7 @@ class Terminal(Helper):
             setattr(self.modhandler.load('shell.php').stored_args_namespace, 'path', cwd_new)
         
 
-    def __env_init(self, saveflag=False):
+    def __env_init(self):
         
         # At terminal start, try to probe automatically best interpreter
         self.__guess_best_interpreter()
@@ -210,8 +232,62 @@ class Terminal(Helper):
         if Vector(self.modhandler, "safe_mode", 'system.info', "safe_mode").execute() == '1':
             self._tprint('[!] PHP Safe mode enabled%s' % os.linesep)
 
-        if saveflag:
-           configDict = {'username':username, 'password':self.modhandler.password, 'hostname':hostname}
-           self.modhandler._write_cfg(self.modhandler.url, configDict)
         
         return username, hostname
+    
+
+
+    def _init_completion(self):
+
+
+            self.matching_words =  [':%s' % m for m in self.modhandler.modules_classes.keys()] + [help_string, load_string, set_string, session_string]
+        
+            try:
+                readline.set_history_length(100)
+                readline.set_completer_delims(' \t\n;')
+                readline.parse_and_bind( 'tab: complete' )
+                readline.set_completer( self._complete )
+                readline.read_history_file( os.path.join(cfgfilepath, historyfilepath))
+
+            except IOError:
+                pass
+            
+
+
+
+    def _complete(self, text, state):
+        """Generic readline completion entry point."""
+
+        try:
+            buffer = readline.get_line_buffer()
+            line = readline.get_line_buffer().split()
+
+            if ' ' in buffer:
+                return []
+
+            # show all commandspath
+            if not line:
+                all_cmnds = [c + ' ' for c in self.matching_words]
+                if len(all_cmnds) > state:
+                    return all_cmnds[state]
+                else:
+                    return []
+
+
+            cmd = line[0].strip()
+
+            if cmd in self.matching_words:
+                return [cmd + ' '][state]
+
+            results = [c + ' ' for c in self.matching_words if c.startswith(cmd)] + [None]
+            if len(results) == 2:
+                if results[state]:
+                    return results[state].split()[0] + ' '
+                else:
+                    return []
+            return results[state]
+
+        except Exception, e:
+            self._tprint('[!] Completion error: %s' % e)
+
+

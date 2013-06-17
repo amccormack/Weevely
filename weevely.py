@@ -24,35 +24,41 @@ from core.moduleexception import ModuleException
 from core.helper import banner, credits, usage
 
 import sys
+import os
 
 
 
 if __name__ == "__main__":
 
 
-    if  len(sys.argv) == 3 and sys.argv[1].startswith('http'):
 
+    if len(sys.argv) >= 3 and (sys.argv[1].startswith('http') or sys.argv[1] == 'session'):         
+        
+        url = None
+        password = None
+        sessionfile = None
 
-        url = sys.argv[1]
-        password = sys.argv[2]
+        if sys.argv[1].startswith('http'):
+            url = sys.argv[1]
+            password = sys.argv[2]
+        else:
+            sessionfile = sys.argv[2]
 
         try:
-            Terminal ( ModHandler(url, password) ).loop()
+            
+            module_handler = ModHandler(url=url, password=password, sessionfile=sessionfile)
+            
+            if len(sys.argv) == 3:     
+                Terminal (module_handler).loop()
+            else:
+                Terminal(module_handler).run_cmd_line(sys.argv[3:])
+    
         except ModuleException, e:
             print '[!] [%s] %s ' % (e.module, e.error)
         except (KeyboardInterrupt, EOFError):
             print '\n[!] Exiting. Bye ^^'
 
-    elif len(sys.argv) >= 3 and sys.argv[1].startswith('session'):
 
-        sessionfile = sys.argv[2]
-
-        try:
-           Terminal(ModHandler()).loop(sessionfile)
-        except ModuleException, e:
-           print '[!] [%s] %s ' % (e.module, e.error)
-        except KeyboardInterrupt:
-           print '\n[!] Exiting. Bye ^^'
 
     elif len(sys.argv) >= 3 and sys.argv[1].startswith('generate'):
 
@@ -71,20 +77,6 @@ if __name__ == "__main__":
         Terminal (ModHandler()).run_cmd_line([':help' ] + sys.argv[2:])
 
 
-    elif len(sys.argv) > 3:
-
-        url = sys.argv[1]
-        password = sys.argv[2]
-
-        if sys.argv[1].startswith('http'):
-
-            try:
-                Terminal(ModHandler(url, password)).run_cmd_line(sys.argv[3:])
-
-            except ModuleException, e:
-                print '[!] [%s] %s ' % (e.module, e.error)
-            except KeyboardInterrupt:
-                print '\n[!] Exiting. Bye ^^'
 
     elif len(sys.argv)==2 and sys.argv[1] == 'credits':
         print credits

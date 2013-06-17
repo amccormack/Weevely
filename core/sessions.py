@@ -1,139 +1,193 @@
 import os
-import core.terminal
-import atexit
-from urlparse import urlparse, urlsplit
+import glob
+import urlparse 
 from ConfigParser import ConfigParser
-
-try:
-        import readline
-except ImportError:
-    try:
-        import pyreadline as readline
-    except ImportError: 
-        print '[!] Error, readline or pyreadline python module required. In Ubuntu linux run\n[!] sudo apt-get install python-readline'
-        sys.exit(1)
+from core.moduleexception import ModuleException
+from collections import OrderedDict
 
 dirpath = '.weevely'
 rcfilepath = 'weevely.rc'
-cfgext = '.conf'
+cfgext = '.session'
 cfgfilepath = 'sessions'
-historyfilepath = 'weevely_history'
+historyfilepath = 'history'
 
-class Configs():
+default_session = { 'global' : OrderedDict([('url', ''), ('username', ''), ('password', ''), ('hostname', ''), ('rcfile', '')]) }
 
-    def _read_cfg(self, sessionfile):
-        #sessionfile = os.path.join(cfgfilepath, sessionfile)
-        parser = ConfigParser()
+class Sessions():
 
-        try:
-          with open(sessionfile):
-            parser.read(sessionfile)
-            for key, value in parser.items('global'):
-              setattr(self, key, value)
-            print("[+] Reading session file '%s'\n" % sessionfile)
-            return self.url, self.password
+    def __init__(self, url = None, password = None, sessionfile=None):
+        
+        self.sessions = {}
+        self.current_session_name = ''
+        
+        if not os.path.isdir(cfgfilepath):
+            os.makedirs(cfgfilepath)
+            
+        self.load_session(url, password, sessionfile) 
 
-        except (IOError, Exception) as e:
-          print( "[!] Error: %s" % e)
-	  raise
-          #self._tprint( "[!] Error opening '%s' file.\n" % sessionfile)
 
-    def _write_cfg(self, url, configDict):
-
-        hostname = urlparse(url).hostname
-        weevname =  os.path.splitext(os.path.basename(urlsplit(url).path))[0]
-        sessionfile = os.path.join(cfgfilepath, hostname, weevname + cfgext)
-        parser = ConfigParser()
-
-        try:
-          if not os.path.exists(os.path.join(cfgfilepath, hostname)):
-             os.makedirs(os.path.join(cfgfilepath, hostname))
-          writer = open(sessionfile, 'w')
-          parser.add_section('global')
-          parser.set('global', 'url', url)
-          for k, v in configDict.iteritems():
-              parser.set('global', k, v)    
-          parser.write(writer)
-
-          print("[+] Writing session file '%s'\n" % sessionfile)
-
-        except (IOError, Exception) as e:
-          #print( "[!] Error: %s" % e)
-          print( "[!] Error writing '%s' file: \n" % sessionfile)
-
-    def _read_rc(self, rcpath):
-
-        try:
-            rcfile = open(rcpath, 'r')
-        except Exception, e:
-            self._tprint( "[!] Error opening '%s' file." % rcpath)
+    def load_session(self, url, password, sessionfile):
+        
+        if sessionfile:
+            self._load_session_file(sessionfile)
+        elif url and password:
+            self._load_session_by_url(url, password)
         else:
-            return [c.strip() for c in rcfile.read().split('\n') if c.strip() and c[0] != '#']
+            self._load_fake_session()
+            
+        if not self.current_session_name:
+            raise ModuleException("session", "Error loading session file")   
 
-        return []
 
-    def _historyfile(self):
-        return os.path.join(self.dirpath, historyfilepath)
-
-    def _make_home_folder(self):
-
-        self.dirpath = os.path.join(os.path.expanduser('~'),dirpath)
+    def _load_fake_session(self):
         
-        if not os.path.exists(self.dirpath):
-            os.mkdir(self.dirpath)
-
-
-    def _init_completion(self):
-
-    
-            self.historyfile = self._historyfile()
-
-            self.matching_words =  [':%s' % m for m in self.modhandler.modules_classes.keys()] + [core.terminal.help_string, core.terminal.load_string, core.terminal.set_string]
+        self.sessions['fake'] = default_session.copy()
+        self.current_session_name = 'fake'
         
-            try:
-                readline.set_history_length(100)
-                readline.set_completer_delims(' \t\n;')
-                readline.parse_and_bind( 'tab: complete' )
-                readline.set_completer( self._complete )
-                readline.read_history_file( self.historyfile )
 
-            except IOError:
-                pass
-            atexit.register( readline.write_history_file, self.historyfile )
+    def _validate_session_data(self, session_dict):
+        
+        for sect in default_session:
+            if not sect in session_dict:
+                raise ModuleException("session", "Missing '%s' field" % sect)
+            
+            for subsect in default_session[sect]:
+                if not subsect in session_dict[sect]:
+                    raise ModuleException("session", "Missing '%s' field" % sect)
 
 
 
-    def _complete(self, text, state):
-        """Generic readline completion entry point."""
+    def _load_session_file(self, session_name, just_return = False):
+
+        parser = ConfigParser()
 
         try:
-            buffer = readline.get_line_buffer()
-            line = readline.get_line_buffer().split()
+            parser.read(session_name)            
+        except (IOError) as e:
+          raise ModuleException("session", e)
+        
+        self._validate_session_data(parser._sections)
+        
+        
+        if not just_return:
+            self.sessions[session_name] = parser._sections
+            self.current_session_name = session_name
+            
+        else:
+            return parser._sections            
 
-            if ' ' in buffer:
-                return []
+      
+    def _load_session_by_url(self, url, password):
+        
+        sessions_available = glob.glob(os.path.join(cfgfilepath,'*','*%s' % cfgext)) 
+        
+        for session in sessions_available:
+            session_opts = self._load_session_file(session, just_return=True)
+            if session_opts['global']['url'] == url:
+                self._load_session_file(session)
+                return
+                
 
-            # show all commandspath
-            if not line:
-                all_cmnds = [c + ' ' for c in self.matching_words]
-                if len(all_cmnds) > state:
-                    return all_cmnds[state]
-                else:
-                    return []
+        self._init_new_session(url, password)
+            
+    
+    def _guess_first_usable_session_name(self, hostfolder, bd_fixedname):      
+        
+        if not os.path.isdir(hostfolder):
+            os.makedirs(hostfolder)
+        
+        bd_num = 0
+        
+        while True:
+            bd_filename =  bd_fixedname + (str(bd_num) if bd_num else '') + cfgext
+            session_name = os.path.join(hostfolder, bd_filename) 
+                
+            if not os.path.exists(session_name):
+                return session_name
+            else:
+                bd_num +=1
+        
+        
+    def _init_new_session(self, url, password, session_name = None):
+        
+        if not session_name:
+            hostname = urlparse.urlparse(url).hostname
+            hostfolder = os.path.join(cfgfilepath, hostname)
+            bd_fixedname = os.path.splitext(os.path.basename(urlparse.urlsplit(url).path))[0]
+            
+            session_name = self._guess_first_usable_session_name(hostfolder, bd_fixedname)
 
 
-            cmd = line[0].strip()
+        self.sessions[session_name] = default_session.copy()
+        
+        self.sessions[session_name]['global']['url'] = url
+        self.sessions[session_name]['global']['password'] = password
+        self.current_session_name = session_name
 
-            if cmd in self.matching_words:
-                return [cmd + ' '][state]
+        #self._dump_session(self.sessions[session_name], session_name, create_new = True)
 
-            results = [c + ' ' for c in self.matching_words if c.startswith(cmd)] + [None]
-            if len(results) == 2:
-                if results[state]:
-                    return results[state].split()[0] + ' '
-                else:
-                    return []
-            return results[state]
 
-        except Exception, e:
-            self._tprint('[!] Completion error: %s' % e)
+    def _get_opts(self, opts_list, section = 'global', session_name = None):
+        
+        session = self.get_session(session_name)
+            
+        opt_dict = {}
+            
+        for key in opts_list:
+            opt_dict[key] = session[section].get(key, '')
+        
+        return opt_dict
+    
+    def get_session(self, session_name = None):
+        
+        if not session_name:
+            return self.sessions[self.current_session_name]
+        else:
+            return self.sessions[session_name]
+            
+    def _set_opts(self, opts_dict, section = 'global', session_name = None):
+        
+        session = self.get_session(session_name)
+            
+        if not section in session: 
+            session[section] = {}
+            
+        for key, value in opts_dict.iteritems():
+            session[section][key] = value    
+
+    def write_sessions_files(self):
+        for session_name in self.sessions:
+            if session_name != 'fake':
+                self._dump_session(self.sessions[session_name], session_name)
+
+    def _dump_session(self, session, session_name):
+        
+        parser = ConfigParser()
+
+        for section in session:
+            parser.add_section(section)
+            for key in session[section]:
+                parser.set(section, key, session[section][key])
+            
+        try:
+
+            parserfile = open(session_name,'w')
+            parser.write(parserfile)
+            
+        except Exception as e:
+            raise ModuleException("session", e)
+
+
+    def format_sessions(self, level = 0):
+        
+        output = "Current session: '%s'%s" % (self.current_session_name, os.linesep)
+        if level > 0:
+            sessions_loaded = "', '".join(sorted(self.sessions.keys()))
+            output += "Loaded: '%s'%s" % (sessions_loaded, os.linesep)
+        if level > 1:
+            sessions_available = "', '".join(glob.glob(os.path.join(cfgfilepath,'*','*%s' % cfgext)))
+            output += "Available: '%s'%s" % (sessions_available, os.linesep)
+            
+        return output
+            
+        

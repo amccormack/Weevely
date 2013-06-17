@@ -21,6 +21,14 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
+def chunks_equal(l, n):
+    """ Yield n successive chunks from l.
+    """
+    newn = int(len(l) / n)
+    for i in xrange(0, n-1):
+        yield l[i*newn:i*newn+newn]
+    yield l[n*newn-newn:]
+
 def b64_chunks(l, n):
     return [b64encode(l[i:i+n]) for i in range(0, len(l), n)]
 

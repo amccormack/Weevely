@@ -32,10 +32,10 @@ class Proxy(Phpproxy):
 
 
     def _get_proxy_path(self):
-        return path.join(self.modhandler.path_modules, 'net', 'external', 'proxy.php')
+        return path.join(self.modhandler.modules_path, 'net', 'external', 'proxy.php')
 
     def _get_local_proxy_path(self):
-        return path.join(self.modhandler.path_modules, 'net', 'external', 'local_proxy.py')
+        return path.join(self.modhandler.modules_path, 'net', 'external', 'local_proxy.py')
 
     def _prepare(self):
         

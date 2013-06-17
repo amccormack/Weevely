@@ -1,18 +1,20 @@
 #!/usr/bin/env python
-import sys, os, socket, unittest, shlex, random
+import sys, os, socket, unittest, shlex, random, atexit
 sys.path.append(os.path.abspath('..'))
 import core.terminal
 from core.modulehandler import ModHandler
+from core.sessions import cfgfilepath
 from ConfigParser import ConfigParser
 from string import ascii_lowercase, Template
 from tempfile import NamedTemporaryFile
 from PythonProxy import start_server, start_dummy_tcp_server  
 from thread import start_new_thread    
-from shutil import move
+from shutil import move, rmtree
 from time import sleep
 from test import conf
 from core.utils import randstr
 from commands import getstatusoutput
+
 
 class SimpleTestCase(unittest.TestCase):
     
@@ -24,8 +26,17 @@ class SimpleTestCase(unittest.TestCase):
 
     @classmethod  
     def tearDownClass(cls):  
+        cls._rm_sess()
         cls._unsetenv()
 
+    @classmethod 
+    def _rm_sess(cls):
+        
+        atexit._exithandlers[:] = []
+          
+        if not cfgfilepath.startswith('/') and os.path.exists(cfgfilepath):
+            rmtree(cfgfilepath)
+        
     @classmethod  
     def _setenv(cls):  
         cls.basedir = os.path.join(conf['env_base_writable_web_dir'], randstr(4))
@@ -190,17 +201,20 @@ class RcTestCase(SimpleTestCase):
     def _setenv(cls):
         
         SimpleTestCase._setenv.im_func(cls)
+        cls.rcfile = NamedTemporaryFile()
+        cls.rcpath = cls.rcfile.name
+        
 
-        cls.rcpath = os.path.expanduser('~/.weevely/weevely.rc')
-        cls.rcbackuppath = '%s_backup' % cls.rcpath
-
-        move(cls.rcpath, cls.rcbackuppath)
-
+    @classmethod
+    def _write_rc(cls, rc_content):
+        # Create rc to load
+        cls.rcfile.write(rc_content)
+        cls.rcfile.flush()
 
     @classmethod
     def _unsetenv(cls):
         SimpleTestCase._unsetenv.im_func(cls)    
-        move(cls.rcbackuppath, cls.rcpath)
+        cls.rcfile.close()
 
     
 class ProxyTestCase(RcTestCase):
@@ -218,5 +232,6 @@ class ProxyTestCase(RcTestCase):
     @classmethod
     def _unsetenv(cls):
         RcTestCase._unsetenv.im_func(cls)    
-  
+
+    
             

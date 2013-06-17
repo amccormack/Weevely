@@ -1,13 +1,12 @@
 from core.prettytable import PrettyTable
-
+import os
 
 
 class Helper:
     
     def _format_presentation(self):
         
-        presentation_output = banner + presentation 
-        return presentation_output
+        return (os.linesep + '[+] ').join([banner, 'Browse filesystem, execute commands or list available modules with \':help\'', self.modhandler.sessions.format_sessions()]) + os.linesep
     
     def _format_grouped_helps(self, oneline=False):
         
@@ -58,7 +57,7 @@ usage = '''
     weevely <url> <password> [ "<command> .." | :<module> .. ]  
 
 [+] Restore a saved session file
-    weevely session [ <file> ]
+    weevely [ <file> ]
 
 [+] Generate PHP backdoor
     weevely generate <password> [ <path> ] ..
@@ -89,7 +88,5 @@ Contributors
            http://www.evilsocket.net/
 '''
 
-presentation = '''
-[+] Welcome to Weevely. Browse filesystem and execute system commands.
-[+] Hint: Use ':help' to list available modules.
+presentation = '''Welcome to Weevely. Browse filesystem, execute system commands or type ':help' to show available modules
 '''

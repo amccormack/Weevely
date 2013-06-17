@@ -3,7 +3,9 @@ import unittest
 from ConfigParser import ConfigParser
 from argparse import ArgumentParser
 from glob import glob
-import sys
+import os, sys, shutil
+sys.path.append(os.path.abspath('..'))
+from core.sessions import cfgfilepath
 
 def run_all(confpatterns):
     
@@ -37,3 +39,4 @@ conf['shell_sh'] = True if conf['shell_sh'].lower() == 'true' else False
 
 if __name__ == "__main__":
     run_all(parsed.test_patterns)
+    shutil.rmtree(cfgfilepath)

@@ -33,7 +33,7 @@ class Sessions():
     def load_session(self, url, password, sessionfile):
         
         if sessionfile:
-            self._load_session_file(sessionfile)
+            self._load_session_by_file(sessionfile)
         elif url and password:
             self._load_session_by_url(url, password)
         else:
@@ -61,7 +61,7 @@ class Sessions():
 
 
 
-    def _load_session_file(self, session_name, just_return = False):
+    def _load_session_by_file(self, session_name, just_return = False):
 
         parser = ConfigParser()
         
@@ -89,9 +89,9 @@ class Sessions():
         sessions_available = glob.glob(os.path.join(cfgfilepath,'*','*%s' % cfgext)) 
         
         for session in sessions_available:
-            session_opts = self._load_session_file(session, just_return=True)
+            session_opts = self._load_session_by_file(session, just_return=True)
             if session_opts['global']['url'] == url:
-                self._load_session_file(session)
+                self._load_session_by_file(session)
                 return
                 
 
@@ -130,20 +130,6 @@ class Sessions():
         self.sessions[session_name]['global']['url'] = url
         self.sessions[session_name]['global']['password'] = password
         self.current_session_name = session_name
-
-        #self._dump_session(self.sessions[session_name], session_name, create_new = True)
-
-
-    def _get_opts(self, opts_list, section = 'global', session_name = None):
-        
-        session = self.get_session(session_name)
-            
-        opt_dict = {}
-            
-        for key in opts_list:
-            opt_dict[key] = session[section].get(key, '')
-        
-        return opt_dict
     
     def get_session(self, session_name = None):
         
@@ -152,17 +138,8 @@ class Sessions():
         else:
             return self.sessions[session_name]
             
-    def _set_opts(self, opts_dict, section = 'global', session_name = None):
-        
-        session = self.get_session(session_name)
-            
-        if not section in session: 
-            session[section] = {}
-            
-        for key, value in opts_dict.iteritems():
-            session[section][key] = value    
 
-    def write_sessions_files(self):
+    def dump_all_sessions(self):
         for session_name in self.sessions:
             if session_name != 'fake':
                 self._dump_session(self.sessions[session_name], session_name)

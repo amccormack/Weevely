@@ -162,7 +162,7 @@ class FolderFSTestCase(SimpleTestCase):
 
     def _path(self, command):
         self.__class__._run_test(command)
-        return getattr(self.term.modhandler.load('shell.php').stored_args_namespace, 'path')
+        return self.term.modhandler.load('shell.php').stored_args_namespace['path']
 
 
 class FolderFileFSTestCase(FolderFSTestCase):

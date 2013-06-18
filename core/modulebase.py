@@ -208,7 +208,7 @@ class ModuleBase:
         stringified_stored_args = ''
         
         for index, argument in enumerate(action.dest for action in self.argparser._actions if action.dest != 'help' ):
-            value = getattr(self.stored_args_namespace, argument) if (argument in self.stored_args_namespace and getattr(self.stored_args_namespace, argument) != None) else ''
+            value = self.stored_args_namespace[argument] if (argument in self.stored_args_namespace and self.stored_args_namespace[argument] != None) else ''
             stringified_stored_args += '%s=\'%s\' ' % (argument, value)
             
             if index+1 % 4 == 0:

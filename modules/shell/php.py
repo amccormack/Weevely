@@ -30,8 +30,8 @@ class Php(Module):
 
     def _init_stored_args(self):
         self.stored_args_namespace = StoredNamespace()
-        setattr(self.stored_args_namespace, 'mode', None)
-        setattr(self.stored_args_namespace, 'path', '')
+        self.stored_args_namespace['mode'] = None
+        self.stored_args_namespace['path'] = ''
 
     
     def _set_args(self):
@@ -53,10 +53,10 @@ class Php(Module):
         # Avoid probing (and storing) if mode is specified by user
         
         if not self.args['mode'] or self.args['just_probe']:
-            if not getattr(self.stored_args_namespace,'mode') or self.args['just_probe']:
+            if not self.stored_args_namespace['mode'] or self.args['just_probe']:
                 self.__slacky_probe()
                 
-            self.args['mode'] = getattr(self.stored_args_namespace,'mode')
+            self.args['mode'] = self.stored_args_namespace['mode']
         
         
         # Check if is raw command is not 'ls' 
@@ -67,8 +67,8 @@ class Php(Module):
                 self.mprint('\'..%s\' %s' % (self.args['cmd'][-1], WARN_TRAILING_SEMICOLON))
           
             # Prepend chdir
-            if getattr(self.stored_args_namespace,'path'):
-                self.args['cmd'] = [ 'chdir(\'%s\');' % (getattr(self.stored_args_namespace,'path')) ] + self.args['cmd'] 
+            if self.stored_args_namespace['path']:
+                self.args['cmd'] = [ 'chdir(\'%s\');' % (self.stored_args_namespace['path']) ] + self.args['cmd'] 
                 
             # Prepend precmd
             if self.args['precmd']:
@@ -145,7 +145,7 @@ class Php(Module):
             
             if response == rand:
                 
-                setattr(self.stored_args_namespace, 'mode', currentmode)
+                self.stored_args_namespace['mode'] = currentmode
                 
                 if self.args['just_probe']:
                     self._result = True 

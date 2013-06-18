@@ -39,15 +39,15 @@ fclose($pipes[2]); proc_close($h);""")
         
     def _init_stored_args(self):
         self.stored_args_namespace = StoredNamespace()
-        setattr(self.stored_args_namespace, 'vector', None )
+        self.stored_args_namespace['vector'] = None 
 
     def _execute_vector(self):
 
-        if not getattr(self.stored_args_namespace, 'vector') or self.args['just_probe']:
+        if not self.stored_args_namespace['vector'] or self.args['just_probe']:
             self.__slacky_probe()
 
         # Execute if is current vector is saved or choosen
-        if self.current_vector.name in (getattr(self.stored_args_namespace, 'vector'), self.args['vector']):
+        if self.current_vector.name in (self.stored_args_namespace['vector'], self.args['vector']):
             self._result = self.current_vector.execute( self.formatted_args)
         
     def _prepare_vector(self):
@@ -71,7 +71,7 @@ fclose($pipes[2]); proc_close($h);""")
         
         if self.current_vector.execute( slacky_formats) == rand:
             
-            setattr(self.stored_args_namespace, 'vector', self.current_vector.name)
+            self.stored_args_namespace['vector'] = self.current_vector.name
             
             # Set as best interpreter
             #self.modhandler.interpreter = self.name

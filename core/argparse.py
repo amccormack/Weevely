@@ -1192,6 +1192,18 @@ class Namespace(_AttributeHolder):
 class StoredNamespace(Namespace):
     
     stored = True
+    
+    def __getitem__(self,key):
+        return getattr(self, key)
+    
+    def __setitem__(self,key, value):
+        return setattr(self, key, value)
+    
+    def __len__(self):
+        return len(self.__dict__)
+    
+    def __delitem__(self, key):
+        delattr(self, key)
 
 
 

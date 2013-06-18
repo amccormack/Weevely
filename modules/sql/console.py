@@ -25,8 +25,8 @@ class Console(Module):
 
     def _init_stored_args(self):
         self.stored_args_namespace = StoredNamespace()
-        setattr(self.stored_args_namespace, 'vector', '')
-        setattr(self.stored_args_namespace, 'prompt', 'SQL> ')
+        self.stored_args_namespace['vector'] = ''
+        self.stored_args_namespace['prompt'] = 'SQL> '
         
 
 
@@ -49,7 +49,7 @@ class Console(Module):
                 self._result = None
                 self._output = ''
                 
-                query  = raw_input( getattr(self.stored_args_namespace,'prompt') ).strip()
+                query  = raw_input( self.stored_args_namespace['prompt'] ).strip()
                 
                 if not query:
                     continue
@@ -88,7 +88,7 @@ class Console(Module):
         
         if user:
             user = user[:-1]
-            setattr(self.stored_args_namespace, 'vector', self.args['vector'])
-            setattr(self.stored_args_namespace, 'prompt', '%s SQL> ' % user)
+            self.stored_args_namespace['vector'] = self.args['vector']
+            self.stored_args_namespace['prompt'] = '%s SQL> ' % user
         else:
             raise ProbeException(self.name, "%s of %s " % (WARN_CHECK_CRED, self.args['host']) )

@@ -1193,7 +1193,7 @@ class StoredNamespace(Namespace):
     
     stored = True
     
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         return getattr(self, key)
     
     def __setitem__(self,key, value):
@@ -1205,7 +1205,13 @@ class StoredNamespace(Namespace):
     def __delitem__(self, key):
         delattr(self, key)
 
+    def __iter__(self):
+        for x in self.__dict__:
+            yield x, self.__dict__[x]
 
+    def update(self, arguments):
+        for arg, value in arguments.items():
+            setattr(self, arg, value)
 
 class _ActionsContainer(object):
 

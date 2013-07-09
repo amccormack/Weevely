@@ -41,7 +41,7 @@ class Terminal(Helper):
         
         # Register methods to dump files at exit
         atexit.register( readline.write_history_file, os.path.join(cfgfilepath, historyfilepath))
-        atexit.register( modhandler.sessions.dump_all_sessions)
+        atexit.register( modhandler.sessions.dump_all_sessions, modhandler.modules)
 
         
     def loop(self):

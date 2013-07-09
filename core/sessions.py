@@ -1,9 +1,8 @@
 import os
 import glob
 import urlparse 
-from ConfigParser import ConfigParser
+import yaml
 from core.moduleexception import ModuleException
-from collections import OrderedDict
 
 dirpath = '.weevely'
 rcfilepath = 'weevely.rc'
@@ -11,7 +10,7 @@ cfgext = '.session'
 cfgfilepath = 'sessions'
 historyfilepath = 'history'
 
-default_session = { 'global' : OrderedDict([('url', ''), ('username', ''), ('password', ''), ('hostname', ''), ('rcfile', '')]) }
+default_session = { 'global' : { 'url' : '' , 'username': '', 'password': '', 'hostname': '', 'rcfile': '' } }
 
 WARN_NOT_FOUND = 'Session file not found'
 WARN_BROKEN_SESS = 'Broken session file, missing fields'
@@ -62,26 +61,23 @@ class Sessions():
 
 
     def _load_session_by_file(self, session_name, just_return = False):
-
-        parser = ConfigParser()
         
         if not os.path.isfile(session_name):
             raise ModuleException('session', WARN_NOT_FOUND)
 
         try:
-            parser.read(session_name)            
+            session_data = yaml.load(open(session_name,'r').read())
         except Exception as e:
           raise ModuleException("session", WARN_BROKEN_SESS)
         
-        self._validate_session_data(parser._sections)
-        
+        self._validate_session_data(session_data)
         
         if not just_return:
-            self.sessions[session_name] = parser._sections
+            self.sessions[session_name] = session_data
             self.current_session_name = session_name
             
         else:
-            return parser._sections            
+            return session_data          
 
       
     def _load_session_by_url(self, url, password):
@@ -139,25 +135,27 @@ class Sessions():
             return self.sessions[session_name]
             
 
-    def dump_all_sessions(self):
+    def dump_all_sessions(self, modules):
+        
+        # Update sessions with module stored arguments
+        
+        for modname, mod in modules.items():
+            for arg, val in mod.stored_args_namespace:
+                if not modname in self.sessions[self.current_session_name]:
+                    self.sessions[self.current_session_name][modname] = {}
+                    
+                self.sessions[self.current_session_name][modname][arg] = val
+                
+        
+        # Dump all sessions
         for session_name in self.sessions:
             if session_name != 'fake':
                 self._dump_session(self.sessions[session_name], session_name)
 
     def _dump_session(self, session, session_name):
-        
-        parser = ConfigParser()
-
-        for section in session:
-            parser.add_section(section)
-            for key in session[section]:
-                parser.set(section, key, session[section][key])
             
         try:
-
-            parserfile = open(session_name,'w')
-            parser.write(parserfile)
-            
+            yaml.dump(session,open(session_name,'w'), default_flow_style=False)
         except Exception as e:
             raise ModuleException("session", e)
 

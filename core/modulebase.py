@@ -25,6 +25,8 @@ class ModuleBase:
         self._set_vectors()
         self._set_args()
         
+        self._init_session_args()
+        
         self._init_module()
         
     def _init_vectors(self):
@@ -37,7 +39,7 @@ class ModuleBase:
     def _init_args(self):
         """This method initialize ArgumentParser objects self.argparser.
         """
-        
+    
         self.argparser = ArgumentParser(prog=':%s' % self.name, description = self.__doc__, add_help=False)
         
         
@@ -96,6 +98,13 @@ class ModuleBase:
             
     def _init_stored_args(self):
         self.stored_args_namespace = StoredNamespace()
+        
+    def _init_session_args(self):
+        
+        # Get arguments from session, casting it if needed
+        session_args = self.modhandler.sessions.get_session().get(self.name,{})
+        self.stored_args_namespace.update(session_args)
+
     
     def _check_args(self, submitted_args):
         """This method parse and merge new arguments with stored arguments (assigned with :set)

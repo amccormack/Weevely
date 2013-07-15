@@ -86,7 +86,7 @@ class Sessions():
         
         for session in sessions_available:
             session_opts = self._load_session_by_file(session, just_return=True)
-            if session_opts['global']['url'] == url:
+            if session_opts['global']['url'] == url and session_opts['global']['password'] == password:
                 self._load_session_by_file(session)
                 return
                 

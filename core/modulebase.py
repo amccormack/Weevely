@@ -63,9 +63,9 @@ class ModuleBase:
             self._prepare()
             self._probe()
             self._verify()
-        except ProbeException, e:
+        except ProbeException as e:
             self.mprint('[!] Error: %s' % (e.error), 2, e.module) 
-        except ProbeSucceed, e:
+        except ProbeSucceed as e:
             self._stringify_result()
         except InitException, e:
             raise

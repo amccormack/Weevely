@@ -107,10 +107,14 @@ class SimpleTestCase(unittest.TestCase):
 
 
     @classmethod  
-    def _env_chmod(cls, relpath, mode='744'):
+    def _env_chmod(cls, relpath, mode='0744'):
+        
+        
+        
         abspath = os.path.join(cls.basedir, relpath)
         
         cmd = Template(conf['env_chmod_command']).safe_substitute(path=abspath, mode=mode)
+
         cls._run_cmd(cmd)
 
     @classmethod  
@@ -118,7 +122,7 @@ class SimpleTestCase(unittest.TestCase):
         abspath = os.path.join(cls.basedir, relpath)
         
         # Restore modes
-        #cls._env_chmod(cls.basedir, recursion=True)
+        cls._env_chmod(cls.basedir)
         
         if cls.basedir.count('/') < 3:
             print 'Please check %s, not removing' % cls.basedir
@@ -180,10 +184,11 @@ class FolderFileFSTestCase(FolderFSTestCase):
             i+=1
 
         # Restore modes
-        #cls._env_chmod(cls.basedir, recursion=True)
+        cls._env_chmod(cls.basedir, recursive=True)
 
     @classmethod  
-    def _env_chmod(cls, relpath, mode='744', recursive = False):
+    def _env_chmod(cls, relpath, mode='0744', recursive = False):
+        
         
         if recursive:
             items = sorted(cls.filenames + cls.dirs)

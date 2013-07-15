@@ -101,7 +101,7 @@ class Generators(SimpleTestCase):
         # No output expected 
         self.assertEqual(self._outp(':generate.img %s %s %s'  % (phpbd_pwd, temp_imgpathname, temp_outputdir+'2')), '')
 
-        self.__class__._env_chmod(temp_outputdir, '777', currentuser=True)
+        self.__class__._env_chmod(temp_outputdir, '0777')
         self.__class__._env_cp(os.path.join(temp_outputdir, '.htaccess'), '.htaccess')
 
         self.__test_new_bd( os.path.join(temp_outputdir,temp_filename), temp_filename, phpbd_pwd)

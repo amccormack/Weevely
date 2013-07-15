@@ -54,7 +54,7 @@ if __name__ == "__main__":
                 Terminal(module_handler).run_cmd_line(sys.argv[3:])
     
         except ModuleException, e:
-            print '[!] [%s] %s ' % (e.module, e.error)
+            print '[%s] [!] %s ' % (e.module, e.error)
         except (KeyboardInterrupt, EOFError):
             print '\n[!] Exiting. Bye ^^'
 

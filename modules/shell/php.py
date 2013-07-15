@@ -41,39 +41,45 @@ class Php(Module):
         self.argparser.add_argument('-precmd', help='Insert string at beginning of commands', nargs='+'  )
         self.argparser.add_argument('-debug', help='Change debug class (3 or less to show request and response)', type=int, default=4, choices =range(1,5))
         self.argparser.add_argument('-post', help=SUPPRESS, type=type({}), default={})
-        self.argparser.add_argument('-just-probe', help=SUPPRESS, action='store_true')
 
     def _set_vectors(self):
         
         self.support_vectors.add_vector(name='ls', interpreter='file.ls', payloads = [ '$rpath' ])
  
     def _prepare(self):
-                
-        # Slacky backdoor validation. 
-        # Avoid probing (and storing) if mode is specified by user
         
-        if not self.args['mode'] or self.args['just_probe']:
-            if not self.stored_args_namespace['mode'] or self.args['just_probe']:
-                self.__slacky_probe()
-                
-            self.args['mode'] = self.stored_args_namespace['mode']
+        # Cases: 
+        # 1. First call by terminal. No preset vector, do a slacky probe
+        # 2. first call by cmdline (no vector)
         
-        
-        # Check if is raw command is not 'ls' 
-        if self.args['cmd'][0][:2] != 'ls':
+        if not self.stored_args_namespace['mode']:
+            
+            first_probe = self.__slacky_probe()
+            
+            if first_probe:
+                # If there is no command, raise ProbeSucceed and do not execute the command
+                self.stored_args_namespace['mode'] = first_probe
                 
-            # Warn about not ending semicolon
-            if self.args['cmd'] and self.args['cmd'][-1][-1] not in (';', '}'):
-                self.mprint('\'..%s\' %s' % (self.args['cmd'][-1], WARN_TRAILING_SEMICOLON))
-          
-            # Prepend chdir
-            if self.stored_args_namespace['path']:
-                self.args['cmd'] = [ 'chdir(\'%s\');' % (self.stored_args_namespace['path']) ] + self.args['cmd'] 
-                
-            # Prepend precmd
-            if self.args['precmd']:
-                self.args['cmd'] = self.args['precmd'] + self.args['cmd']
+                if self.args['cmd'][0] == ' ':
+                    raise ProbeSucceed(self.name, MSG_PHP_INTERPRETER_SUCCEED)
 
+        if self.args['cmd'][0] != ' ' and self.stored_args_namespace['mode'] in self.mode_choices:        
+                    
+            # Check if is raw command is not 'ls' 
+            if self.args['cmd'][0][:2] != 'ls':
+                    
+                # Warn about not ending semicolon
+                if self.args['cmd'] and self.args['cmd'][-1][-1] not in (';', '}'):
+                    self.mprint('\'..%s\' %s' % (self.args['cmd'][-1], WARN_TRAILING_SEMICOLON))
+              
+                # Prepend chdir
+                if self.stored_args_namespace['path']:
+                    self.args['cmd'] = [ 'chdir(\'%s\');' % (self.stored_args_namespace['path']) ] + self.args['cmd'] 
+                    
+                # Prepend precmd
+                if self.args['precmd']:
+                    self.args['cmd'] = self.args['precmd'] + self.args['cmd']
+    
 
     def _probe(self):
         
@@ -144,17 +150,7 @@ class Php(Module):
                 continue
             
             if response == rand:
-                
-                self.stored_args_namespace['mode'] = currentmode
-                
-                if self.args['just_probe']:
-                    self._result = True 
-                    raise ProbeSucceed(self.name, MSG_PHP_INTERPRETER_SUCCEED)
-                
-                return
-        
-        
-        raise InitException(self.name, WARN_PHP_INTERPRETER_FAIL)
+                return currentmode
         
 
 

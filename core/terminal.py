@@ -8,7 +8,7 @@ from core.moduleexception import ModuleException
 from core.vector import Vector
 from core.helper import Helper
 from core.sessions import cfgfilepath, historyfilepath
-import os, re, shlex, atexit
+import os, re, shlex, atexit, sys
 
 
 try:

@@ -20,7 +20,7 @@ re_exitaddress = compile('\nExitAddress[\s]+([^\s]+)')
 WARN_NO_EXITLIST = 'Error downloading TOR exit list'
 
 class Info(Module):
-    """Collect system informations"""
+    """Collect system information"""
 
     def _set_vectors(self):
             self.support_vectors.add_vector('document_root', 'shell.php', "@print($_SERVER['DOCUMENT_ROOT']);"),

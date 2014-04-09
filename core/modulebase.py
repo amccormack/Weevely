@@ -47,7 +47,7 @@ class ModuleBase:
         """Main method called every module execution. It calls:
         
         . Check and set arguments (method _check_args(), do not inherit)
-        . Optionally prepares the enviroinment or formats the passed arguments to simplify vector run 
+        . Optionally prepares the environment or formats the passed arguments to simplify vector run 
            (method _prepare(), inherition is optional)
         . Runs vectors and saves results  (method _probe(), inherition is mandatory)
         . Optionally verifies probe execution (method _verify(), inherition is optional)

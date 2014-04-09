@@ -20,7 +20,7 @@ class ModuleGuess(ModuleGuessBase):
     At every call (e.g. at every ':mymgroup.mymodule' run) run() method parse passed
     arguments and execute following main tasks:
     
-        1) Optionally prepares the enviroinment (method _prepare(), inherition is optional)
+        1) Optionally prepares the environment (method _prepare(), inherition is optional)
         2) Runs every vector to guess best way to accomplish task. Guessing stops as soon as 
            first vector returns good results. Those three methods are executed for every vector:
            
@@ -114,7 +114,7 @@ class ModuleGuess(ModuleGuessBase):
         """
     
     def _prepare(self):
-        """Inherit this method to prepare enviroinment for the probe.
+        """Inherit this method to prepare environment for the probe.
         
         This method is called at every module run. Throws ModuleException, ProbeException.
         """

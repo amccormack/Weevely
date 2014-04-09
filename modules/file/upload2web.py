@@ -15,7 +15,7 @@ from string import ascii_lowercase
 from urlparse import urlsplit, urlunsplit
 
 
-WARN_WEBROOT_INFO = 'Error getting web enviroinment information'
+WARN_WEBROOT_INFO = 'Error getting web environment information'
 WARN_NOT_WEBROOT_SUBFOLDER = "is not a webroot subdirectory"
 WARN_NOT_FOUND = 'Path not found'
 WARN_WRITABLE_DIR_NOT_FOUND = "Writable web directory not found"

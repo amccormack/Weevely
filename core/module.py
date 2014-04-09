@@ -116,7 +116,7 @@ class Module(ModuleBase):
         pass
 
     def _prepare(self):
-        """Inherit this method to prepare vectors and enviroinment for the
+        """Inherit this method to prepare vectors and environment for the
         probe, using declared vectors.
 
         This method is called at every module execution. Throws ModuleException,

